@@ -101,7 +101,6 @@ public:
 		int m_Max;
 	} m_Latency;
 
-	bool m_ResetPickups;
 	bool m_ShowOthers;
 	
 	bool m_IsUsingRaceClient;

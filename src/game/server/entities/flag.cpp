@@ -5,7 +5,7 @@
 #include "../gamemodes/race.h"
 
 CFlag::CFlag(CGameWorld *pGameWorld, int Team, vec2 Pos, CCharacter *pOwner)
-: CEntity(pGameWorld, CGameWorld::ENTTYPE_FLAG, pOwner->GetPlayer()->GetGameTeam())
+: CEntity(pGameWorld, CGameWorld::ENTTYPE_FLAG, Team)
 {
 	m_Team = Team;
 	m_Pos = Pos;

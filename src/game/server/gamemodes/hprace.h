@@ -1,7 +1,7 @@
 
-#include "race.h"
+#include "../team_racecontroller.h"
 
-class CGameControllerHPRACE : public CGameControllerRACE
+class CGameControllerHPRACE : public CGameControllerTeamRace
 {
 private:
 	int m_aPartnerWishes[MAX_CLIENTS];

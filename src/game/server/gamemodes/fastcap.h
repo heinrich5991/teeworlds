@@ -1,8 +1,9 @@
 #ifndef GAME_SERVER_GAMEMODES_CTF_H
 #define GAME_SERVER_GAMEMODES_CTF_H
-#include "race.h"
 
-class CGameControllerFC : public CGameControllerRACE
+#include "../no_team_racecontroller.h"
+
+class CGameControllerFC : public CGameControllerNoTeamRace
 {
 public:
 	class CFlag *m_apFlags[2];
@@ -13,7 +14,7 @@ public:
 	bool IsOwnFlagStand(vec2 Pos, int Team);
 	bool IsEnemyFlagStand(vec2 Pos, int Team);
 	
-	virtual bool CanBeMovedOnBalance(int Cid);
+	virtual bool CanBeMovedOnBalance(int ClientID);
 	
 	virtual bool OnEntity(int Index, vec2 Pos);
 	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
@@ -22,8 +23,8 @@ public:
 	
 	virtual bool IsFastCap() { return true; }
 
-	virtual bool OnRaceStart(int ID, float StartAddTime, bool Check);
-	virtual bool OnRaceEnd(int ID, float FinishTime);
+	virtual bool OnRaceStart(int ClientID, float StartAddTime, bool Check);
+	virtual bool OnRaceEnd(int ClientID, float FinishTime);
 	
 	virtual void Snap(int SnappingClient);
 };

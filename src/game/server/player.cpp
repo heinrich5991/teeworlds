@@ -33,7 +33,6 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team, int GameTeam
 	else
 		m_ShowOthers = true;
 		
-	m_ResetPickups = true;
 	m_IsUsingRaceClient = false;
 
 #if defined(CONF_TEERACE)
@@ -123,10 +122,6 @@ void CPlayer::Tick()
 	}
 	else if(m_Spawning && m_RespawnTick <= Server()->Tick())
 		TryRespawn();
-	
-	// reset PickupReset
-	if(m_ResetPickups && GetCharacter())
-		m_ResetPickups = false;
 }
 
 void CPlayer::PostTick()

@@ -3,11 +3,7 @@
 #include <game/server/gamecontext.h>
 
 CGameControllerRACE::CGameControllerRACE(CGameContext *pGameContext)
-	: CRaceController(pGameContext)
+	: CGameControllerNoTeamRace(pGameContext)
 {
 	m_pGameType = "Race";
-}
-
-CGameControllerRACE::~CGameControllerRACE()
-{
 }

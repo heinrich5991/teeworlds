@@ -597,7 +597,7 @@ int IGameController::GetAutoTeam(int NotThisID)
 
 int IGameController::GetAutoGameTeam(int ClientID)
 {
-	return -1;
+	return ClientID;
 }
 
 bool IGameController::CanJoinTeam(int Team, int NotThisID)

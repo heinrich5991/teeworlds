@@ -4,7 +4,7 @@
 #include "hprace.h"
 
 CGameControllerHPRACE::CGameControllerHPRACE(class CGameContext *pGameServer)
-	: CGameControllerRACE(pGameServer)
+	: CGameControllerTeamRace(pGameServer)
 {
 	m_pGameType = "HpRace";
 	for(int i = 0; i < MAX_CLIENTS; i++)

@@ -3,12 +3,13 @@
 #include <game/mapitems.h>
 #include <game/server/entities/character.h>
 #include <game/server/entities/flag.h>
+#include <game/server/entities/pickup.h>
 #include <game/server/player.h>
 #include <game/server/gamecontext.h>
 #include "fastcap.h"
 
 CGameControllerFC::CGameControllerFC(class CGameContext *pGameServer)
-: CGameControllerRACE(pGameServer)
+: CGameControllerNoTeamRace(pGameServer)
 {
 	m_apFlags[0] = 0;
 	m_apFlags[1] = 0;
@@ -69,7 +70,7 @@ int CGameControllerFC::OnCharacterDeath(class CCharacter *pVictim, class CPlayer
 		m_apPlFlags[ID] = 0;
 	}
 
-	return CGameControllerRACE::OnCharacterDeath(pVictim, pKiller, Weapon);
+	return CGameControllerNoTeamRace::OnCharacterDeath(pVictim, pKiller, Weapon);
 }
 
 void CGameControllerFC::OnCharacterSpawn(class CCharacter *pChr)
@@ -107,9 +108,9 @@ bool CGameControllerFC::CanSpawn(CPlayer *pPlayer, vec2 *pOutPos)
 	return Eval.m_Got;
 }
 
-bool CGameControllerFC::CanBeMovedOnBalance(int Cid)
+bool CGameControllerFC::CanBeMovedOnBalance(int ClientID)
 {
-	CCharacter* Character = GameServer()->m_apPlayers[Cid]->GetCharacter();
+	CCharacter* Character = GameServer()->m_apPlayers[ClientID]->GetCharacter();
 	if(Character)
 	{
 		for(int fi = 0; fi < 2; fi++)
@@ -122,35 +123,36 @@ bool CGameControllerFC::CanBeMovedOnBalance(int Cid)
 	return true;
 }
 
-bool CGameControllerFC::OnRaceStart(int ID, float StartAddTime, bool Check)
+bool CGameControllerFC::OnRaceStart(int ClientID, float StartAddTime, bool Check)
 {
-	CRaceData *p = &m_aRace[ID];
+	CRaceData *p = &m_aRace[ClientID];
 	if(p->m_RaceState == RACE_STARTED)
 		return false;
 	
-	CGameControllerRACE::OnRaceStart(ID, StartAddTime, false);
+	CGameControllerNoTeamRace::OnRaceStart(ClientID, StartAddTime, false);
 	
-	m_apPlFlags[ID] = new CFlag(&GameServer()->m_World, GameServer()->m_apPlayers[ID]->GetTeam()^1, GameServer()->GetPlayerChar(ID)->m_Pos, GameServer()->GetPlayerChar(ID));
-	GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_EN, ID);
+	m_apPlFlags[ClientID] = new CFlag(&GameServer()->m_World, GameServer()->m_apPlayers[ClientID]->GetTeam()^1, GameServer()->GetPlayerChar(ClientID)->m_Pos, GameServer()->GetPlayerChar(ClientID));
+	GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_EN, ClientID);
 
 	return true;
 }
 
-bool CGameControllerFC::OnRaceEnd(int ID, float FinishTime)
+bool CGameControllerFC::OnRaceEnd(int ClientID, float FinishTime)
 {
-	if(!CGameControllerRACE::OnRaceEnd(ID, FinishTime))
+	if(!CGameControllerNoTeamRace::OnRaceEnd(ClientID, FinishTime))
 		return false;
 
-	if(m_apPlFlags[ID])
+	if(m_apPlFlags[ClientID])
 	{
-		m_apPlFlags[ID]->Reset();
-		m_apPlFlags[ID] = 0;
+		m_apPlFlags[ClientID]->Reset();
+		m_apPlFlags[ClientID] = 0;
 
-		// reset pickups
-		GameServer()->m_apPlayers[ID]->m_ResetPickups = true;
+		// respawn pickups
+		for(CEntity *pEnt = GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_PICKUP); pEnt; pEnt = pEnt->TypeNext())
+			((CPickup *)pEnt)->Respawn(ClientID);
 
 		// sound \o/
-		GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, ID);
+		GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, ClientID);
 	}
 
 	return true;

@@ -299,14 +299,14 @@ void CCharacter::FireWeapon()
 
 			CCharacter *apEnts[MAX_CLIENTS];
 			int Hits = 0;
-			int Num = GameServer()->m_World.FindEntities(ProjStartPos, m_ProximityRadius*0.5f, (CEntity**)apEnts,
+			int Num = GameServer()->m_World.FindEntities(ProjStartPos, m_ProximityRadius, (CEntity**)apEnts,
 														MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER, m_Team);
 
 			for (int i = 0; i < Num; ++i)
 			{
 				CCharacter *pTarget = apEnts[i];
 
-				if ((pTarget == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
+				if ((pTarget == this))
 					continue;
 
 				// set his velocity to fast upward (for now)
@@ -699,9 +699,18 @@ void CCharacter::Tick()
 		if(Jumped&3 && m_Core.m_Jumped != Jumped)
 			m_Core.m_Jumped = Jumped;
 				
+		for(int i = 0;i<MAX_CLIENTS;i++)
+		{
+			if(GameServer()->m_apPlayers[i] && i!=m_pPlayer->GetCID() && GameServer()->m_apPlayers[i]->GetCharacter() 
+			&& GameServer()->m_apPlayers[i]->GetCharacter()->m_Core.m_HookedPlayer == m_pPlayer->GetCID())
+			{
+				GameServer()->GetPlayerChar(i)->m_Core.m_HookedPlayer = -1;
+				GameServer()->GetPlayerChar(i)->m_Core.m_HookState = HOOK_RETRACTED;
+				GameServer()->GetPlayerChar(i)->m_Core.m_HookPos = m_Core.m_Pos;
+			}
+		}
+
 		m_Core.m_HookedPlayer = -1;
-		m_Core.m_HookState = HOOK_RETRACTED;
-		m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
 		m_Core.m_HookState = HOOK_RETRACTED;
 		m_Core.m_Pos = pRace->m_pTeleporter[z-1];
 		m_Core.m_HookPos = m_Core.m_Pos;
@@ -1031,7 +1040,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 
 void CCharacter::Snap(int SnappingClient)
 {
-	if(NetworkClipped(SnappingClient) || (!GameServer()->m_apPlayers[SnappingClient]->m_ShowOthers && SnappingClient != m_pPlayer->GetCID()))
+	if(NetworkClipped(SnappingClient) || (!GameServer()->m_apPlayers[SnappingClient]->m_ShowOthers && SnappingClient != m_pPlayer->GetCID() && GameServer()->m_apPlayers[SnappingClient]->GetSnappingTeam() == -1))
 		return;
 
 	CNetObj_Character *pCharacter = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));

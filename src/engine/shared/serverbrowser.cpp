@@ -75,15 +75,11 @@ void CStatsServerBrowser::AddMaster(const char *pHostname)
 	str_copy(pMasterServer->m_aHostname, pHostname, sizeof(pMasterServer->m_aHostname));
 	
 	if(m_pMasterServers)
-	{
 		m_pMasterServersLast->m_pNext = pMasterServer;
-		m_pMasterServersLast = pMasterServer;
-	}
 	else
-	{
 		m_pMasterServers = pMasterServer;
-		m_pMasterServersLast = pMasterServer;
-	}
+
+	m_pMasterServersLast = pMasterServer;
 }
 
 void CStatsServerBrowser::CheckMasterDone(CMasterServerEntry *pMasterServer)
@@ -136,6 +132,7 @@ void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 	else if(pPacket->m_DataSize >= sizeof(SERVERBROWSE_LIST) && mem_comp(pPacket->m_pData, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST)) == 0)
 	{
 		CMasterServerEntry *pMasterServer = FindMaster(&pPacket->m_Address);
+		int MasterServerIndex = GetMasterIndex(&pPacket->m_Address);
 		if(!pMasterServer)
 		{
 			dbg_msg("stats/browser", "warning: received server list from non-master, addr=%s", aAddressStr);
@@ -168,7 +165,7 @@ void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 			}
 			Addr.port = (pAddrs[i].m_aPort[0]<<8) | pAddrs[i].m_aPort[1];
 
-			AddServer(&Addr, INFOVERSION_2);
+			AddServer(&Addr, INFOVERSION_2, MasterServerIndex);
 		}
 		pMasterServer->m_NumGotServers += Num;
 
@@ -177,6 +174,7 @@ void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 	else if(pPacket->m_DataSize >= sizeof(SERVERBROWSE_LIST_LEGACY) && mem_comp(pPacket->m_pData, SERVERBROWSE_LIST_LEGACY, sizeof(SERVERBROWSE_LIST_LEGACY)) == 0)
 	{
 		CMasterServerEntry *pMasterServer = FindMaster(&pPacket->m_Address);
+		int MasterServerIndex = GetMasterIndex(&pPacket->m_Address);
 		if(!pMasterServer)
 		{
 			dbg_msg("stats/browser", "warning: received server list from non-master, addr=%s", aAddressStr);
@@ -205,7 +203,7 @@ void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 			Addr.ip[3] = pAddrs[i].m_aIp[3];
 			Addr.port = pAddrs[i].m_Port;
 
-			AddServer(&Addr, INFOVERSION_1);
+			AddServer(&Addr, INFOVERSION_1, MasterServerIndex);
 		}
 		pMasterServer->m_NumGotServers += Num;
 		
@@ -252,6 +250,7 @@ void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 			pServer->m_GotInfo = 1;
 			pServer->m_Done = 1;
 			pServer->m_Info.m_Latency = time_get() - pServer->m_RequestTime;
+			pServer->m_Info.m_MasterServer = pServer->m_MasterServer;
 			m_NumReceivedServers++;
 		}
 
@@ -262,6 +261,17 @@ void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 	}
 }
 
+const char *CStatsServerBrowser::MasterServerHostname(int Index) const
+{
+	CMasterServerEntry *pMasterServer = m_pMasterServers;
+	while(pMasterServer && Index)
+	{
+		pMasterServer = pMasterServer->m_pNext;
+		Index--;
+	}
+	return (pMasterServer) ? pMasterServer->m_aHostname : 0;
+}
+
 CStatsServerBrowser::CMasterServerEntry *CStatsServerBrowser::FindMaster(const NETADDR *pAddr)
 {
 	CMasterServerEntry *pMasterServer = m_pMasterServers;
@@ -270,7 +280,19 @@ CStatsServerBrowser::CMasterServerEntry *CStatsServerBrowser::FindMaster(const N
 	return pMasterServer;
 }
 
-void CStatsServerBrowser::AddServer(const NETADDR *pAddr, int InfoVersion)
+int CStatsServerBrowser::GetMasterIndex(const NETADDR *pAddr)
+{
+	int i;
+	CMasterServerEntry *pMasterServer = m_pMasterServers;
+	while(pMasterServer && net_addr_comp(pAddr, &pMasterServer->m_Addr) != 0)
+	{
+		pMasterServer = pMasterServer->m_pNext;
+		i++;
+	}
+	return (pMasterServer) ? i : -1;
+}
+
+void CStatsServerBrowser::AddServer(const NETADDR *pAddr, int InfoVersion, int Master)
 {
 	if(Find(pAddr))
 	{
@@ -284,7 +306,8 @@ void CStatsServerBrowser::AddServer(const NETADDR *pAddr, int InfoVersion)
 	mem_zero(pServerEntry, sizeof(*pServerEntry));
 	pServerEntry->m_Addr = *pAddr;
 	pServerEntry->m_InfoVersion = InfoVersion;
-	
+	pServerEntry->m_MasterServer = Master;
+
 	if(m_pServersLast)
 	{
 		m_pServersLast->m_pNext = pServerEntry;

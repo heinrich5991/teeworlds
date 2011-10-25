@@ -41,6 +41,8 @@ public:
 	CClient m_aClients[MAX_CLIENTS];
 	char m_aAddress[NETADDR_MAXSTRSIZE];
 
+	int m_MasterServer;
+
 	int m_Version;
 };
 
@@ -80,6 +82,7 @@ private:
 		int m_RequestTries;
 		int m_GotInfo;
 		int m_Done;
+		int m_MasterServer;
 		CServerInfo m_Info;
 
 		CServerEntry *m_pNext;
@@ -105,6 +108,8 @@ public:
 
 	const CServerInfo *ServerInfo(int Index) const;
 
+	const char *MasterServerHostname(int Index) const;
+
 private:
 	void ClearServers();
 	CServerEntry *Find(const NETADDR *pAddr);
@@ -112,7 +117,8 @@ private:
 	int UpdateMasters();
 	int RequestNextServerInfo();
 	CMasterServerEntry *FindMaster(const NETADDR *pAddr);
-	void AddServer(const NETADDR *pAddr, int InfoVersion);
+	int GetMasterIndex(const NETADDR *pAddr);
+	void AddServer(const NETADDR *pAddr, int InfoVersion, int Master);
 	int Done() const;
 	void ResetMasterServers();
 	void CheckMasterDone(CMasterServerEntry *pMasterServer);

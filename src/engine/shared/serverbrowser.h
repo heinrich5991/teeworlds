@@ -44,10 +44,9 @@ public:
 	int m_Version;
 };
 
-
 class CStatsServerBrowser
 {
-public:
+private:
 	enum
 	{
 		MAX_ACTIONS=50,
@@ -86,6 +85,7 @@ public:
 		CServerEntry *m_pNext;
 	};
 
+public:
 	CStatsServerBrowser();
 	~CStatsServerBrowser();
 
@@ -98,7 +98,7 @@ public:
 	int NumNotReceivedServers() const { return m_NumServers - m_NumReceivedServers; };
 
 	void AddMaster(const char *pHostname);
-	
+
 	const NETADDR *ReceivedServer(int Index) const;
 	const NETADDR *NotReceivedServer(int Index) const;
 	const NETADDR *Server(int Index) const;

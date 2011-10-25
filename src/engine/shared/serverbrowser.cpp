@@ -282,7 +282,7 @@ CStatsServerBrowser::CMasterServerEntry *CStatsServerBrowser::FindMaster(const N
 
 int CStatsServerBrowser::GetMasterIndex(const NETADDR *pAddr)
 {
-	int i;
+	int i = 0;
 	CMasterServerEntry *pMasterServer = m_pMasterServers;
 	while(pMasterServer && net_addr_comp(pAddr, &pMasterServer->m_Addr) != 0)
 	{

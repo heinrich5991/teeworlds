@@ -323,6 +323,7 @@ void CCharacter::FireWeapon()
 					if(pController->m_Bomb.m_ClientID == m_pPlayer->GetCID())
 					{
 						pController->MakeBomb(pTarget->m_pPlayer->GetCID());
+						pTarget->m_ReloadTimer = Server()->TickSpeed()/2;
 						m_pPlayer->m_Score += 5;
 					}
 					else if(pController->m_Bomb.m_ClientID == pTarget->m_pPlayer->GetCID())

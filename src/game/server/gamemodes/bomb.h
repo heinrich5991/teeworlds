@@ -30,6 +30,8 @@ public:
 		int m_ClientID;
 		int m_Tick;
 	} m_Bomb;
+
+	bool m_Running;
 };
 
 #endif

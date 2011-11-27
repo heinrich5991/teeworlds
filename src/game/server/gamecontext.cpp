@@ -136,8 +136,8 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 			for(int y = -1; y <= 1; y += 2)
 			{
 				CNetEvent_Explosion *pEvent = (CNetEvent_Explosion *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(CNetEvent_Explosion));
-				pEvent->m_X = (int)x * 64;
-				pEvent->m_Y = (int)y * 64;
+				pEvent->m_X = (int) Pos.x + x * 64;
+				pEvent->m_Y = (int) Pos.y + y * 64;
 			}
 	}
 

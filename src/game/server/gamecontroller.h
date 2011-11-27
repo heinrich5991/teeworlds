@@ -65,6 +65,8 @@ public:
 
 	bool IsTeamplay() const;
 
+	virtual bool IsBomb() const { return false; }
+
 	IGameController(class CGameContext *pGameServer);
 	virtual ~IGameController();
 

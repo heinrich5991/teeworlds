@@ -4,6 +4,7 @@
 #include <engine/shared/config.h>
 #include <game/server/gamecontext.h>
 #include <game/mapitems.h>
+#include <game/server/gamemodes/bomb.h>
 
 #include "character.h"
 #include "laser.h"
@@ -57,6 +58,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_EmoteStop = -1;
 	m_LastAction = -1;
 	m_ActiveWeapon = WEAPON_GUN;
+	if(GameServer()->m_pController->IsBomb())
+		m_ActiveWeapon = WEAPON_HAMMER;
 	m_LastWeapon = WEAPON_HAMMER;
 	m_QueuedWeapon = -1;
 
@@ -76,6 +79,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_Alive = true;
 
 	GameServer()->m_pController->OnCharacterSpawn(this);
+
+	m_FreezeTick = -1;
 
 	return true;
 }
@@ -311,9 +316,32 @@ void CCharacter::FireWeapon()
 				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage,
 					m_pPlayer->GetCID(), m_ActiveWeapon);
 				Hits++;
+
+				if(GameServer()->m_pController->IsBomb())
+				{
+					CGameControllerBOMB *pController = (CGameControllerBOMB *)GameServer()->m_pController;
+					if(pController->m_Bomb.m_ClientID == m_pPlayer->GetCID())
+					{
+						pController->MakeBomb(pTarget->m_pPlayer->GetCID());
+						m_pPlayer->m_Score += 5;
+					}
+					else if(pController->m_Bomb.m_ClientID == pTarget->m_pPlayer->GetCID())
+					{
+						pController->m_Bomb.m_Tick -= 50;
+						if(pController->m_Bomb.m_Tick < 1)
+							pController->m_Bomb.m_Tick = 1;
+						m_pPlayer->m_Score += 5;
+					}
+					else
+					{
+						if(pTarget->m_FreezeTick == -1)
+							pTarget->m_FreezeTick = SERVER_TICK_SPEED;
+						m_pPlayer->m_Score++;
+					}
+				}
 			}
 
-			// if we Hit anything, we have to wait for the reload
+			// if we hit anything, we have to wait for the reload
 			if(Hits)
 				m_ReloadTimer = Server()->TickSpeed()/3;
 
@@ -499,6 +527,9 @@ void CCharacter::SetEmote(int Emote, int Tick)
 
 void CCharacter::OnPredictedInput(CNetObj_PlayerInput *pNewInput)
 {
+	if(m_FreezeTick != -1)
+		return;
+		
 	// check for changes
 	if(mem_comp(&m_Input, pNewInput, sizeof(CNetObj_PlayerInput)) != 0)
 		m_LastAction = Server()->Tick();
@@ -514,6 +545,9 @@ void CCharacter::OnPredictedInput(CNetObj_PlayerInput *pNewInput)
 
 void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 {
+	if(m_FreezeTick != -1)
+		return;
+		
 	mem_copy(&m_LatestPrevInput, &m_LatestInput, sizeof(m_LatestInput));
 	mem_copy(&m_LatestInput, pNewInput, sizeof(m_LatestInput));
 
@@ -567,6 +601,9 @@ void CCharacter::Tick()
 
 	// Previnput
 	m_PrevInput = m_Input;
+
+	if(m_FreezeTick != -1)
+		m_FreezeTick--;
 	return;
 }
 

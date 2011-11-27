@@ -90,6 +90,7 @@ void CGameControllerBOMB::OnCharacterSpawn(CCharacter *pChr)
 {
 	pChr->IncreaseHealth(10);
 	pChr->GiveWeapon(WEAPON_HAMMER, -1);
+	OnPlayerInfoChange(pChr->GetPlayer());
 }
 
 int CGameControllerBOMB::OnCharacterDeath(CCharacter *pChr, CPlayer *pKiller, int Weapon)

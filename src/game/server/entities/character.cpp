@@ -324,20 +324,17 @@ void CCharacter::FireWeapon()
 					{
 						pController->MakeBomb(pTarget->m_pPlayer->GetCID());
 						pTarget->m_ReloadTimer = Server()->TickSpeed()/2;
-						m_pPlayer->m_Score += 5;
 					}
 					else if(pController->m_Bomb.m_ClientID == pTarget->m_pPlayer->GetCID())
 					{
-						pController->m_Bomb.m_Tick -= 50;
+						pController->m_Bomb.m_Tick -= SERVER_TICK_SPEED;
 						if(pController->m_Bomb.m_Tick < 1)
 							pController->m_Bomb.m_Tick = 1;
-						m_pPlayer->m_Score += 5;
 					}
 					else
 					{
 						if(pTarget->m_FreezeTick == -1)
 							pTarget->m_FreezeTick = SERVER_TICK_SPEED;
-						m_pPlayer->m_Score++;
 					}
 				}
 			}

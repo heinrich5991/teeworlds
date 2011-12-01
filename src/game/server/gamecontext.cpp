@@ -800,8 +800,10 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			return;
 		}
 
+		char aBuf[128];
+
 		// Switch team on given client and kill/respawn him
-		if(m_pController->CanJoinTeam(pMsg->m_Team, ClientID))
+		if(m_pController->CanJoinTeam(pMsg->m_Team, ClientID, aBuf, sizeof(aBuf)))
 		{
 			if(m_pController->CanChangeTeam(pPlayer, pMsg->m_Team))
 			{
@@ -816,11 +818,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				SendBroadcast("Teams must be balanced, please join other team", ClientID);
 		}
 		else
-		{
-			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "Only %d active players are allowed", g_Config.m_SvMaxClients-g_Config.m_SvSpectatorSlots);
-			SendBroadcast(aBuf, ClientID);
-		}
+			if(aBuf[0])
+				SendBroadcast(aBuf, ClientID);
 	}
 	else if (MsgID == NETMSGTYPE_CL_SETSPECTATORMODE && !m_World.m_Paused)
 	{

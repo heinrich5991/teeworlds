@@ -9,6 +9,8 @@
 #include "gamecontroller.h"
 #include "gamecontext.h"
 
+#include "gamemodes/bomb.h" // TODO: remove this
+
 
 IGameController::IGameController(class CGameContext *pGameServer)
 {
@@ -221,6 +223,9 @@ void IGameController::StartRound()
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "start round type='%s' teamplay='%d'", m_pGameType, m_GameFlags&GAMEFLAG_TEAMS);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+
+	if(IsBomb())
+		((CGameControllerBOMB *)this)->StartBombRound();
 }
 
 void IGameController::ChangeMap(const char *pToMap)
@@ -539,7 +544,7 @@ void IGameController::Snap(int SnappingClient)
 
 	pGameInfoObj->m_GameFlags = m_GameFlags;
 	pGameInfoObj->m_GameStateFlags = 0;
-	if(m_GameOverTick != -1 && !IsBomb())
+	if(m_GameOverTick != -1)
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_GAMEOVER;
 	if(m_SuddenDeath)
 		pGameInfoObj->m_GameStateFlags |= GAMESTATEFLAG_SUDDENDEATH;

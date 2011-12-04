@@ -29,12 +29,9 @@ void CGameControllerBOMB::MakeBomb(int ClientID)
 		{
 			OnPlayerInfoChange(GameServer()->m_apPlayers[i]);
 			if(ClientID != i)
-				GameServer()->SendChatTarget(i, aBuf);
+				GameServer()->SendBroadcast(aBuf, i);
 			else
-			{
-				GameServer()->SendChatTarget(i, "You are the new bomb!");
-				GameServer()->SendChatTarget(i, "Hit another player before the time runs out!");
-			}
+				GameServer()->SendBroadcast("You are the new bomb\nHit another player before the time runs out!", i);
 		}
 	}
 }
@@ -203,7 +200,7 @@ void CGameControllerBOMB::Tick()
 
 			if(m_Bomb.m_Tick <= 0)
 			{
-				GameServer()->SendChat(-1, CGameContext::CHAT_ALL, "BOOM!");
+				GameServer()->SendBroadcast("BOOM!", -1);
 				GameServer()->CreateExplosion(GameServer()->m_apPlayers[m_Bomb.m_ClientID]->m_ViewPos, m_Bomb.m_ClientID, WEAPON_GAME, false);
 				GameServer()->CreateSound(GameServer()->m_apPlayers[m_Bomb.m_ClientID]->m_ViewPos, SOUND_GRENADE_EXPLODE);
 				GameServer()->m_apPlayers[m_Bomb.m_ClientID]->KillCharacter();

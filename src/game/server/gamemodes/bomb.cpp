@@ -50,7 +50,7 @@ void CGameControllerBOMB::StartBombRound()
 		}
 
 	m_Bomb.m_ClientID = -1;
-	m_Bomb.m_Tick = SERVER_TICK_SPEED * 19 + 1;
+	m_Bomb.m_Tick = SERVER_TICK_SPEED * 20;
 }
 
 void CGameControllerBOMB::EndBombRound(bool RealEnd)
@@ -64,7 +64,7 @@ void CGameControllerBOMB::EndBombRound(bool RealEnd)
 
 void CGameControllerBOMB::MakeRandomBomb()
 {
-	m_Bomb.m_Tick = SERVER_TICK_SPEED * 19 + 1;
+	m_Bomb.m_Tick = SERVER_TICK_SPEED * 20;
 
 	int Alive[MAX_CLIENTS];
 	int NumAlives = 0;
@@ -199,7 +199,7 @@ void CGameControllerBOMB::Tick()
 
 			for(int i = 0; i < MAX_CLIENTS; i++)
 				if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetCharacter())
-					GameServer()->m_apPlayers[i]->GetCharacter()->SetHealth(m_Bomb.m_Tick / SERVER_TICK_SPEED);
+					GameServer()->m_apPlayers[i]->GetCharacter()->SetHealth(m_Bomb.m_Tick / SERVER_TICK_SPEED + 1);
 
 			if(m_Bomb.m_Tick <= 0)
 			{

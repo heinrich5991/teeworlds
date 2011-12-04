@@ -2,8 +2,9 @@
 
 #include "bomb.h"
 
-#include <game/mapitems.h>
+#include <engine/shared/config.h>
 
+#include <game/mapitems.h>
 #include <game/server/gamecontext.h>
 
 CGameControllerBOMB::CGameControllerBOMB(CGameContext *pGameServer)
@@ -38,23 +39,42 @@ void CGameControllerBOMB::MakeBomb(int ClientID)
 
 void CGameControllerBOMB::StartBombRound()
 {
-	for(int i = 0; i < MAX_CLIENTS; i++)
-		if(GameServer()->m_apPlayers[i] && m_aClients[i].m_State == STATE_ACTIVE)
-		{
-			GameServer()->m_apPlayers[i]->SetTeam(TEAM_RED, true);
-			GameServer()->m_apPlayers[i]->Respawn();
-			m_aClients[i].m_State = STATE_ALIVE;
-		}
-
 	m_Bomb.m_ClientID = -1;
 	m_Bomb.m_Tick = SERVER_TICK_SPEED * 20;
 }
 
 void CGameControllerBOMB::EndBombRound(bool RealEnd)
 {
+	int Topscore = 0;
+	int TopscoreCount = 0;
 	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
 		if(GameServer()->m_apPlayers[i] && m_aClients[i].m_State >= STATE_ALIVE)
 			GameServer()->m_apPlayers[i]->m_Score++;
+		if(GameServer()->m_apPlayers[i] && m_aClients[i].m_State == STATE_ACTIVE)
+		{
+			GameServer()->m_apPlayers[i]->SetTeam(TEAM_RED, true);
+			GameServer()->m_apPlayers[i]->Respawn();
+			m_aClients[i].m_State = STATE_ALIVE;
+			int Score = GameServer()->m_apPlayers[i]->m_Score;
+			if(Score > Topscore)
+			{
+				Topscore = Score;
+				TopscoreCount = 1;
+			}
+			else if(Score == Topscore)
+				TopscoreCount++;
+		}
+
+	}
+
+	if(TopscoreCount == 1)
+	{
+		if(g_Config.m_SvScorelimit && Topscore >= g_Config.m_SvScorelimit)
+			RealEnd = true;
+		else if(m_SuddenDeath)
+			RealEnd = true;
+	}
 
 	EndRound(RealEnd);
 }
@@ -98,12 +118,14 @@ void CGameControllerBOMB::DoWincheck()
 			}
 		}
 
+		if(!m_SuddenDeath && g_Config.m_SvTimelimit && (Server()->Tick()-m_RoundStartTick) >= g_Config.m_SvTimelimit * Server()->TickSpeed() * 60)
+			m_SuddenDeath = true;
+
 		if(NumActivePlayers >= 1)
 		{
 			if(NumLivingPlayers <= 1 && NumActivePlayers > 1)
 			{
 				EndBombRound(false);
-				GameServer()->SendBroadcast("Round is over!", -1);
 				GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE);
 			}
 		}

@@ -46,6 +46,7 @@ protected:
 
 	char m_aMapWish[128];
 
+	bool m_RealReset;
 
 	int m_RoundStartTick;
 	int m_GameOverTick;
@@ -75,7 +76,7 @@ public:
 	void DoWarmup(int Seconds);
 
 	void StartRound();
-	void EndRound();
+	void EndRound(bool RealReset = true);
 	void ChangeMap(const char *pToMap);
 
 	bool IsFriendlyFire(int ClientID1, int ClientID2);

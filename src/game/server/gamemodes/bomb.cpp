@@ -53,13 +53,13 @@ void CGameControllerBOMB::StartBombRound()
 	m_Bomb.m_Tick = SERVER_TICK_SPEED * 19 + 1;
 }
 
-void CGameControllerBOMB::EndBombRound()
+void CGameControllerBOMB::EndBombRound(bool RealEnd)
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		if(GameServer()->m_apPlayers[i] && m_aClients[i].m_State >= STATE_ALIVE)
 			GameServer()->m_apPlayers[i]->m_Score++;
 
-	EndRound();
+	EndRound(RealEnd);
 }
 
 void CGameControllerBOMB::MakeRandomBomb()
@@ -105,13 +105,13 @@ void CGameControllerBOMB::DoWincheck()
 		{
 			if(NumLivingPlayers <= 1 && NumActivePlayers > 1)
 			{
-				EndBombRound();
+				EndBombRound(false);
 				GameServer()->SendBroadcast("Round is over!", -1);
 				GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE);
 			}
 		}
 		else
-			EndBombRound();
+			EndBombRound(true);
 	}
 }
 
@@ -197,6 +197,10 @@ void CGameControllerBOMB::Tick()
 			if(m_Bomb.m_Tick)
 				m_Bomb.m_Tick--;
 
+			for(int i = 0; i < MAX_CLIENTS; i++)
+				if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetCharacter())
+					GameServer()->m_apPlayers[i]->GetCharacter()->SetHealth(m_Bomb.m_Tick / SERVER_TICK_SPEED);
+
 			if(m_Bomb.m_Tick <= 0)
 			{
 				GameServer()->SendChat(-1, CGameContext::CHAT_ALL, "BOOM!");
@@ -206,9 +210,6 @@ void CGameControllerBOMB::Tick()
 			}
 			else if(m_Bomb.m_Tick % SERVER_TICK_SPEED == 0)
 			{
-				char aBuf[8];
-				str_format(aBuf, sizeof(aBuf), "%d", m_Bomb.m_Tick / SERVER_TICK_SPEED);
-				GameServer()->SendBroadcast(aBuf, -1);
 				GameServer()->CreateSound(GameServer()->m_apPlayers[m_Bomb.m_ClientID]->m_ViewPos, SOUND_HOOK_NOATTACH);
 				if(m_Bomb.m_Tick / SERVER_TICK_SPEED <= 10)
 					GameServer()->CreateDamageInd(GameServer()->m_apPlayers[m_Bomb.m_ClientID]->m_ViewPos, 0, m_Bomb.m_Tick / SERVER_TICK_SPEED);

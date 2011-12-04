@@ -173,10 +173,12 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 	return false;
 }
 
-void IGameController::EndRound()
+void IGameController::EndRound(bool RealReset)
 {
 	if(m_Warmup) // game can't end when we are running warmup
 		return;
+
+	m_RealReset = RealReset;
 
 	GameServer()->m_World.m_Paused = true;
 	m_GameOverTick = Server()->Tick();
@@ -212,7 +214,8 @@ void IGameController::StartRound()
 {
 	ResetGame();
 
-	m_RoundStartTick = Server()->Tick();
+	if(m_RealReset)
+		m_RoundStartTick = Server()->Tick();
 	m_SuddenDeath = 0;
 	m_GameOverTick = -1;
 	GameServer()->m_World.m_Paused = false;
@@ -220,9 +223,13 @@ void IGameController::StartRound()
 	m_aTeamscore[TEAM_BLUE] = 0;
 	m_ForceBalanced = false;
 	Server()->DemoRecorder_HandleAutoStart();
-	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "start round type='%s' teamplay='%d'", m_pGameType, m_GameFlags&GAMEFLAG_TEAMS);
-	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+
+	if(m_RealReset)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "start round type='%s' teamplay='%d'", m_pGameType, m_GameFlags&GAMEFLAG_TEAMS);
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+	}
 
 	if(IsBomb())
 		((CGameControllerBOMB *)this)->StartBombRound();
@@ -423,11 +430,14 @@ void IGameController::Tick()
 	if(m_GameOverTick != -1)
 	{
 		// game over.. wait for restart
-		if(Server()->Tick() > m_GameOverTick+Server()->TickSpeed()*10)
+		if(Server()->Tick() > m_GameOverTick+Server()->TickSpeed()*10
+			|| (!m_RealReset && Server()->Tick() > m_GameOverTick + Server()->TickSpeed() * 3))
 		{
-			CycleMap();
+			if(m_RealReset)
+				CycleMap();
 			StartRound();
-			m_RoundCount++;
+			if(m_RealReset)
+				m_RoundCount++;
 		}
 	}
 

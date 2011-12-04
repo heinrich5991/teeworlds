@@ -15,7 +15,7 @@ public: CGameControllerBOMB(class CGameContext *pGameServer);
 	void MakeRandomBomb();
 
 	void StartBombRound();
-	void EndBombRound();
+	void EndBombRound(bool RealEnd);
 
 	virtual void DoWincheck();
 

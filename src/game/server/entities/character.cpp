@@ -704,6 +704,12 @@ bool CCharacter::IncreaseArmor(int Amount)
 	return true;
 }
 
+void CCharacter::SetHealth(int Amount)
+{
+	m_Health = clamp(Amount, 0, 10);
+	m_Armor = clamp(Amount - 10, 0, 10);
+}
+
 void CCharacter::Die(int Killer, int Weapon)
 {
 	// we got to wait 0.5 secs before respawning

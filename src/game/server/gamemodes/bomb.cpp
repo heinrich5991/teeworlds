@@ -44,7 +44,7 @@ void CGameControllerBOMB::StartBombRound()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		if(GameServer()->m_apPlayers[i] && m_aClients[i].m_State == STATE_ACTIVE)
 		{
-			GameServer()->m_apPlayers[i]->SetTeam(TEAM_RED);
+			GameServer()->m_apPlayers[i]->SetTeam(TEAM_RED, true);
 			GameServer()->m_apPlayers[i]->Respawn();
 			m_aClients[i].m_State = STATE_ALIVE;
 		}
@@ -96,7 +96,7 @@ void CGameControllerBOMB::DoWincheck()
 					if(m_aClients[i].m_State >= STATE_ALIVE)
 						NumLivingPlayers++;
 					else if(GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
-						GameServer()->m_apPlayers[i]->SetTeam(TEAM_SPECTATORS);
+						GameServer()->m_apPlayers[i]->SetTeam(TEAM_SPECTATORS, true);
 				}
 			}
 		}

@@ -20,7 +20,7 @@ public:
 
 	void TryRespawn();
 	void Respawn();
-	void SetTeam(int Team);
+	void SetTeam(int Team, bool Game = false);
 	int GetTeam() const { return m_Team; };
 	int GetCID() const { return m_ClientID; };
 

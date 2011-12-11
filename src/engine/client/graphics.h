@@ -82,6 +82,7 @@ public:
 
 	virtual void MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY);
 	virtual void GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY);
+	virtual bool OnScreen(float X, float Y, float Width, float Height);
 
 	virtual void LinesBegin();
 	virtual void LinesEnd();
@@ -95,6 +96,26 @@ public:
 	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType);
 
 	void ScreenshotDirect(const char *pFilename);
+    void CapturePixelStreamDirect(const char *pPath, int Frame);
+    static void CapturePixelStreamThread(void *pUser);
+	struct CaptureThreadStruct
+	{
+	    unsigned char *m_pPixelData;
+	    int m_w;
+	    int m_h;
+	    char m_aPath[1024];
+	    int m_Frame;
+	    CGraphics_OpenGL *m_pSelf;
+	};
+	static void ScreenShotThread(void *pUser);
+	struct ScreenshotThreadStruct
+	{
+	    unsigned char *m_pPixelData;
+	    int m_w;
+	    int m_h;
+	    char m_aFilename[1024];
+	    CGraphics_OpenGL *m_pSelf;
+	};
 
 	virtual void TextureSet(int TextureID);
 

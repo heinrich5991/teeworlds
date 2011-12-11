@@ -121,7 +121,7 @@ void CEmoticon::OnRender()
 	if (length(m_SelectorMouse) > 100)
 		m_SelectedEmote = (int)(SelectedAngle / (2*pi) * NUM_EMOTICONS);
 
-	CUIRect Screen = *UI()->Screen();
+    CUIRect Screen = *UI()->Screen();
 
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 
@@ -155,12 +155,12 @@ void CEmoticon::OnRender()
 
 	Graphics()->QuadsEnd();
 
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1,1,1,1);
+    Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
+    Graphics()->QuadsBegin();
+    Graphics()->SetColor(1,1,1,1);
 	IGraphics::CQuadItem QuadItem(m_SelectorMouse.x+Screen.w/2,m_SelectorMouse.y+Screen.h/2,24,24);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
+    Graphics()->QuadsEnd();
 }
 
 void CEmoticon::Emote(int Emoticon)

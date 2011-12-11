@@ -29,6 +29,8 @@
 #include "register.h"
 #include "server.h"
 
+#include <zlib.h> //crc32
+
 #if defined(CONF_FAMILY_WINDOWS)
 	#define _WIN32_WINNT 0x0501
 	#define WIN32_LEAN_AND_MEAN
@@ -627,6 +629,20 @@ void CServer::SendMap(int ClientID)
 	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
 }
 
+void CServer::SendFile(int ClientID)
+{
+    dbg_msg("Mod", "Now we scares the client. Buuuh");
+	CMsgPacker Msg(NETMSG_FILE_CHANGE);
+	Msg.AddInt(m_lModFiles.size());
+	int size = 0;
+	for (array<CModFile>::range r = m_lModFiles.all(); !r.empty(); r.pop_front())
+	{
+	    size = size + r.front().m_Size;
+	}
+	Msg.AddInt(size);
+	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
+}
+
 void CServer::SendConnectionReady(int ClientID)
 {
 	CMsgPacker Msg(NETMSG_CON_READY);
@@ -677,7 +693,7 @@ void CServer::SendRconCmdRem(const IConsole::CCommandInfo *pCommandInfo, int Cli
 void CServer::UpdateClientRconCommands()
 {
 	int ClientID = Tick() % MAX_CLIENTS;
-
+		
 	if(m_aClients[ClientID].m_State != CClient::STATE_EMPTY && m_aClients[ClientID].m_Authed)
 	{
 		int ConsoleAccessLevel = m_aClients[ClientID].m_Authed == AUTHED_ADMIN ? IConsole::ACCESS_LEVEL_ADMIN : IConsole::ACCESS_LEVEL_MOD;
@@ -712,16 +728,15 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if(m_aClients[ClientID].m_State == CClient::STATE_AUTH)
 			{
 				const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
-				if(str_comp(pVersion, GameServer()->NetVersion()) != 0)
+				const char *pPassword = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+				const char *pNClient = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+				if(str_comp(pVersion, GameServer()->NetVersion()) != 0 && str_comp(pNClient, GameServer()->NetVersion()) != 0)
 				{
 					// wrong version
-					char aReason[256];
-					str_format(aReason, sizeof(aReason), "Wrong version. Server is running '%s' and client '%s'", GameServer()->NetVersion(), pVersion);
-					m_NetServer.Drop(ClientID, aReason);
+					m_NetServer.Drop(ClientID, "You need the N-Client to join this Server.\nnclient.n-lvl.com\nTake your client to the Next Level!");
 					return;
 				}
 
-				const char *pPassword = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 				if(g_Config.m_Password[0] != 0 && str_comp(g_Config.m_Password, pPassword) != 0)
 				{
 					// wrong password
@@ -730,6 +745,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				}
 
 				m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
+				SendFile(ClientID);
 				SendMap(ClientID);
 			}
 		}
@@ -940,7 +956,62 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			CMsgPacker Msg(NETMSG_PING_REPLY);
 			SendMsgEx(&Msg, 0, ClientID, true);
 		}
-		else
+		else if(Msg == NETMSG_REQUEST_FILE_INDEX)
+		{
+			int Index = Unpacker.GetInt();
+
+			// drop faulty map data requests
+
+			if(Index < 0 || Index >= m_lModFiles.size())
+				return;
+
+			CMsgPacker Msg(NETMSG_FILE_INDEX);
+			Msg.AddString(m_lModFiles[Index].m_aName, 0);
+			Msg.AddInt(m_lModFiles[Index].m_Type);
+			Msg.AddInt(m_lModFiles[Index].m_Crc);
+			Msg.AddInt(m_lModFiles[Index].m_Size);
+			SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
+		}
+		else if(Msg == NETMSG_REQUEST_FILE_DATA)
+		{
+			int Index = Unpacker.GetInt();
+			int Chunk = Unpacker.GetInt();
+			int ChunkSize = 1024-128;
+			int Offset = Chunk * ChunkSize;
+			int Last = 0;
+
+            //dbg_msg("x", "\a");
+
+			// drop faulty file data requests
+			if(Index < 0 || Index >= m_lModFiles.size())
+				return;
+			if(Chunk < 0 || Offset > m_lModFiles[Index].m_Size)
+				return;
+
+			if(Offset+ChunkSize >= m_lModFiles[Index].m_Size)
+			{
+				ChunkSize = m_lModFiles[Index].m_Size-Offset;
+				if(ChunkSize < 0)
+					ChunkSize = 0;
+				Last = 1;
+			}
+
+			CMsgPacker Msg(NETMSG_FILE_DATA);
+			Msg.AddInt(Last);
+			Msg.AddInt(m_lModFiles[Index].m_Crc);
+			Msg.AddInt(Chunk);
+			Msg.AddInt(ChunkSize);
+			Msg.AddRaw(&m_lModFiles[Index].m_pCurrentData[Offset], ChunkSize);
+			SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
+
+			if(g_Config.m_Debug)
+			{
+				char aBuf[256];
+				str_format(aBuf, sizeof(aBuf), "sending chunk %d with size %d", Chunk, ChunkSize);
+				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
+			}
+		}
+        else
 		{
 			if(g_Config.m_Debug)
 			{
@@ -991,9 +1062,9 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 
 	p.Reset();
 
-	p.AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
-	str_format(aBuf, sizeof(aBuf), "%d", Token);
-	p.AddString(aBuf, 6);
+		p.AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
+		str_format(aBuf, sizeof(aBuf), "%d", Token);
+		p.AddString(aBuf, 6);
 
 	p.AddString(GameServer()->Version(), 32);
 	p.AddString(g_Config.m_SvName, 64);
@@ -1004,25 +1075,25 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 
 	// flags
 	int i = 0;
-	if(g_Config.m_Password[0]) // password set
+	if(g_Config.m_Password[0])   // password set
 		i |= SERVER_FLAG_PASSWORD;
 	str_format(aBuf, sizeof(aBuf), "%d", i);
 	p.AddString(aBuf, 2);
 
-	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3); // num players
+	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3);  // num players
 	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()-g_Config.m_SvSpectatorSlots); p.AddString(aBuf, 3); // max players
-	str_format(aBuf, sizeof(aBuf), "%d", ClientCount); p.AddString(aBuf, 3); // num clients
+	str_format(aBuf, sizeof(aBuf), "%d", ClientCount); p.AddString(aBuf, 3);  // num clients
 	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()); p.AddString(aBuf, 3); // max clients
 
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
-			p.AddString(ClientName(i), MAX_NAME_LENGTH); // client name
-			p.AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
-			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Country); p.AddString(aBuf, 6); // client country
-			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Score); p.AddString(aBuf, 6); // client score
-			str_format(aBuf, sizeof(aBuf), "%d", GameServer()->IsClientPlayer(i)?1:0); p.AddString(aBuf, 2); // is player?
+			p.AddString(ClientName(i), MAX_NAME_LENGTH);  // client name
+			p.AddString(ClientClan(i), MAX_CLAN_LENGTH);  // client clan
+			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Country); p.AddString(aBuf, 6);  // client country
+			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Score); p.AddString(aBuf, 6);  // client score
+			str_format(aBuf, sizeof(aBuf), "%d", GameServer()->IsClientPlayer(i)?1:0); p.AddString(aBuf, 2);  // is player?
 		}
 	}
 
@@ -1041,7 +1112,7 @@ void CServer::UpdateServerInfo()
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
 			NETADDR Addr = m_NetServer.ClientAddr(i);
-			SendServerInfo(&Addr, -1);
+			SendServerInfo(&Addr, -1); 	// SERVERBROWSE_OLD_INFO
 		}
 	}
 }
@@ -1147,7 +1218,7 @@ int CServer::LoadMap(const char *pMapName)
 	str_copy(m_aCurrentMap, pMapName, sizeof(m_aCurrentMap));
 	//map_set(df);
 
-	// load complete map into memory for download
+	// load compelate map into memory for download
 	{
 		IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
 		m_CurrentMapSize = (int)io_length(File);
@@ -1158,6 +1229,20 @@ int CServer::LoadMap(const char *pMapName)
 		io_close(File);
 	}
 	return 1;
+}
+
+void CServer::AddModFile(const char *pFileName, int Type)
+{
+    CModFile tmp;
+    str_copy(tmp.m_aName, pFileName, sizeof(tmp.m_aName));
+    tmp.m_Type = (CModFile::FILETYPE)Type;
+    IOHANDLE File = Storage()->OpenFile(pFileName, IOFLAG_READ, IStorage::TYPE_ALL);
+    tmp.m_Size = (int)io_length(File);
+    tmp.m_pCurrentData = (unsigned char *)mem_alloc(tmp.m_Size, 1);
+    io_read(File, tmp.m_pCurrentData, tmp.m_Size);
+    tmp.m_Crc = crc32(tmp.m_Crc, tmp.m_pCurrentData, tmp.m_Size);
+    io_close(File);
+    m_lModFiles.add(tmp);
 }
 
 void CServer::InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole)
@@ -1180,6 +1265,8 @@ int CServer::Run()
 		dbg_msg("server", "failed to load map. mapname='%s'", g_Config.m_SvMap);
 		return -1;
 	}
+	AddModFile("SDL.dll", 1);
+	AddModFile("freetype.dll", 1);
 
 	// start server
 	NETADDR BindAddr;
@@ -1194,6 +1281,7 @@ int CServer::Run()
 		BindAddr.type = NETTYPE_ALL;
 		BindAddr.port = g_Config.m_SvPort;
 	}
+
 
 	if(!m_NetServer.Open(BindAddr, g_Config.m_SvMaxClients, g_Config.m_SvMaxClientsPerIP, 0))
 	{
@@ -1251,6 +1339,7 @@ int CServer::Run()
 						if(m_aClients[c].m_State <= CClient::STATE_AUTH)
 							continue;
 
+						SendFile(c);
 						SendMap(c);
 						m_aClients[c].Reset();
 						m_aClients[c].m_State = CClient::STATE_CONNECTING;
@@ -1372,7 +1461,7 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 	CServer *pServer = (CServer *)pUser;
 	const char *pStr = pResult->GetString(0);
 	int Minutes = 30;
-	const char *pReason = "No reason given";
+  	const char *pReason = "No reason given";
 
 	if(pResult->NumArguments() > 1)
 		Minutes = max(0, pResult->GetInteger(1));
@@ -1426,7 +1515,7 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 		{
 			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "ban command denied");
 			return;
-		}
+	}
 
 		Addr = pServer->m_NetServer.ClientAddr(ClientID);
 		pServer->BanAdd(Addr, Minutes*60, pReason);

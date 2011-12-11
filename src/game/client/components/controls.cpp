@@ -86,24 +86,24 @@ void CControls::OnConsoleInit()
 	Console()->Register("+hook", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputData.m_Hook, "Hook");
 	Console()->Register("+fire", "", CFGFLAG_CLIENT, ConKeyInputCounter, &m_InputData.m_Fire, "Fire");
 
-	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 1}; Console()->Register("+weapon1", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to hammer"); }
-	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 2}; Console()->Register("+weapon2", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to gun"); }
-	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 3}; Console()->Register("+weapon3", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to shotgun"); }
-	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 4}; Console()->Register("+weapon4", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to grenade"); }
-	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 5}; Console()->Register("+weapon5", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to rifle"); }
+	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 1};  Console()->Register("+weapon1", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to hammer"); }
+	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 2};  Console()->Register("+weapon2", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to gun"); }
+	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 3};  Console()->Register("+weapon3", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to shotgun"); }
+	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 4};  Console()->Register("+weapon4", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to grenade"); }
+	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 5};  Console()->Register("+weapon5", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to rifle"); }
 
-	{ static CInputSet s_Set = {this, &m_InputData.m_NextWeapon, 0}; Console()->Register("+nextweapon", "", CFGFLAG_CLIENT, ConKeyInputNextPrevWeapon, (void *)&s_Set, "Switch to next weapon"); }
-	{ static CInputSet s_Set = {this, &m_InputData.m_PrevWeapon, 0}; Console()->Register("+prevweapon", "", CFGFLAG_CLIENT, ConKeyInputNextPrevWeapon, (void *)&s_Set, "Switch to previous weapon"); }
+	{ static CInputSet s_Set = {this, &m_InputData.m_NextWeapon, 0};  Console()->Register("+nextweapon", "", CFGFLAG_CLIENT, ConKeyInputNextPrevWeapon, (void *)&s_Set, "Switch to next weapon"); }
+	{ static CInputSet s_Set = {this, &m_InputData.m_PrevWeapon, 0};  Console()->Register("+prevweapon", "", CFGFLAG_CLIENT, ConKeyInputNextPrevWeapon, (void *)&s_Set, "Switch to previous weapon"); }
 }
 
 void CControls::OnMessage(int Msg, void *pRawMsg)
 {
-	if(Msg == NETMSGTYPE_SV_WEAPONPICKUP)
-	{
-		CNetMsg_Sv_WeaponPickup *pMsg = (CNetMsg_Sv_WeaponPickup *)pRawMsg;
-		if(g_Config.m_ClAutoswitchWeapons)
-			m_InputData.m_WantedWeapon = pMsg->m_Weapon+1;
-	}
+    if(Msg == NETMSGTYPE_SV_WEAPONPICKUP)
+    {
+    	CNetMsg_Sv_WeaponPickup *pMsg = (CNetMsg_Sv_WeaponPickup *)pRawMsg;
+        if(g_Config.m_ClAutoswitchWeapons)
+        	m_InputData.m_WantedWeapon = pMsg->m_Weapon+1;
+    }
 }
 
 int CControls::SnapInput(int *pData)
@@ -171,6 +171,48 @@ int CControls::SnapInput(int *pData)
 			m_InputData.m_TargetY = (int)(cosf(t*3)*100.0f);
 		}
 
+        if (m_pClient->m_pLuaBinding) //make sure that we have this class
+        {
+            //Lua
+            m_pClient->m_pLuaBinding->m_ControlDirectionPre = m_InputData.m_Direction;
+            m_pClient->m_pLuaBinding->m_ControlFirePre = m_InputData.m_Fire;
+            m_pClient->m_pLuaBinding->m_ControlJumpPre = m_InputData.m_Jump;
+            m_pClient->m_pLuaBinding->m_ControlHookPre = m_InputData.m_Hook;
+            m_pClient->m_pLuaBinding->m_ControlWeaponPre = m_InputData.m_WantedWeapon;
+            m_pClient->m_pLuaBinding->m_ControlTargetXPre = m_InputData.m_TargetX;
+            m_pClient->m_pLuaBinding->m_ControlTargetYPre = m_InputData.m_TargetY;
+
+            m_pClient->m_pLua->m_EventListener.OnEvent("OnControlChange");
+
+            if (m_pClient->m_pLuaBinding->m_ControlDirectionIsSet)
+            {
+                m_InputData.m_Direction = m_pClient->m_pLuaBinding->m_ControlDirection;
+            }
+            if (m_pClient->m_pLuaBinding->m_ControlFireIsSet)
+            {
+                m_InputData.m_Fire = m_pClient->m_pLuaBinding->m_ControlFire;
+            }
+            if (m_pClient->m_pLuaBinding->m_ControlHookIsSet)
+            {
+                m_InputData.m_Hook = m_pClient->m_pLuaBinding->m_ControlHook;
+            }
+            if (m_pClient->m_pLuaBinding->m_ControlJumpIsSet)
+            {
+                m_InputData.m_Jump = m_pClient->m_pLuaBinding->m_ControlJump;
+            }
+            if (m_pClient->m_pLuaBinding->m_ControlWeaponIsSet)
+            {
+                m_InputData.m_WantedWeapon = m_pClient->m_pLuaBinding->m_ControlWeapon;
+            }
+            if (m_pClient->m_pLuaBinding->m_ControlTargetXIsSet)
+            {
+                m_InputData.m_TargetX = m_pClient->m_pLuaBinding->m_ControlTargetX;
+            }
+            if (m_pClient->m_pLuaBinding->m_ControlTargetYIsSet)
+            {
+                m_InputData.m_TargetY = m_pClient->m_pLuaBinding->m_ControlTargetY;
+            }
+        }
 		// check if we need to send input
 		if(m_InputData.m_Direction != m_LastData.m_Direction) Send = true;
 		else if(m_InputData.m_Jump != m_LastData.m_Jump) Send = true;

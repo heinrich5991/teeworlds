@@ -5,10 +5,16 @@
 
 #include <base/vmath.h>
 #include <engine/client.h>
+#include <engine/lua.h>
 #include <engine/console.h>
 #include <game/layers.h>
 #include <game/gamecore.h>
 #include "render.h"
+
+#include "nchat.h"
+#include "nmusic.h"
+#include "nmsgs.h"
+#include "lua.h"
 
 class CGameClient : public IGameClient
 {
@@ -60,9 +66,12 @@ class CGameClient : public IGameClient
 
 	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
+	static void ConMusic(IConsole::IResult *pResult, void *pUserData);
 
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
+    static void ConLua(IConsole::IResult *pResult, void *pUserData);
+    static void ConPlusLua(IConsole::IResult *pResult, void *pUserData);
 public:
 	IKernel *Kernel() { return IInterface::Kernel(); }
 	IEngine *Engine() const { return m_pEngine; }
@@ -89,7 +98,7 @@ public:
 	bool m_SuppressEvents;
 	bool m_NewTick;
 	bool m_NewPredictedTick;
-	int m_FlagDropTick[2];
+    int m_FlagDropTick[2];
 
 	// TODO: move this
 	CTuningParams m_Tuning;
@@ -212,9 +221,12 @@ public:
 	virtual void OnGameOver();
 	virtual void OnStartGame();
 
+	virtual void OnLuaPacket(CUnpacker *pUnpacker);
+
 	virtual const char *GetItemName(int Type);
 	virtual const char *Version();
 	virtual const char *NetVersion();
+	virtual const char *NetVersionLua();
 
 
 	// actions
@@ -242,19 +254,30 @@ public:
 	class CVoting *m_pVoting;
 	class CScoreboard *m_pScoreboard;
 	class CItems *m_pItems;
+	//chat
+	class CNChat *m_NChat;
+	class CMusic *m_Music;
+	class CNMsg *m_Msgs;
+    class CEmitters *m_pEmitter;
+    class CStats *m_pStat;
+
 	class CMapLayers *m_pMapLayersBackGround;
 	class CMapLayers *m_pMapLayersForeGround;
+	class ILua *m_pLuaCore;
+	class CLua *m_pLua;
+	class CLuaBinding *m_pLuaBinding;
+    static void ConAddLuaFile(IConsole::IResult *pResult, void *pUserData);
 };
 
 
 inline float HueToRgb(float v1, float v2, float h)
 {
-	if(h < 0.0f) h += 1;
-	if(h > 1.0f) h -= 1;
-	if((6.0f * h) < 1.0f) return v1 + (v2 - v1) * 6.0f * h;
-	if((2.0f * h) < 1.0f) return v2;
-	if((3.0f * h) < 2.0f) return v1 + (v2 - v1) * ((2.0f/3.0f) - h) * 6.0f;
-	return v1;
+   if(h < 0.0f) h += 1;
+   if(h > 1.0f) h -= 1;
+   if((6.0f * h) < 1.0f) return v1 + (v2 - v1) * 6.0f * h;
+   if((2.0f * h) < 1.0f) return v2;
+   if((3.0f * h) < 2.0f) return v1 + (v2 - v1) * ((2.0f/3.0f) - h) * 6.0f;
+   return v1;
 }
 
 inline vec3 HslToRgb(vec3 HSL)

@@ -10,11 +10,11 @@ class CSounds : public CComponent
 	{
 		QUEUE_SIZE = 32,
 	};
-	struct QueueEntry
-	{
-		int m_Channel;
-		int m_SetId;
-	} m_aQueue[QUEUE_SIZE];
+    struct QueueEntry
+    {
+        int m_Channel;
+        int m_SetId;
+    } m_aQueue[QUEUE_SIZE];
 	int m_QueuePos;
 	int64 m_QueueWaitTime;
 	class CJob m_SoundJob;

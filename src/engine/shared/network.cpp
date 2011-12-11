@@ -6,6 +6,7 @@
 #include "config.h"
 #include "network.h"
 #include "huffman.h"
+#include "game/protocol.h"
 
 void CNetRecvUnpacker::Clear()
 {
@@ -359,3 +360,232 @@ void CNetBase::Init()
 {
 	ms_Huffman.Init(gs_aFreqTable);
 }
+
+CNetTCP::CNetTCP()
+{
+    //reset
+    m_Status = 0;
+    m_OldStatus = 0;
+    m_BytesRecv = 0;
+    m_BytesSend = 0;
+    m_inbuffer_read = 0;
+    m_inbuffer_write = 0;
+    m_Socket.type = 0;
+    m_Socket.ipv4sock = 0;
+    m_Socket.ipv6sock = 0;
+    m_LastPing = 0;
+    //start
+    return;
+}
+
+CNetTCP::~CNetTCP()
+{
+    Close();
+    Tick();
+    Tick();
+    return;
+}
+
+
+bool CNetTCP::Open(NETADDR BindAddr)
+{
+    m_inbuffer_read = 0;
+    m_inbuffer_write = 0;
+    m_BindAddr = BindAddr;
+    m_Socket = net_tcp_create(m_BindAddr);
+    net_set_non_blocking(m_Socket);
+    m_Status = 1;
+    return (m_Socket.ipv4sock != 0 && m_Socket.ipv6sock != 0);
+}
+
+void CNetTCP::Close()
+{
+    if (m_Socket.ipv4sock)
+        net_tcp_close(m_Socket);
+    if (m_Socket.ipv6sock)
+        net_tcp_close(m_Socket);
+    m_Status = 0;
+    m_Socket.type = 0;
+    m_Socket.ipv4sock = 0;
+    m_Socket.ipv6sock = 0;
+}
+
+void CNetTCP::Connect(NETADDR ConnAddr)
+{
+    if (m_Status == 0)
+    {
+        Open(m_BindAddr);
+    }
+    m_Status = 6; //connecting
+    m_ConnectStartTime = time_get();
+    net_set_non_blocking(m_Socket);
+    net_tcp_connect(m_Socket, &ConnAddr);
+}
+
+void CNetTCP::ListenAccept(NETADDR LocalAddr, NETADDR ListenAddr)
+{
+    m_LocalAddr = LocalAddr;
+    m_ListenAddr = ListenAddr;
+    thread_create(&ListenAcceptThread, this);
+}
+
+void CNetTCP::ListenAcceptThread(void *pUser)
+{
+    dbg_msg("nChat", "Listen: start");
+    CNetTCP *pSelf = (CNetTCP *)pUser;
+    net_set_blocking(pSelf->m_Socket);
+    NETSOCKET listensocket = net_tcp_create(pSelf->m_ListenAddr);
+    net_tcp_listen(listensocket, 1);
+    net_tcp_close(pSelf->m_Socket);
+    pSelf->m_Status = 2; //listening
+    net_tcp_accept(listensocket, (NETSOCKET *)(&pSelf->m_Socket), &pSelf->m_LocalAddr);
+    net_tcp_close(listensocket);
+    net_set_non_blocking(pSelf->m_Socket);
+    pSelf->m_Status = 6; //connecting
+    dbg_msg("nChat", "Listen: connected");
+}
+
+int CNetTCP::Send(const char *data, int size)
+{
+    m_BytesSend += size;
+    return net_tcp_send(m_Socket, (const void*)data, size);
+}
+
+int CNetTCP::StreamSize()
+{
+    int vread = m_inbuffer_read;
+    if (vread == m_inbuffer_write)
+        return 0;
+    //slow ;)
+    for (int i = 0; ; i++)
+    {
+        vread++;
+        if (vread >= STREAM_SIZE)
+            vread = 0;
+        if (vread == m_inbuffer_write)
+            return i + 1;
+    }
+}
+
+void CNetTCP::StreamClear()
+{
+    m_inbuffer_read = 0;
+    m_inbuffer_write = 0;
+}
+
+int CNetTCP::StreamRead(int len, char *buf, bool move)
+{
+    if (m_inbuffer_read == m_inbuffer_write)
+    {
+        return 0;
+    }
+    //slow ;)
+    int tmp_inbuffer_read = m_inbuffer_read;
+    for (int i = 0; i < len; i++)
+    {
+        if (move)
+        {
+            buf[i] = m_inbuffer[m_inbuffer_read];
+            m_inbuffer_read++;
+            if (m_inbuffer_read >= STREAM_SIZE)
+                m_inbuffer_read = 0;
+            if (m_inbuffer_read == m_inbuffer_write)
+            {
+                return i + 1;
+            }
+        }
+        else
+        {
+            buf[i] = m_inbuffer[tmp_inbuffer_read];
+            tmp_inbuffer_read++;
+            if (tmp_inbuffer_read >= STREAM_SIZE)
+                tmp_inbuffer_read = 0;
+            if (tmp_inbuffer_read == m_inbuffer_write)
+            {
+                return i + 1;
+            }
+        }
+
+    }
+    return len;
+}
+
+void CNetTCP::SendPing()
+{
+    char TmpStream[] = {0, 0, 2, 0, 2, 0, 0, 0, 'P', 0};
+    Send(TmpStream, 10);
+}
+
+void CNetTCP::SendResp()
+{
+    char TmpStream[] = {0, 0, 2, 0, 2, 0, 0, 0, 'R', 0};
+    Send(TmpStream, 10);
+}
+
+void CNetTCP::Tick()
+{
+    //Do status checks first
+    if(m_Status != m_OldStatus)
+    {
+        m_OldStatus = m_Status;
+        if (m_Status == 3)
+        {
+            Close();
+            return;
+        }
+    }
+
+    if (m_Status == 6)
+    {
+        m_LastPingResponse = time_get();
+        if ((time_get() - m_LastPing) / time_freq() > 1)
+        {
+            m_LastPing = time_get();
+            dbg_msg("TCP", "[Send] Ping");
+            SendPing();
+        }
+    }
+    if (m_Status == 7)
+    {
+        if ((time_get() - m_LastPing) / time_freq() > PINGDELAY)
+        {
+            m_LastPing = time_get();
+            dbg_msg("TCP", "[Send] Ping");
+            SendPing();
+        }
+    }
+    if (StreamSize() < PACKET_SIZE)
+    {
+        char buf[PACKET_SIZE + 1]; // allocate 1 byte for the null-terminator
+        int size;
+        size = net_tcp_recv(m_Socket, (void*)buf, PACKET_SIZE);
+        if (size <= 0)
+            buf[0] = 0;
+        else
+        {
+            buf[size] = 0;
+            m_Status = 7; // connected
+            m_BytesRecv += size;
+            dbg_msg("Recv", "");
+        }
+        if (size > 0)
+        {
+            for (int i = 0; i < size; i++)
+            {
+                    m_inbuffer[m_inbuffer_write] = buf[i];
+                    m_inbuffer_write++;
+                    if (m_inbuffer_write >= STREAM_SIZE)
+                        m_inbuffer_write = 0;
+            }
+        }
+    }
+    if (m_LastPingResponse < time_get() - time_freq() * TIMEOUT && m_Status == 7)
+    {
+        m_Status = 3;
+    }
+}
+
+
+
+
+

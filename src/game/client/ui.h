@@ -1,5 +1,3 @@
-/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
-/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_UI_H
 #define GAME_CLIENT_UI_H
 
@@ -8,7 +6,7 @@ class CUIRect
 	// TODO: Refactor: Redo UI scaling
 	float Scale() const;
 public:
-	float x, y, w, h;
+    float x, y, w, h;
 
 	void HSplitMid(CUIRect *pTop, CUIRect *pBottom) const;
 	void HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const;

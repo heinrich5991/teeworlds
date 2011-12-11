@@ -1,4 +1,4 @@
-/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
 #include <engine/graphics.h>
@@ -54,7 +54,11 @@ static CSample m_aSamples[NUM_SAMPLES] = { {0} };
 static CVoice m_aVoices[NUM_VOICES] = { {0} };
 static CChannel m_aChannels[NUM_CHANNELS] = { {255, 0} };
 
+static CSound *m_pSelf = 0;
+
+static LOCK m_MusicLock = 0;
 static LOCK m_SoundLock = 0;
+static int m_SoundEnabled = 0;
 
 static int m_CenterX = 0;
 static int m_CenterY = 0;
@@ -63,7 +67,6 @@ static int m_MixingRate = 48000;
 static volatile int m_SoundVolume = 100;
 
 static int m_NextVoice = 0;
-
 
 // TODO: there should be a faster way todo this
 static short Int2Short(int i)
@@ -82,15 +85,81 @@ static int IntAbs(int i)
 	return i;
 }
 
+static void LoadMusicWavThread(void *pUser)
+{
+    CSound *pSelf = (CSound *)pUser;
+    while (1)
+    {
+        if (1) // wave
+        {
+            while(pSelf->m_MusicTmpBufferIn >= MUSICTMPBUFFERSIZE - 1 || !pSelf->m_MusicFileHandle)
+            {
+                thread_sleep(1);
+
+            }
+            lock_wait(m_MusicLock);
+            if (pSelf->m_MusicFinished || !pSelf->m_MusicPlaying || !pSelf->m_MusicFileHandle)
+            {
+                mem_zero((void *)pSelf->m_MusicTmpBuffer[pSelf->m_MusicTmpBufferRead], pSelf->m_MusicFrameCount * 4);
+            }
+            else if (pSelf->m_MusicFileHandle)
+            {
+                if (pSelf->m_MusicSeekStart)
+                {
+
+                    io_read(pSelf->m_MusicFileHandle, &pSelf->m_MusicWaveFileHeader, sizeof(pSelf->m_MusicWaveFileHeader));
+                    #if defined(CONF_ARCH_ENDIAN_BIG)
+                        swap_endian(&pSelf->m_MusicWaveFileHeader.riff_name, 4, 1);
+                        swap_endian(&pSelf->m_MusicWaveFileHeader.riff_laenge, 4, 1);
+                        swap_endian(&pSelf->m_MusicWaveFileHeader.riff_type, 4, 1);
+                        swap_endian(&pSelf->m_MusicWaveFileHeader.fmt_name, 4, 1);
+                        swap_endian(&pSelf->m_MusicWaveFileHeader.fmt_laenge, 4, 1);
+                        swap_endian(&pSelf->m_MusicWaveFileHeader.formattyp, 2, 1);
+                        swap_endian(&pSelf->m_MusicWaveFileHeader.kanalzahl, 2, 1);
+                        swap_endian(&pSelf->m_MusicWaveFileHeader.samplerate, 4, 1);
+                        swap_endian(&pSelf->m_MusicWaveFileHeader.b_pro_sec, 4, 1);
+                        swap_endian(&pSelf->m_MusicWaveFileHeader.b_pro_sample, 2, 1);
+                        swap_endian(&pSelf->m_MusicWaveFileHeader.Bits_per_sample, 2, 1);
+                    #endif
+                    pSelf->m_MusicPlayedBytes = pSelf->m_MusicWaveFileHeader.fmt_laenge + 21;
+                    io_seek(pSelf->m_MusicFileHandle, pSelf->m_MusicWaveFileHeader.fmt_laenge + 21, IOSEEK_START);
+                    pSelf->m_MusicSeekStart = false;
+                }
+                mem_zero((void *)pSelf->m_MusicTmpBuffer[pSelf->m_MusicTmpBufferRead], pSelf->m_MusicFrameCount * 4);
+                pSelf->m_MusicPlayedBytes = pSelf->m_MusicPlayedBytes + pSelf->m_MusicFrameCount * 4;
+                if (io_read(pSelf->m_MusicFileHandle, (void *)pSelf->m_MusicTmpBuffer[pSelf->m_MusicTmpBufferRead], pSelf->m_MusicFrameCount * 4) == 0)
+                {
+                    pSelf->m_MusicFinished = true;
+                    pSelf->m_MusicPlayedBytes = pSelf->m_MusicWaveFileHeader.fmt_laenge + 21;
+                    pSelf->m_MusicPlayIndex++;
+                }
+                pSelf->m_MusicTmpBufferRead++;
+                pSelf->m_MusicTmpBufferIn++;
+                if (pSelf->m_MusicTmpBufferRead >= MUSICTMPBUFFERSIZE)
+                    pSelf->m_MusicTmpBufferRead = 0;
+            }
+            lock_release(m_MusicLock);
+        }
+        else
+        {
+
+        }
+    }
+}
+
 static void Mix(short *pFinalOut, unsigned Frames)
 {
+    CSound *pSelf = m_pSelf;
 	int aMixBuffer[MAX_FRAMES*2] = {0};
+	int aMusicBuffer[MAX_FRAMES*2] = {0};
 	int MasterVol;
+	int MasterMusicVol;
 
 	// aquire lock while we are mixing
 	lock_wait(m_SoundLock);
 
 	MasterVol = m_SoundVolume;
+	MasterMusicVol = pSelf->m_MusicVolume;
 
 	for(unsigned i = 0; i < NUM_VOICES; i++)
 	{
@@ -157,15 +226,73 @@ static void Mix(short *pFinalOut, unsigned Frames)
 
 			// free voice if not used any more
 			if(v->m_Tick == v->m_pSample->m_NumFrames)
-			{
-				if(v->m_Flags&ISound::FLAG_LOOP)
-					v->m_Tick = 0;
-				else
-					v->m_pSample = 0;
-			}
+            {
+                if(v->m_Flags&ISound::FLAG_LOOP)
+                    v->m_Tick = 0;
+                else
+                    v->m_pSample = 0;
+            }
+
 		}
 	}
-
+    if (!pSelf->m_MusicTmpBuffer[0])
+    {
+        for (int i = 0; i < MUSICTMPBUFFERSIZE; i++)
+            pSelf->m_MusicTmpBuffer[i] = new char[Frames * 4];
+        thread_create(LoadMusicWavThread, (void *)pSelf);
+    }
+    else if(!pSelf->m_MusicFinished && pSelf->m_MusicPlaying && pSelf->m_MusicFileHandle)
+    {
+        pSelf->m_MusicPeakL = 0;
+        pSelf->m_MusicPeakR = 0;
+        if (pSelf->m_MusicTmpBufferIn > 1)
+        {
+            for(unsigned i = 0; i < Frames; i++)
+            {
+                aMusicBuffer[i * 2] = (int)(((unsigned int)pSelf->m_MusicTmpBuffer[pSelf->m_MusicTmpBufferWrite][i * 4 + 0]) * 256 + ((unsigned int)pSelf->m_MusicTmpBuffer[pSelf->m_MusicTmpBufferWrite][i * 4 + 1])) * 100;
+                aMusicBuffer[i * 2 + 1] = (int)(((unsigned int)pSelf->m_MusicTmpBuffer[pSelf->m_MusicTmpBufferWrite][i * 4 + 2]) * 256 + ((unsigned int)pSelf->m_MusicTmpBuffer[pSelf->m_MusicTmpBufferWrite][i * 4 + 3])) * 100;
+                pSelf->m_MusicPeakL += (int)(((unsigned int)pSelf->m_MusicTmpBuffer[pSelf->m_MusicTmpBufferWrite][i * 4 + 0]) * 256 + ((unsigned int)pSelf->m_MusicTmpBuffer[pSelf->m_MusicTmpBufferWrite][i * 4 + 1]));
+                pSelf->m_MusicPeakR += (int)(((unsigned int)pSelf->m_MusicTmpBuffer[pSelf->m_MusicTmpBufferWrite][i * 4 + 2]) * 256 + ((unsigned int)pSelf->m_MusicTmpBuffer[pSelf->m_MusicTmpBufferWrite][i * 4 + 3]));
+            }
+            pSelf->m_MusicTmpBufferWrite++;
+            pSelf->m_MusicTmpBufferIn--;
+            if (pSelf->m_MusicTmpBufferWrite >= MUSICTMPBUFFERSIZE)
+                pSelf->m_MusicTmpBufferWrite = 0;
+        }
+        else
+        {
+            mem_zero(aMusicBuffer, Frames * 2);
+        }
+    }
+    if (pSelf->m_MusicLoadNew == true && pSelf->m_MusicFileName[0])
+    {
+        lock_wait(m_MusicLock);
+        if (pSelf->m_MusicFileHandle)
+        {
+            io_close(pSelf->m_MusicFileHandle);
+            pSelf->m_MusicFileHandle = 0;
+        }
+        pSelf->m_MusicFileHandle = io_open(pSelf->m_MusicFileName, IOFLAG_READ);
+        if (pSelf->m_MusicFileHandle)
+        {
+            pSelf->m_MusicLoadNew = false;
+            pSelf->m_MusicFinished = false;
+            pSelf->m_MusicSeekStart = true;
+            pSelf->m_MusicPlaying = true;
+            pSelf->m_MusicTmpBufferIn = 0;
+            pSelf->m_MusicTmpBufferWrite = 0;
+            pSelf->m_MusicTmpBufferRead = 0;
+        }
+        else
+        {
+            pSelf->m_MusicPlayIndex++;
+            pSelf->m_MusicLoadNew = false;
+        }
+        lock_release(m_MusicLock);
+    }
+    if (pSelf->m_MusicTmpBufferIn < -10)
+        pSelf->m_MusicPlaying = false;
+    pSelf->m_MusicFrameCount = Frames;
 
 	// release the lock
 	lock_release(m_SoundLock);
@@ -177,12 +304,54 @@ static void Mix(short *pFinalOut, unsigned Frames)
 		{
 			int j = i<<1;
 			int vl = ((aMixBuffer[j]*MasterVol)/101)>>8;
+			vl += ((aMusicBuffer[j]*MasterMusicVol)/101)>>8;
 			int vr = ((aMixBuffer[j+1]*MasterVol)/101)>>8;
+			vr += ((aMusicBuffer[j+1]*MasterMusicVol)/101)>>8;
 
 			pFinalOut[j] = Int2Short(vl);
 			pFinalOut[j+1] = Int2Short(vr);
 		}
 	}
+
+    static int sRecordAudio = 0;
+    if (pSelf->m_RecordAudio == 1) //record audio
+    {
+        static IOHANDLE AudioOut;
+        if (sRecordAudio == 0)
+        {
+            AudioOut = pSelf->m_pStorage->OpenFile("tmp/pixelstream/sound.wav", IOFLAG_WRITE, IStorage::TYPE_SAVE);
+        }
+        if (1)
+        {
+            const char x = 0;
+            str_copy(pSelf->m_RecordWaveFileHeader.riff_name, "RIFF", 5);
+            str_copy(pSelf->m_RecordWaveFileHeader.riff_type, "WAVE", 5);
+            str_copy(pSelf->m_RecordWaveFileHeader.fmt_name, "fmt ", 5);
+            pSelf->m_RecordWaveFileHeader.riff_laenge = sRecordAudio * Frames * 2 * 2 + sizeof(pSelf->m_RecordWaveFileHeader);
+            pSelf->m_RecordWaveFileHeader.fmt_laenge = 16;
+            pSelf->m_RecordWaveFileHeader.formattyp = 1;
+            pSelf->m_RecordWaveFileHeader.kanalzahl = 2;
+            pSelf->m_RecordWaveFileHeader.samplerate = 44100;
+            pSelf->m_RecordWaveFileHeader.b_pro_sec = 44100 * 2 * 2;
+            pSelf->m_RecordWaveFileHeader.b_pro_sample = 4;
+            pSelf->m_RecordWaveFileHeader.Bits_per_sample = 16;
+
+            io_seek(AudioOut, 0, IOSEEK_START);
+            io_write(AudioOut, &pSelf->m_RecordWaveFileHeader, sizeof(pSelf->m_RecordWaveFileHeader));
+            io_write(AudioOut, "data", sizeof("data"));
+            io_write(AudioOut, &x, 1);
+            io_write(AudioOut, &x, 1);
+            io_write(AudioOut, &x, 1);
+            io_seek(AudioOut, 0, IOSEEK_END);
+
+            io_write(AudioOut, pFinalOut, Frames * 2 * 2);
+        }
+        sRecordAudio++;
+    }
+    else
+    {
+        sRecordAudio = 0;
+    }
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
 	swap_endian(pFinalOut, sizeof(short), Frames * 2);
@@ -195,7 +364,6 @@ static void SdlCallback(void *pUnused, Uint8 *pStream, int Len)
 	Mix((short *)pStream, Len/2/2);
 }
 
-
 int CSound::Init()
 {
 	m_SoundEnabled = 0;
@@ -204,6 +372,24 @@ int CSound::Init()
 
 	SDL_AudioSpec Format;
 
+    //init music
+    m_MusicTmpBuffer[0] = 0;
+    m_MusicTmpBufferIn = 0;
+    m_MusicTmpBufferRead = 0;
+    m_MusicTmpBufferWrite = 0;
+    m_MusicFrameCount = 0;
+    m_MusicFileHandle = 0;
+    m_MusicSeekStart = true;
+    m_MusicFinished = true;
+    m_MusicPlaying = false;
+    m_MusicVolume = 100;
+    m_MusicPeakL = 0;
+    m_MusicPeakR = 0;
+    m_pSelf = this; // needed for the mixing process
+
+    m_RecordAudio = 1;
+
+	m_MusicLock = lock_create();
 	m_SoundLock = lock_create();
 
 	if(!g_Config.m_SndEnable)
@@ -228,6 +414,7 @@ int CSound::Init()
 	else
 		dbg_msg("client/sound", "sound init successful");
 
+
 	SDL_PauseAudio(0);
 
 	m_SoundEnabled = 1;
@@ -239,14 +426,24 @@ int CSound::Update()
 {
 	// update volume
 	int WantedVolume = g_Config.m_SndVolume;
+    int WantedMusicVolume = g_Config.m_SndMusicVolume;
 
 	if(!m_pGraphics->WindowActive() && g_Config.m_SndNonactiveMute)
+	{
 		WantedVolume = 0;
+	    WantedMusicVolume = 0;
+	}
 
 	if(WantedVolume != m_SoundVolume)
 	{
 		lock_wait(m_SoundLock);
 		m_SoundVolume = WantedVolume;
+		lock_release(m_SoundLock);
+	}
+	if(WantedMusicVolume != m_MusicVolume)
+	{
+		lock_wait(m_SoundLock);
+		m_MusicVolume = WantedMusicVolume;
 		lock_release(m_SoundLock);
 	}
 
@@ -257,6 +454,10 @@ int CSound::Shutdown()
 {
 	SDL_CloseAudio();
 	lock_destroy(m_SoundLock);
+	lock_destroy(m_MusicLock);
+
+
+
 	return 0;
 }
 

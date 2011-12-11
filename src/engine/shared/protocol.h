@@ -51,6 +51,7 @@ enum
 	NETMSG_AUTH_CHALLANGE,	//
 	NETMSG_AUTH_RESULT,		//
 
+
 	// sent by client
 	NETMSG_READY,			//
 	NETMSG_ENTERGAME,
@@ -67,9 +68,22 @@ enum
 	NETMSG_PING_REPLY,
 	NETMSG_ERROR,
 
+	//Mod //must be after the std nets due to standard protocol compatibility
 	// sent by server (todo: move it up)
 	NETMSG_RCON_CMD_ADD,
 	NETMSG_RCON_CMD_REM,
+
+	//send by server
+    NETMSG_FILE_CHANGE,     // sent when client should refresh files
+	NETMSG_FILE_INDEX,       // file transfer, contains information about a file
+	NETMSG_FILE_DATA,       // file transfer, contains a chunk of a file (lua, png, wav)
+
+	//sent by client
+    NETMSG_REQUEST_FILE_INDEX,  // requests the file index
+	NETMSG_REQUEST_FILE_DATA,   // requests file data
+
+	//send by both
+    NETMSG_LUA_DATA
 };
 
 // this should be revised
@@ -78,7 +92,7 @@ enum
 	SERVER_TICK_SPEED=50,
 	SERVER_FLAG_PASSWORD = 0x1,
 
-	MAX_CLIENTS=16,
+	MAX_CLIENTS=128,
 
 	MAX_INPUT_SIZE=128,
 	MAX_SNAPSHOT_PACKSIZE=900,

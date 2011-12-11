@@ -1,4 +1,5 @@
-Copyright (c) 2011 Magnus Auvinen
+N-Client Copyright (c) 2011 MAP94
+Teeworlds Copyright (c) 2011 Magnus Auvinen
 
 
 This software is provided 'as-is', without any express or implied

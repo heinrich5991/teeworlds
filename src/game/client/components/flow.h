@@ -13,18 +13,23 @@ class CFlow : public CComponent
 	};
 
 	CCell *m_pCells;
+	array<unsigned int> m_pCellsList;
+
 	int m_Height;
 	int m_Width;
 	int m_Spacing;
 
-	void DbgRender();
-	void Init();
+	int m_Init;
+	void MapscreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup);
 public:
 	CFlow();
 
+	void Init();
 	vec2 Get(vec2 Pos);
 	void Add(vec2 Pos, vec2 Vel, float Size);
+	void Add(unsigned int i, vec2 Vel);
 	void Update();
+	void DbgRender();
 };
 
 #endif

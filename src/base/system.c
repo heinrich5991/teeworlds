@@ -7,7 +7,9 @@
 #include <ctype.h>
 #include <time.h>
 
+/*#include "detect.h"*/
 #include "system.h"
+/*#include "e_console.h"*/
 
 #if defined(CONF_FAMILY_UNIX)
 	#include <sys/time.h>
@@ -42,10 +44,6 @@
 	#include <errno.h>
 #else
 	#error NOT IMPLEMENTED
-#endif
-
-#if defined(CONF_PLATFORM_SOLARIS)
-	#include <sys/filio.h>
 #endif
 
 #if defined(__cplusplus)
@@ -278,19 +276,16 @@ IOHANDLE io_open(const char *filename, int flags)
 		if(!filename || !length || filename[length-1] == '\\')
 			return 0x0;
 		handle = FindFirstFile(filename, &finddata);
-		if(handle == INVALID_HANDLE_VALUE)
+		if(handle == INVALID_HANDLE_VALUE || str_comp(filename+length-str_length(finddata.cFileName), finddata.cFileName))
 			return 0x0;
-		else if(str_comp(filename+length-str_length(finddata.cFileName), finddata.cFileName) != 0)
-		{
-			FindClose(handle);
-			return 0x0;
-		}
 		FindClose(handle);
 	#endif
 		return (IOHANDLE)fopen(filename, "rb");
 	}
 	if(flags == IOFLAG_WRITE)
 		return (IOHANDLE)fopen(filename, "wb");
+	if(flags == IOFLAG_APPEND)
+		return (IOHANDLE)fopen(filename, "ab");
 	return 0x0;
 }
 

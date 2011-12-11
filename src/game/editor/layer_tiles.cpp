@@ -363,7 +363,7 @@ void CLayerTiles::ShowInfo()
 int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 {
 	CUIRect Button;
-
+	
 	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
 	if(m_pEditor->m_Map.m_pGameLayer != this)
 	{
@@ -373,7 +373,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
 			if(m_pEditor->DoButton_Editor(&s_AutoMapperButton, "Auto map", 0, &Button, 0, ""))
 				m_pEditor->PopupSelectConfigAutoMapInvoke(m_pEditor->UI()->MouseX(), m_pEditor->UI()->MouseY());
-
+			
 			int Result = m_pEditor->PopupSelectConfigAutoMapResult();
 			if(Result > -1)
 			{
@@ -473,19 +473,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		m_Color.a = NewVal&0xff;
 	}
 	if(Prop == PROP_COLOR_ENV)
-	{
-		int Index = clamp(NewVal-1, -1, m_pEditor->m_Map.m_lEnvelopes.size()-1);
-		int Step = (Index-m_ColorEnv)%2;
-		if(Step != 0)
-		{
-			for(; Index >= -1 && Index < m_pEditor->m_Map.m_lEnvelopes.size(); Index += Step)
-				if(Index == -1 || m_pEditor->m_Map.m_lEnvelopes[Index]->m_Channels == 4)
-				{
-					m_ColorEnv = Index;
-					break;
-				}
-		}
-	}
+		m_ColorEnv = clamp(NewVal-1, -1, m_pEditor->m_Map.m_lEnvelopes.size()-1);
 	if(Prop == PROP_COLOR_ENV_OFFSET)
 		m_ColorEnvOffset = NewVal;
 

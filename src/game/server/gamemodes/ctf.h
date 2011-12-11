@@ -9,13 +9,13 @@ class CGameControllerCTF : public IGameController
 {
 public:
 	class CFlag *m_apFlags[2];
-
+	
 	CGameControllerCTF(class CGameContext *pGameServer);
 	virtual void DoWincheck();
 	virtual bool CanBeMovedOnBalance(int ClientID);
 	virtual void Snap(int SnappingClient);
 	virtual void Tick();
-
+	
 	virtual bool OnEntity(int Index, vec2 Pos);
 	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
 };

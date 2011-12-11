@@ -40,7 +40,6 @@ enum
 };
 
 typedef void (*ENVELOPE_EVAL)(float TimeOffset, int Env, float *pChannels, void *pUser);
-
 class CRenderTools
 {
 public:

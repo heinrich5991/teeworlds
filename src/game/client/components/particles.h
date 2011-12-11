@@ -10,21 +10,24 @@ struct CParticle
 {
 	void SetDefault()
 	{
-		m_Vel = vec2(0,0);
+		m_Vel = vec2(0, 0);
 		m_LifeSpan = 0;
 		m_StartSize = 32;
 		m_EndSize = 32;
 		m_Rot = 0;
 		m_Rotspeed = 0;
-		m_Gravity = 0;
+		m_Gravity = vec2(0, 0);
 		m_Friction = 0;
 		m_FlowAffected = 1.0f;
 		m_Color = vec4(1,1,1,1);
+		m_ColorEnd = vec4(-1,-1,-1,-1);
+		m_Texture = -2; // std
 	}
 
 	vec2 m_Pos;
 	vec2 m_Vel;
 
+	int m_Texture;
 	int m_Spr;
 
 	float m_FlowAffected;
@@ -37,10 +40,13 @@ struct CParticle
 	float m_Rot;
 	float m_Rotspeed;
 
-	float m_Gravity;
+    //maybe add Gravity start for e.g. smoke
+    //MAP94: i like the idea but first 2d gravity ;)
+	vec2 m_Gravity;
 	float m_Friction;
 
 	vec4 m_Color;
+	vec4 m_ColorEnd;
 
 	// set by the particle system
 	float m_Life;
@@ -71,7 +77,7 @@ private:
 
 	enum
 	{
-		MAX_PARTICLES=1024*8,
+		MAX_PARTICLES=1024*8*20, //Particles are evil
 	};
 
 	CParticle m_aParticles[MAX_PARTICLES];

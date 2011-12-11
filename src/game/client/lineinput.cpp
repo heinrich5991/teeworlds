@@ -86,6 +86,27 @@ bool CLineInput::Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int *p
 	return Changes;
 }
 
+void CLineInput::ProcessCharInput(char Code) // This is needed for copy paste feature
+{
+	// 127 is produced on Mac OS X and corresponds to the delete key
+	if (!(Code >= 0 && Code < 32) && Code != 127)
+	{
+		char Tmp[8];
+		int StrMaxSize = sizeof(m_Str);
+		int CharSize = str_utf8_encode(Tmp, Code);
+
+		if (m_Len < StrMaxSize - CharSize && m_CursorPos < StrMaxSize - CharSize)
+		{
+			mem_move(m_Str + m_CursorPos + CharSize, m_Str + m_CursorPos, m_Len - m_CursorPos + CharSize);
+			for(int i = 0; i < CharSize; i++)
+				m_Str[m_CursorPos+i] = Tmp[i];
+			m_CursorPos += CharSize;
+			m_Len += CharSize;
+			// Changes = true;
+		}
+	}
+}
+
 void CLineInput::ProcessInput(IInput::CEvent e)
 {
 	Manipulate(e, m_Str, sizeof(m_Str), &m_Len, &m_CursorPos);

@@ -39,6 +39,7 @@
 #include <versionsrv/versionsrv.h>
 
 #include "friends.h"
+#include "lua.h"
 #include "serverbrowser.h"
 #include "client.h"
 
@@ -48,6 +49,8 @@
 	#include <windows.h>
 #endif
 
+//Lua version server
+#include <game/version.h>
 
 void CGraph::Init(float Min, float Max)
 {
@@ -262,6 +265,8 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	// version-checking
 	m_aVersionStr[0] = '0';
 	m_aVersionStr[1] = 0;
+	m_aLuaVersionStr[0] = '0';
+	m_aLuaVersionStr[1] = 0;
 
 	// pinging
 	m_PingStartTime = 0;
@@ -281,6 +286,9 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_MapdownloadCrc = 0;
 	m_MapdownloadAmount = -1;
 	m_MapdownloadTotalsize = -1;
+
+	m_FileDownloadTotalSize = -1;
+	m_FileDownloadAmount = -1;
 
 	m_CurrentServerInfoRequestTime = -1;
 
@@ -344,6 +352,7 @@ void CClient::SendInfo()
 	CMsgPacker Msg(NETMSG_INFO);
 	Msg.AddString(GameClient()->NetVersion(), 128);
 	Msg.AddString(g_Config.m_Password, 128);
+	Msg.AddString(GameClient()->NetVersionLua(), 128); //I am a N-Client
 	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
 
@@ -437,6 +446,11 @@ const char *CClient::LatestVersion()
 	return m_aVersionStr;
 }
 
+const char *CClient::LatestLuaVersion()
+{
+	return m_aLuaVersionStr;
+}
+
 // TODO: OPT: do this alot smarter!
 int *CClient::GetInput(int Tick)
 {
@@ -486,6 +500,7 @@ void CClient::OnEnterGame()
 	m_CurrentRecvTick = 0;
 	m_CurGameTick = 0;
 	m_PrevGameTick = 0;
+    m_ServerBrowser.AddRecent(m_ServerAddress);
 }
 
 void CClient::EnterGame()
@@ -523,7 +538,7 @@ void CClient::Connect(const char *pAddress)
 
 	m_RconAuthed = 0;
 	if(m_ServerAddress.port == 0)
-		m_ServerAddress.port = Port;
+	m_ServerAddress.port = Port;
 	m_NetClient.Connect(&m_ServerAddress);
 	SetState(IClient::STATE_CONNECTING);
 
@@ -555,10 +570,16 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_MapdownloadChunk = 0;
 	if(m_MapdownloadFile)
 		io_close(m_MapdownloadFile);
+    m_MapdownloadSegments = 0;
+    m_pMapdownloadChecks = 0;
+    m_pMapdownloadCache = 0;
 	m_MapdownloadFile = 0;
 	m_MapdownloadCrc = 0;
 	m_MapdownloadTotalsize = -1;
 	m_MapdownloadAmount = 0;
+
+	m_FileDownloadTotalSize = -1;
+	m_FileDownloadAmount = 0;
 
 	// clear the current server info
 	mem_zero(&m_CurrentServerInfo, sizeof(m_CurrentServerInfo));
@@ -888,6 +909,30 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 			m_MapChecker.AddMaplist((CMapVersion *)((char*)pPacket->m_pData+sizeof(VERSIONSRV_MAPLIST)), Num);
 		}
 	}
+	// lua version server
+	if(m_VersionLuaInfo.m_State == CVersionInfo::STATE_READY && net_addr_comp(&pPacket->m_Address, &m_VersionLuaInfo.m_VersionServeraddr.m_Addr) == 0)
+	{
+		// version info
+		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_LUAVERSION) + sizeof(GAME_LUA_VERSION)) &&
+			mem_comp(pPacket->m_pData, VERSIONSRV_LUAVERSION, sizeof(VERSIONSRV_LUAVERSION)) == 0)
+
+		{
+			unsigned char *pVersionData = (unsigned char*)pPacket->m_pData + sizeof(VERSIONSRV_LUAVERSION);
+			int VersionMatch = !mem_comp(pVersionData, GAME_LUA_VERSION, sizeof(GAME_LUA_VERSION));
+
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "version does %s (%s)",
+				VersionMatch ? "match" : "NOT match",
+				pVersionData);
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/version", aBuf);
+
+			// assume version is out of date when version-data doesn't match
+			if (!VersionMatch)
+			{
+				str_format(m_aLuaVersionStr, sizeof(m_aLuaVersionStr), "%s", pVersionData);
+			}
+		}
+	}
 
 	// server list from master server
 	if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_LIST) &&
@@ -1040,7 +1085,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if(!pError)
 				{
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
-					SendReady();
+					if (m_FileDownloadTotalSize == -1)
+                        SendReady();
 				}
 				else
 				{
@@ -1057,6 +1103,14 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					m_MapdownloadFile = Storage()->OpenFile(m_aMapdownloadFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 					m_MapdownloadCrc = MapCrc;
 					m_MapdownloadTotalsize = MapSize;
+					m_pMapdownloadChecks = new char[((int)(((float)m_MapdownloadTotalsize - 1) / (1024.0f - 128.0f) + 1))];
+					m_pMapdownloadCache = new char[m_MapdownloadTotalsize];
+					for (int x = 0; x < ((float)m_MapdownloadTotalsize - 1) / (1024.0f - 128.0f) + 1; x++)
+					{
+					    m_pMapdownloadChecks[x] = 0;
+					}
+					m_pMapdownloadChecks[0] = 1;
+					m_MapdownloadSegments = 0;
 					m_MapdownloadAmount = 0;
 
 					CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
@@ -1071,7 +1125,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				}
 			}
 		}
-		else if(Msg == NETMSG_MAP_DATA)
+		else if(Msg == NETMSG_MAP_DATA && 0)
 		{
 			int Last = Unpacker.GetInt();
 			int MapCRC = Unpacker.GetInt();
@@ -1103,7 +1157,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if(!pError)
 				{
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
-					SendReady();
+					if (m_FileDownloadTotalSize == -1)
+                        SendReady();
 				}
 				else
 					DisconnectWithReason(pError);
@@ -1123,6 +1178,75 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk);
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
 				}
+			}
+		}
+		else if(Msg == NETMSG_MAP_DATA && 1)
+		{
+			int Last = Unpacker.GetInt();
+			int MapCRC = Unpacker.GetInt();
+			int Chunk = Unpacker.GetInt();
+			int Size = Unpacker.GetInt();
+			const unsigned char *pData = Unpacker.GetRaw(Size);
+
+			// check fior errors
+			if(Unpacker.Error() || Size <= 0 || MapCRC != m_MapdownloadCrc || m_pMapdownloadChecks[Chunk] == 0 || !m_MapdownloadFile)
+				return;
+
+
+			if (!Last)
+			{
+			    while(m_MapdownloadSegments < g_Config.m_ClDownloadSegments)
+			    {
+			        m_MapdownloadSegments++;
+                    // request new chunk
+                    m_MapdownloadChunk++;
+
+                    m_pMapdownloadChecks[m_MapdownloadChunk] = 1;
+
+                    CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
+                    Msg.AddInt(m_MapdownloadChunk);
+                    SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+
+                    if(g_Config.m_Debug)
+                    {
+                        char aBuf[256];
+                        str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk);
+                        m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
+                    }
+			    }
+			}
+
+            //io_seek(m_MapdownloadFile, (1024-128) * Chunk, IOSEEK_START);
+            mem_copy(&m_pMapdownloadCache[(1024-128) * Chunk], pData, Size);
+            m_pMapdownloadChecks[Chunk] = 2;
+            m_MapdownloadSegments--;
+			//io_write(m_MapdownloadFile, pData, Size);
+
+			m_MapdownloadAmount += Size;
+
+			if(Last)
+			{
+			    io_write(m_MapdownloadFile, m_pMapdownloadCache, m_MapdownloadTotalsize);
+			    delete []m_pMapdownloadCache;
+				const char *pError;
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "download complete, loading map");
+
+				if(m_MapdownloadFile)
+					io_close(m_MapdownloadFile);
+				m_MapdownloadFile = 0;
+				m_MapdownloadAmount = 0;
+				m_MapdownloadTotalsize = -1;
+
+				// load map
+				pError = LoadMap(m_aMapdownloadName, m_aMapdownloadFilename, m_MapdownloadCrc);
+				if(!pError)
+				{
+					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
+					if (m_FileDownloadTotalSize == -1)
+                        SendReady();
+				}
+				else
+					DisconnectWithReason(pError);
 			}
 		}
 		else if(Msg == NETMSG_CON_READY)
@@ -1377,6 +1501,112 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				}
 			}
 		}
+        else if(Msg == NETMSG_FILE_CHANGE)
+        {
+            m_ModFileNumber = Unpacker.GetInt();
+            m_FileDownloadTotalSize = Unpacker.GetInt();
+
+            CMsgPacker Msg(NETMSG_REQUEST_FILE_INDEX);
+            if (m_ModFileNumber)
+            {
+                m_ModFileCurrentNumber = 0;
+                Msg.AddInt(m_ModFileCurrentNumber); //reguest the first Index
+                SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+            }
+        }
+        else if(Msg == NETMSG_FILE_INDEX)
+        {
+            const char *pFileName = Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES);
+			int FileType = Unpacker.GetInt();
+			int FileCrc = Unpacker.GetInt();
+			int FileSize = Unpacker.GetInt();
+
+            CModFile tmp;
+            str_copy(tmp.m_aName, pFileName, sizeof(tmp.m_aName));
+            tmp.m_Size = FileSize;
+            tmp.m_Crc = FileCrc;
+            tmp.m_Type = (CModFile::FILETYPE)FileType;
+            m_lModFiles.add(tmp);
+
+            char aFileName[256];
+            if ((CModFile::FILETYPE)FileType == CModFile::FILETYPELUA)
+                str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.lua", pFileName, FileCrc);
+            else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEPNG)
+                str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.wav", pFileName, FileCrc);
+            else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEWAV)
+                str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.png", pFileName, FileCrc);
+            else
+                str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.inv", pFileName, FileCrc);
+
+
+            if(m_FileDownloadHandle)
+                io_close(m_FileDownloadHandle);
+            m_FileDownloadHandle = Storage()->OpenFile(aFileName, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+
+
+            CMsgPacker Msg(NETMSG_REQUEST_FILE_DATA);
+            m_ModFileCurrentChunk = 0;
+            Msg.AddInt(m_ModFileCurrentNumber);
+            Msg.AddInt(m_ModFileCurrentChunk); //request the first chunk
+            SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+        }
+        else if(Msg == NETMSG_FILE_DATA)
+        {
+            int Last = Unpacker.GetInt();
+			int FileCRC = Unpacker.GetInt();
+			int Chunk = Unpacker.GetInt();
+			int Size = Unpacker.GetInt();
+			const unsigned char *pData = Unpacker.GetRaw(Size);
+
+			// check fior errors
+			if(Unpacker.Error() || Size <= 0 || FileCRC != m_lModFiles[m_ModFileCurrentNumber].m_Crc || Chunk != m_ModFileCurrentChunk || !m_FileDownloadHandle)
+				return;
+
+			io_write(m_FileDownloadHandle, pData, Size);
+
+			m_FileDownloadAmount += Size;
+
+			if(Last)
+			{
+				if(m_FileDownloadHandle)
+					io_close(m_FileDownloadHandle);
+				m_FileDownloadHandle = 0;
+
+				m_ModFileCurrentNumber++;
+				CMsgPacker Msg(NETMSG_REQUEST_FILE_INDEX);
+                Msg.AddInt(m_ModFileCurrentNumber);
+                SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+                if (m_FileDownloadAmount == m_FileDownloadTotalSize)
+                {
+                    m_FileDownloadAmount = 0;
+                    m_FileDownloadTotalSize = -1;
+                }
+                if (m_FileDownloadTotalSize == -1 && m_MapdownloadTotalsize == -1)
+                    SendReady();
+
+			}
+			else
+			{
+				// request new chunk
+				m_ModFileCurrentChunk++;
+
+				CMsgPacker Msg(NETMSG_REQUEST_FILE_DATA);
+				Msg.AddInt(m_ModFileCurrentNumber);
+				Msg.AddInt(m_ModFileCurrentChunk);
+				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+
+				if(g_Config.m_Debug)
+				{
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_ModFileCurrentChunk);
+					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
+				}
+			}
+        }
+        else if(Msg ==NETMSG_LUA_DATA)
+        {
+            GameClient()->OnLuaPacket(&Unpacker);
+        }
 	}
 	else
 	{
@@ -1662,12 +1892,42 @@ void CClient::VersionUpdate()
 	}
 }
 
+void CClient::VersionLuaUpdate()
+{
+	if(m_VersionLuaInfo.m_State == CVersionInfo::STATE_INIT)
+	{
+		Engine()->HostLookup(&m_VersionLuaInfo.m_VersionServeraddr, "version.n-lvl.com", m_BindAddr.type);
+		m_VersionLuaInfo.m_State = CVersionInfo::STATE_START;
+	}
+	else if(m_VersionLuaInfo.m_State == CVersionInfo::STATE_START)
+	{
+		if(m_VersionLuaInfo.m_VersionServeraddr.m_Job.Status() == CJob::STATE_DONE)
+		{
+			CNetChunk Packet;
+
+			mem_zero(&Packet, sizeof(Packet));
+
+			m_VersionLuaInfo.m_VersionServeraddr.m_Addr.port = VERSIONSRVLUA_PORT;
+
+			Packet.m_ClientID = -1;
+			Packet.m_Address = m_VersionLuaInfo.m_VersionServeraddr.m_Addr;
+			Packet.m_pData = VERSIONSRV_GETLUAVERSION;
+			Packet.m_DataSize = sizeof(VERSIONSRV_GETLUAVERSION);
+			Packet.m_Flags = NETSENDFLAG_CONNLESS;
+
+			m_NetClient.Send(&Packet);
+			m_VersionLuaInfo.m_State = CVersionInfo::STATE_READY;
+		}
+	}
+}
+
 void CClient::RegisterInterfaces()
 {
 	Kernel()->RegisterInterface(static_cast<IDemoRecorder*>(&m_DemoRecorder));
 	Kernel()->RegisterInterface(static_cast<IDemoPlayer*>(&m_DemoPlayer));
 	Kernel()->RegisterInterface(static_cast<IServerBrowser*>(&m_ServerBrowser));
 	Kernel()->RegisterInterface(static_cast<IFriends*>(&m_Friends));
+	Kernel()->RegisterInterface(static_cast<ILua*>(&m_Lua));
 }
 
 void CClient::InitInterfaces()
@@ -1686,6 +1946,7 @@ void CClient::InitInterfaces()
 	//
 	m_ServerBrowser.SetBaseInfo(&m_NetClient, m_pGameClient->NetVersion());
 	m_Friends.Init();
+	m_Lua.Init();
 }
 
 void CClient::Run()
@@ -1761,6 +2022,7 @@ void CClient::Run()
 
 		//
 		VersionUpdate();
+		VersionLuaUpdate();
 
 		// handle pending connects
 		if(m_aCmdConnect[0])
@@ -2267,6 +2529,7 @@ int main(int argc, const char **argv) // ignore_convention
 
 	// execute config file
 	pConsole->ExecuteFile("settings.cfg");
+	pConsole->ExecuteFile("nsettings.cfg");
 
 	// execute autoexec file
 	pConsole->ExecuteFile("autoexec.cfg");

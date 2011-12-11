@@ -24,6 +24,8 @@ public:
 	const CFriendInfo *GetFriend(int Index) const;
 	int GetFriendState(const char *pName, const char *pClan) const;
 	bool IsFriend(const char *pName, const char *pClan, bool PlayersOnly) const;
+	void ClearOnlineState();
+	void SetOnline(const char *pName, const char *pClan, NETADDR ServerAddr);
 
 	void AddFriend(const char *pName, const char *pClan);
 	void RemoveFriend(const char *pName, const char *pClan);

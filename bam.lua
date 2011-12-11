@@ -73,7 +73,7 @@ function Dat2c(datafile, sourcefile, arrayname)
 	AddJob(
 		sourcefile,
 		"dat2c " .. PathFilename(sourcefile) .. " = " .. PathFilename(datafile),
-		Script("scripts/dat2c.py").. "\" " .. sourcefile .. " " .. datafile .. " " .. arrayname
+		Script("scripts/dat2c.py")..  "\" " .. sourcefile .. " " .. datafile .. " " .. arrayname
 	)
 	AddDependency(sourcefile, datafile)
 	return sourcefile
@@ -85,7 +85,7 @@ function ContentCompile(action, output)
 		output,
 		action .. " > " .. output,
 		--Script("datasrc/compile.py") .. "\" ".. Path(output) .. " " .. action
-		Script("datasrc/compile.py") .. " " .. action .. " > " .. Path(output)
+		Script("datasrc/compile.py") .. " " .. action ..  " > " .. Path(output)
 	)
 	AddDependency(output, Path("datasrc/content.py")) -- do this more proper
 	AddDependency(output, Path("datasrc/network.py"))
@@ -144,7 +144,7 @@ function build(settings)
 	if config.compiler.driver == "cl" then
 		settings.cc.flags:Add("/wd4244")
 	else
-		settings.cc.flags:Add("-Wall", "-fno-exceptions")
+		settings.cc.flags:Add("-Wall", "-fexceptions")
 		if platform == "macosx" then
 			settings.cc.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.5.sdk")
 			settings.link.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.5.sdk")
@@ -158,7 +158,7 @@ function build(settings)
 	settings.cc.includes:Add("src")
 
 	if family == "unix" then
-		if platform == "macosx" then
+   		if platform == "macosx" then
 			settings.link.frameworks:Add("Carbon")
 			settings.link.frameworks:Add("AppKit")
 		else
@@ -190,22 +190,29 @@ function build(settings)
 	end
 
 	-- build the small libraries
+	settings_lua = settings:Copy()
+	if family == "unix" then
+        settings_lua.cc.flags:Add("-O3")
+	elseif family == "windows" then
+        settings_lua.cc.flags:Add("/Ob2gity /Gs")
+    end
+	lua = Compile(settings, Collect("src/engine/external/lua/*.c"))
 	wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
 	pnglite = Compile(settings, Collect("src/engine/external/pnglite/*.c"))
 
-	-- build game components
+    -- build game components
 	engine_settings = settings:Copy()
 	server_settings = engine_settings:Copy()
 	client_settings = engine_settings:Copy()
 	launcher_settings = engine_settings:Copy()
 
 	if family == "unix" then
-		if platform == "macosx" then
+   		if platform == "macosx" then
 			client_settings.link.frameworks:Add("OpenGL")
-			client_settings.link.frameworks:Add("AGL")
-			client_settings.link.frameworks:Add("Carbon")
-			client_settings.link.frameworks:Add("Cocoa")
-			launcher_settings.link.frameworks:Add("Cocoa")
+            client_settings.link.frameworks:Add("AGL")
+            client_settings.link.frameworks:Add("Carbon")
+            client_settings.link.frameworks:Add("Cocoa")
+            launcher_settings.link.frameworks:Add("Cocoa")
 		else
 			client_settings.link.libs:Add("X11")
 			client_settings.link.libs:Add("GL")
@@ -251,8 +258,8 @@ function build(settings)
 	end
 
 	-- build client, server, version server and master server
-	client_exe = Link(client_settings, "teeworlds", game_shared, game_client,
-		engine, client, game_editor, zlib, pnglite, wavpack,
+	client_exe = Link(client_settings, "n-client", game_shared, game_client,
+		engine, client, game_editor, zlib, pnglite, wavpack, lua, fmod,
 		client_link_other, client_osxlaunch)
 
 	server_exe = Link(server_settings, "teeworlds_srv", engine, server,
@@ -296,6 +303,31 @@ release_settings.config_ext = ""
 release_settings.debug = 0
 release_settings.optimize = 1
 release_settings.cc.defines:Add("CONF_RELEASE")
+
+release_settings_hide = NewSettings()
+release_settings_hide.config_name = "release_hide"
+release_settings_hide.config_ext = "_hide"
+release_settings_hide.debug = 0
+release_settings_hide.optimize = 1
+release_settings_hide.cc.defines:Add("CONF_RELEASE")
+release_settings_hide.link.flags:Add("/subsystem:\"windows\" /entry:\"mainCRTStartup\"") -- hide the console
+
+release_settings_optimized = NewSettings()
+release_settings_optimized.config_name = "release_optimized"
+release_settings_optimized.config_ext = "_test"
+release_settings_optimized.debug = 0
+release_settings_optimized.optimize = 1
+
+if family == "unix" then
+    release_settings_optimized.cc.flags:Add("-O3")
+elseif family == "windows" then
+    release_settings_optimized.cc.flags:Add("/Ob2xt")
+    release_settings_optimized.cc.flags:Add("/Gs")
+    release_settings_optimized.cc.flags:Add("/GL")
+    --release_settings_optimized.cc.flags:Add("/arch:SSE2")
+    release_settings_optimized.link.flags:Add("/LTCG")
+end
+release_settings_optimized.cc.defines:Add("CONF_RELEASE")
 
 if platform == "macosx" then
 	debug_settings_ppc = debug_settings:Copy()
@@ -380,5 +412,8 @@ if platform == "macosx" then
 else
 	build(debug_settings)
 	build(release_settings)
+	build(release_settings_hide)
+	build(release_settings_optimized)
 	DefaultTarget("game_debug")
+	PseudoTarget("all", "debug", "release", "release_hide", "release_optimized")
 end

@@ -66,6 +66,13 @@ int CFriends::GetFriendState(const char *pName, const char *pClan) const
 	}
 	return Result;
 }
+void CFriends::ClearOnlineState()
+{
+	for(int i = 0; i < m_NumFriends; i++)
+	{
+	    m_aFriends[i].m_Online = false;
+	}
+}
 
 bool CFriends::IsFriend(const char *pName, const char *pClan, bool PlayersOnly) const
 {
@@ -78,6 +85,17 @@ bool CFriends::IsFriend(const char *pName, const char *pClan, bool PlayersOnly) 
 			return true;
 	}
 	return false;
+}
+void CFriends::SetOnline(const char *pName, const char *pClan, NETADDR ServerAddr)
+{
+	for(int i = 0; i < m_NumFriends; i++)
+	{
+		if(!str_comp(m_aFriends[i].m_aClan, pClan) && !str_comp(m_aFriends[i].m_aName, pName))
+		{
+            m_aFriends[i].m_Online = true;
+            m_aFriends[i].m_ServerAddr = ServerAddr;;
+		}
+	}
 }
 
 void CFriends::AddFriend(const char *pName, const char *pClan)

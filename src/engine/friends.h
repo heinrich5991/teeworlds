@@ -13,6 +13,8 @@ struct CFriendInfo
 	char m_aClan[MAX_CLAN_LENGTH];
 	unsigned m_NameHash;
 	unsigned m_ClanHash;
+	bool m_Online;
+	NETADDR m_ServerAddr;
 };
 
 class IFriends : public IInterface
@@ -25,7 +27,7 @@ public:
 		FRIEND_CLAN,
 		FRIEND_PLAYER,
 
-		MAX_FRIENDS=128,
+		MAX_FRIENDS=256,
 	};
 
 	virtual void Init() = 0;
@@ -34,9 +36,12 @@ public:
 	virtual const CFriendInfo *GetFriend(int Index) const = 0;
 	virtual int GetFriendState(const char *pName, const char *pClan) const = 0;
 	virtual bool IsFriend(const char *pName, const char *pClan, bool PlayersOnly) const = 0;
+	virtual void ClearOnlineState() = 0;
+	virtual void SetOnline(const char *pName, const char *pClan, NETADDR ServerAddr) = 0;
 
 	virtual void AddFriend(const char *pName, const char *pClan) = 0;
 	virtual void RemoveFriend(const char *pName, const char *pClan) = 0;
+	virtual void RemoveFriend(int Index) = 0;
 };
 
 #endif

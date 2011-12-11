@@ -64,8 +64,8 @@ void CSpectator::ConSpectateNext(IConsole::IResult *pResult, void *pUserData)
 				if(!pSelf->m_pClient->m_Snap.m_paPlayerInfos[i] || pSelf->m_pClient->m_Snap.m_paPlayerInfos[i]->m_Team == TEAM_SPECTATORS)
 					continue;
 
-				NewSpectatorID = i;
-				GotNewSpectatorID = true;
+			NewSpectatorID = i;
+			GotNewSpectatorID = true;
 				break;
 			}
 		}
@@ -193,7 +193,7 @@ void CSpectator::OnRender()
 	float FontSize = 20.0f;
 	float StartY = -190.0f;
 	float LineHeight = 60.0f;
-	bool Selected = false;
+	bool Selected  = false;
 
 	if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SPEC_FREEVIEW)
 	{

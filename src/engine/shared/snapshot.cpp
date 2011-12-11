@@ -12,20 +12,20 @@ CSnapshotItem *CSnapshot::GetItem(int Index)
 
 int CSnapshot::GetItemSize(int Index)
 {
-	if(Index == m_NumItems-1)
-		return (m_DataSize - Offsets()[Index]) - sizeof(CSnapshotItem);
-	return (Offsets()[Index+1] - Offsets()[Index]) - sizeof(CSnapshotItem);
+    if(Index == m_NumItems-1)
+        return (m_DataSize - Offsets()[Index]) - sizeof(CSnapshotItem);
+    return (Offsets()[Index+1] - Offsets()[Index]) - sizeof(CSnapshotItem);
 }
 
 int CSnapshot::GetItemIndex(int Key)
 {
-	// TODO: OPT: this should not be a linear search. very bad
-	for(int i = 0; i < m_NumItems; i++)
-	{
-		if(GetItem(i)->Key() == Key)
-			return i;
-	}
-	return -1;
+    // TODO: OPT: this should not be a linear search. very bad
+    for(int i = 0; i < m_NumItems; i++)
+    {
+        if(GetItem(i)->Key() == Key)
+            return i;
+    }
+    return -1;
 }
 
 int CSnapshot::Crc()
@@ -128,7 +128,7 @@ void CSnapshotDelta::UndiffItem(int *pPast, int *pDiff, int *pOut, int Size)
 		else
 		{
 			unsigned char aBuf[16];
-			unsigned char *pEnd = CVariableInt::Pack(aBuf, *pDiff);
+			unsigned char *pEnd = CVariableInt::Pack(aBuf,  *pDiff);
 			m_aSnapshotDataRate[m_SnapshotCurrent] += (int)(pEnd - (unsigned char*)aBuf) * 8;
 		}
 
@@ -197,7 +197,7 @@ int CSnapshotDelta::CreateDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pDstData
 	// we do this as a separate pass because it helps the cache
 	for(i = 0; i < pTo->NumItems(); i++)
 	{
-		pCurItem = pTo->GetItem(i); // O(1) .. O(n)
+		pCurItem = pTo->GetItem(i);  // O(1) .. O(n)
 		aPastIndecies[i] = GetItemIndexHashed(pCurItem->Key(), Hashlist); // O(n) .. O(n^n)
 	}
 
@@ -205,7 +205,7 @@ int CSnapshotDelta::CreateDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pDstData
 	{
 		// do delta
 		ItemSize = pTo->GetItemSize(i); // O(1) .. O(n)
-		pCurItem = pTo->GetItem(i); // O(1) .. O(n)
+		pCurItem = pTo->GetItem(i);  // O(1) .. O(n)
 		PastIndex = aPastIndecies[i];
 
 		if(PastIndex != -1)
@@ -411,8 +411,8 @@ void CSnapshotStorage::PurgeUntil(int Tick)
 		mem_free(pHolder);
 
 		// did we come to the end of the list?
-		if (!pNext)
-			break;
+        if (!pNext)
+            break;
 
 		m_pFirst = pNext;
 		pNext->m_pPrev = 0x0;

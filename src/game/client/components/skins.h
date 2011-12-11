@@ -16,17 +16,19 @@ public:
 		int m_ColorTexture;
 		char m_aName[24];
 		vec3 m_BloodColor;
-
+		char m_aFilename[1024];
+		bool m_Loaded;
 		bool operator<(const CSkin &Other) { return str_comp(m_aName, Other.m_aName) < 0; }
 	};
 
 	void OnInit();
-
+	
 	vec3 GetColorV3(int v);
 	vec4 GetColorV4(int v);
 	int Num();
 	const CSkin *Get(int Index);
 	int Find(const char *pName);
+    void LoadSkin(CSkin *pSkin);
 
 private:
 	sorted_array<CSkin> m_aSkins;

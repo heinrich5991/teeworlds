@@ -89,6 +89,9 @@ public:
 	virtual int MapDownloadAmount() = 0;
 	virtual int MapDownloadTotalsize() = 0;
 
+	virtual int FileDownloadAmount() = 0;
+	virtual int FileDownloadTotalsize() = 0;
+
 	// input
 	virtual int *GetInput(int Tick) = 0;
 
@@ -118,6 +121,7 @@ public:
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags) = 0;
+	virtual int SendMsgEx(CMsgPacker *pMsg, int Flags, bool System) = 0;
 
 	template<class T>
 	int SendPackMsg(T *pMsg, int Flags)
@@ -131,6 +135,7 @@ public:
 	//
 	virtual const char *ErrorString() = 0;
 	virtual const char *LatestVersion() = 0;
+	virtual const char *LatestLuaVersion() = 0;
 	virtual bool ConnectionProblems() = 0;
 
 	virtual bool SoundInitFailed() = 0;
@@ -157,12 +162,14 @@ public:
 	virtual void OnPredict() = 0;
 	virtual void OnActivateEditor() = 0;
 
+	virtual void OnLuaPacket(CUnpacker *pUnpacker) = 0;
+
 	virtual int OnSnapInput(int *pData) = 0;
 
 	virtual const char *GetItemName(int Type) = 0;
 	virtual const char *Version() = 0;
 	virtual const char *NetVersion() = 0;
-
+	virtual const char *NetVersionLua() = 0;
 };
 
 extern IGameClient *CreateGameClient();

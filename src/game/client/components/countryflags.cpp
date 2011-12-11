@@ -6,7 +6,6 @@
 #include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/storage.h>
-#include <engine/shared/config.h>
 #include <engine/shared/linereader.h>
 
 #include "countryflags.h"
@@ -46,14 +45,14 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 			continue;
 		}
 
-		int CountryCode = str_toint(pReplacement+3);
-		if(CountryCode < CODE_LB || CountryCode > CODE_UB)
-		{
-			char aBuf[128];
-			str_format(aBuf, sizeof(aBuf), "country code '%i' not within valid code range [%i..%i]", CountryCode, CODE_LB, CODE_UB);
-			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aBuf);
-			continue;
-		}
+        int CountryCode = str_toint(pReplacement+3);
+        if(CountryCode < CODE_LB || CountryCode > CODE_UB)
+        {
+            char aBuf[128];
+            str_format(aBuf, sizeof(aBuf), "country code '%i' not within valid code range [%i..%i]", CountryCode, CODE_LB, CODE_UB);
+            Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aBuf);
+            continue;
+        }
 
 		// load the graphic file
 		char aBuf[128];
@@ -81,10 +80,9 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 		m_aCountryFlags.add(CountryFlag);
 	}
 	io_close(File);
-
-	mem_zero(m_CodeIndexLUT, sizeof(m_CodeIndexLUT));
-	for(int i = 0; i < m_aCountryFlags.size(); ++i)
-		m_CodeIndexLUT[max(0, (m_aCountryFlags[i].m_CountryCode-CODE_LB)%CODE_RANGE)] = i+1;
+    mem_zero(m_CodeIndexLUT, sizeof(m_CodeIndexLUT));
+    for(int i = 0; i < m_aCountryFlags.size(); ++i)
+        m_CodeIndexLUT[max(0, (m_aCountryFlags[i].m_CountryCode-CODE_LB)%CODE_RANGE)] = i+1;
 }
 
 void CCountryFlags::OnInit()
@@ -115,5 +113,5 @@ const CCountryFlags::CCountryFlag *CCountryFlags::GetByCountryCode(int CountryCo
 
 const CCountryFlags::CCountryFlag *CCountryFlags::GetByIndex(int Index) const
 {
-	return &m_aCountryFlags[max(0, Index%m_aCountryFlags.size())];
+    return &m_aCountryFlags[max(0, Index%m_aCountryFlags.size())];
 }

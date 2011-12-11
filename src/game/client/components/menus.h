@@ -55,6 +55,7 @@ class CMenus : public CComponent
 	*/
 
 	int DoButton_Icon(int ImageId, int SpriteId, const CUIRect *pRect);
+	int DoButton_MusicIcon(int *pID, int What, const CUIRect *pRect);
 	int DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 
 	//static void ui_draw_browse_icon(int what, const CUIRect *r);
@@ -84,46 +85,13 @@ class CMenus : public CComponent
 	};
 
 	void UiDoListboxStart(const void *pID, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
-						int ItemsPerRow, int SelectedIndex, float ScrollValue);
+						  int ItemsPerRow, int SelectedIndex, float ScrollValue);
 	CListboxItem UiDoListboxNextItem(const void *pID, bool Selected = false);
 	CListboxItem UiDoListboxNextRow();
 	int UiDoListboxEnd(float *pScrollValue, bool *pItemActivated);
 
 	//static void demolist_listdir_callback(const char *name, int is_dir, void *user);
 	//static void demolist_list_callback(const CUIRect *rect, int index, void *user);
-
-	enum
-	{
-		POPUP_NONE=0,
-		POPUP_FIRST_LAUNCH,
-		POPUP_CONNECTING,
-		POPUP_MESSAGE,
-		POPUP_DISCONNECTED,
-		POPUP_PURE,
-		POPUP_LANGUAGE,
-		POPUP_COUNTRY,
-		POPUP_DELETE_DEMO,
-		POPUP_RENAME_DEMO,
-		POPUP_REMOVE_FRIEND,
-		POPUP_SOUNDERROR,
-		POPUP_PASSWORD,
-		POPUP_QUIT,
-	};
-
-	enum
-	{
-		PAGE_NEWS=1,
-		PAGE_GAME,
-		PAGE_PLAYERS,
-		PAGE_SERVER_INFO,
-		PAGE_CALLVOTE,
-		PAGE_INTERNET,
-		PAGE_LAN,
-		PAGE_FAVORITES,
-		PAGE_DEMOS,
-		PAGE_SETTINGS,
-		PAGE_SYSTEM,
-	};
 
 	int m_GamePage;
 	int m_Popup;
@@ -134,7 +102,6 @@ class CMenus : public CComponent
 
 	int64 m_LastInput;
 
-	// loading
 	int m_LoadCurrent;
 	int m_LoadTotal;
 
@@ -146,6 +113,7 @@ class CMenus : public CComponent
 	void PopupMessage(const char *pTopic, const char *pBody, const char *pButton);
 
 	// TODO: this is a bit ugly but.. well.. yeah
+	// m_aInputEvents and m_NumInputEvents were static! can anyone tell me why?
 	enum { MAX_INPUTEVENTS = 32 };
 	static IInput::CEvent m_aInputEvents[MAX_INPUTEVENTS];
 	static int m_NumInputEvents;
@@ -155,9 +123,10 @@ class CMenus : public CComponent
 	static float ms_ListheaderHeight;
 	static float ms_FontmodHeight;
 
-	// for settings
+	// for graphic settings
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
+	bool m_NeedRestartLua;
 	bool m_NeedSendinfo;
 	int m_SettingPlayerPage;
 
@@ -165,6 +134,7 @@ class CMenus : public CComponent
 	bool m_EscapePressed;
 	bool m_EnterPressed;
 	bool m_DeletePressed;
+	bool m_F5Pressed;
 
 	// for map download popup
 	int64 m_DownloadLastCheckTime;
@@ -175,6 +145,19 @@ class CMenus : public CComponent
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;
 	char m_aCallvoteReason[VOTE_REASON_LENGTH];
+
+    // lua
+    struct CLuaItem
+	{
+		char m_aFilename[128];
+		char m_aName[128];
+
+		bool operator<(const CLuaItem &Other) { return str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
+	};
+    sorted_array<CLuaItem> m_lLuaFiles;
+    static int LuaFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+    void LuaPopulate();
+
 
 	// demo
 	struct CDemoItem
@@ -270,10 +253,67 @@ class CMenus : public CComponent
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
+	void RenderSettingsLua(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
+
+	// found in menus_music.cpp
+	void RenderMusic(CUIRect MainView);
 
 	void SetActive(bool Active);
 public:
+
+	enum
+	{
+		POPUP_NONE=0,
+		POPUP_FIRST_LAUNCH,
+		POPUP_CONNECTING,
+		POPUP_MESSAGE,
+		POPUP_DISCONNECTED,
+		POPUP_PURE,
+		POPUP_LANGUAGE,
+		POPUP_COUNTRY,
+		POPUP_DELETE_DEMO,
+		POPUP_RENAME_DEMO,
+		POPUP_REMOVE_FRIEND,
+		POPUP_SOUNDERROR,
+		POPUP_PASSWORD,
+		POPUP_QUIT,
+		POPUP_FIRST_LAUNCH_LUA,
+	};
+
+	enum
+	{
+		PAGE_NEWS=1,
+		PAGE_GAME,
+		PAGE_PLAYERS,
+		PAGE_SERVER_INFO,
+		PAGE_CALLVOTE,
+		PAGE_SERVERS,
+		PAGE_CHAT,
+		PAGE_MUSIC,
+		PAGE_DEMOS,
+		PAGE_SETTINGS,
+		PAGE_SYSTEM,
+	};
+
+	enum
+	{
+		PAGE_SERVERS_INTERNET=1,
+		PAGE_SERVERS_LAN,
+		PAGE_SERVERS_FAVORITES,
+		PAGE_SERVERS_RECENT,
+	};
+	// found in menus_popup.cpp
+	void RenderPopus(CUIRect MainView);
+
+	int m_ActivLuaFile;
+    int GetGamePage() { return m_GamePage; }
+
+    vec2 GetMousePos() { return m_MousePos; }
+
+    int GetNumInputEvents() { return m_NumInputEvents; }
+    IInput::CEvent *GetInputEvents() { return m_aInputEvents; }
+
 	void RenderBackground();
 
 	void UseMouseButtons(bool Use) { m_UseMouseButtons = Use; }

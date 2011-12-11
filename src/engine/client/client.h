@@ -3,6 +3,8 @@
 #ifndef ENGINE_CLIENT_CLIENT_H
 #define ENGINE_CLIENT_CLIENT_H
 
+#include <base/tl/array.h>
+
 class CGraph
 {
 public:
@@ -75,6 +77,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	class CDemoPlayer m_DemoPlayer;
 	class CDemoRecorder m_DemoRecorder;
 	class CServerBrowser m_ServerBrowser;
+	class CLua m_Lua;
 	class CFriends m_Friends;
 	class CMapChecker m_MapChecker;
 
@@ -88,6 +91,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	float m_FrameTimeHigh;
 	int m_Frames;
 	NETADDR m_ServerAddress;
+	NETADDR m_BindAddr;
 	int m_WindowMustRefocus;
 	int m_SnapCrcErrors;
 	bool m_AutoScreenshotRecycle;
@@ -102,6 +106,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 
 	// version-checking
 	char m_aVersionStr[10];
+	char m_aLuaVersionStr[10];
 
 	// pinging
 	int64 m_PingStartTime;
@@ -121,6 +126,35 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int m_MapdownloadCrc;
 	int m_MapdownloadAmount;
 	int m_MapdownloadTotalsize;
+	char *m_pMapdownloadChecks;
+	char *m_pMapdownloadCache;
+	int m_MapdownloadSegments;
+
+
+	// file download
+	int m_ModFileNumber;
+	int m_ModFileCurrentNumber;
+	int m_ModFileCurrentChunk;
+	IOHANDLE m_FileDownloadHandle;
+	int m_FileDownloadAmount;
+	int m_FileDownloadTotalSize;
+	class CModFile //may move this to shared?
+	{
+    public:
+	    char m_aName[256];
+	    enum FILETYPE
+	    {
+	        FILETYPEINVALID = 0,
+	        FILETYPELUA,
+	        FILETYPEPNG,
+	        FILETYPEWAV,
+	        FILETYPEOTHER,
+	    } m_Type;
+        int m_Size;
+        int m_Crc;
+        unsigned char *m_pCurrentData;
+	};
+    array<CModFile> m_lModFiles;
 
 	// time
 	CSmoothTime m_GameTime;
@@ -170,7 +204,9 @@ class CClient : public IClient, public CDemoPlayer::IListner
 
 		int m_State;
 		class CHostLookup m_VersionServeraddr;
-	} m_VersionInfo;
+	};
+	CVersionInfo m_VersionInfo;
+	CVersionInfo m_VersionLuaInfo;
 
 public:
 	IEngine *Engine() { return m_pEngine; }
@@ -210,6 +246,8 @@ public:
 
 	const char *LatestVersion();
 	void VersionUpdate();
+	const char *LatestLuaVersion();
+	void VersionLuaUpdate();
 
 	// ------ state handling -----
 	void SetState(int s);
@@ -253,6 +291,9 @@ public:
 
 	virtual int MapDownloadAmount() { return m_MapdownloadAmount; }
 	virtual int MapDownloadTotalsize() { return m_MapdownloadTotalsize; }
+
+	virtual int FileDownloadAmount() { return m_FileDownloadAmount; }
+	virtual int FileDownloadTotalsize() { return m_FileDownloadTotalSize; }
 
 	void PumpNetwork();
 

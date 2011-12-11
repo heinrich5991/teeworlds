@@ -237,9 +237,9 @@ float CGameConsole::TimeNow()
 
 CGameConsole::CInstance *CGameConsole::CurrentConsole()
 {
-	if(m_ConsoleType == CONSOLETYPE_REMOTE)
-		return &m_RemoteConsole;
-	return &m_LocalConsole;
+    if(m_ConsoleType == CONSOLETYPE_REMOTE)
+    	return &m_RemoteConsole;
+    return &m_LocalConsole;
 }
 
 void CGameConsole::OnReset()
@@ -312,7 +312,7 @@ void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 
 void CGameConsole::OnRender()
 {
-	CUIRect Screen = *UI()->Screen();
+    CUIRect Screen = *UI()->Screen();
 	float ConsoleMaxHeight = Screen.h*3/5.0f;
 	float ConsoleHeight;
 
@@ -352,31 +352,31 @@ void CGameConsole::OnRender()
 
 	// do console shadow
 	Graphics()->TextureSet(-1);
-	Graphics()->QuadsBegin();
+    Graphics()->QuadsBegin();
 	IGraphics::CColorVertex Array[4] = {
-		IGraphics::CColorVertex(0, 0,0,0, 0.5f),
-		IGraphics::CColorVertex(1, 0,0,0, 0.5f),
-		IGraphics::CColorVertex(2, 0,0,0, 0.0f),
+    	IGraphics::CColorVertex(0, 0,0,0, 0.5f),
+    	IGraphics::CColorVertex(1, 0,0,0, 0.5f),
+    	IGraphics::CColorVertex(2, 0,0,0, 0.0f),
 		IGraphics::CColorVertex(3, 0,0,0, 0.0f)};
 	Graphics()->SetColorVertex(Array, 4);
 	IGraphics::CQuadItem QuadItem(0, ConsoleHeight, Screen.w, 10.0f);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
+    Graphics()->QuadsEnd();
 
 	// do background
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BG].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.2f, 0.2f, 0.2f,0.9f);
-	if(m_ConsoleType == CONSOLETYPE_REMOTE)
-		Graphics()->SetColor(0.4f, 0.2f, 0.2f,0.9f);
-	Graphics()->QuadsSetSubset(0,-ConsoleHeight*0.075f,Screen.w*0.075f*0.5f,0);
+    Graphics()->QuadsBegin();
+    Graphics()->SetColor(0.2f, 0.2f, 0.2f,0.9f);
+    if(m_ConsoleType == CONSOLETYPE_REMOTE)
+	    Graphics()->SetColor(0.4f, 0.2f, 0.2f,0.9f);
+    Graphics()->QuadsSetSubset(0,-ConsoleHeight*0.075f,Screen.w*0.075f*0.5f,0);
 	QuadItem = IGraphics::CQuadItem(0, 0, Screen.w, ConsoleHeight);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
+    Graphics()->QuadsEnd();
 
 	// do small bar shadow
 	Graphics()->TextureSet(-1);
-	Graphics()->QuadsBegin();
+    Graphics()->QuadsBegin();
 	Array[0] = IGraphics::CColorVertex(0, 0,0,0, 0.0f);
 	Array[1] = IGraphics::CColorVertex(1, 0,0,0, 0.0f);
 	Array[2] = IGraphics::CColorVertex(2, 0,0,0, 0.25f);
@@ -384,20 +384,20 @@ void CGameConsole::OnRender()
 	Graphics()->SetColorVertex(Array, 4);
 	QuadItem = IGraphics::CQuadItem(0, ConsoleHeight-20, Screen.w, 10);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
+    Graphics()->QuadsEnd();
 
 	// do the lower bar
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BAR].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.9f);
-	Graphics()->QuadsSetSubset(0,0.1f,Screen.w*0.015f,1-0.1f);
+    Graphics()->QuadsBegin();
+    Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.9f);
+    Graphics()->QuadsSetSubset(0,0.1f,Screen.w*0.015f,1-0.1f);
 	QuadItem = IGraphics::CQuadItem(0,ConsoleHeight-10.0f,Screen.w,10.0f);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
+    Graphics()->QuadsEnd();
 
-	ConsoleHeight -= 22.0f;
+    ConsoleHeight -= 22.0f;
 
-	CInstance *pConsole = CurrentConsole();
+    CInstance *pConsole = CurrentConsole();
 
 	{
 		float FontSize = 10.0f;
@@ -532,11 +532,14 @@ void CGameConsole::OnRender()
 
 		// render page
 		char aBuf[128];
+
 		str_format(aBuf, sizeof(aBuf), Localize("-Page %d-"), pConsole->m_BacklogActPage+1);
 		TextRender()->Text(0, 10.0f, 0.0f, FontSize, aBuf, -1);
 
-		// render version
-		str_format(aBuf, sizeof(aBuf), "v%s", GAME_VERSION);
+		// render version & time date
+		char aTime[128];
+		str_timestamp(aTime, sizeof(aTime));
+        str_format(aBuf, sizeof(aBuf), "%s - v%s - L%s", aTime, GAME_VERSION, GAME_LUA_VERSION);
 		float Width = TextRender()->TextWidth(0, FontSize, aBuf, -1);
 		TextRender()->Text(0, Screen.w-Width-10.0f, 0.0f, FontSize, aBuf, -1);
 	}
@@ -705,4 +708,6 @@ void CGameConsole::OnStateChange(int NewState, int OldState)
 {
 	if(NewState == IClient::STATE_OFFLINE)
 		m_RemoteConsole.ClearHistory();
+    m_pClient->m_pLua->m_EventListener.m_StateOld = OldState;
+    m_pClient->m_pLua->m_EventListener.OnEvent("OnStateChange");
 }

@@ -18,6 +18,10 @@
 
 #include "chat.h"
 
+#if defined(CONF_FAMILY_WINDOWS)
+	#include <windows.h> // copy paste
+#endif
+
 
 CChat::CChat()
 {
@@ -95,6 +99,56 @@ void CChat::OnConsoleInit()
 
 bool CChat::OnInput(IInput::CEvent Event)
 {
+    #if defined(CONF_FAMILY_WINDOWS) // Copy paste in chat - only for Windows atm
+        if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == 'v' && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL))) // paste
+        {
+            if(m_Mode == MODE_NONE) // Simply send it
+            {
+                char *Data;
+                OpenClipboard(NULL);
+                Data = (char*)GetClipboardData(CF_TEXT);
+                if(Data)
+                    Say(0, Data);
+                CloseClipboard();
+            }
+            else
+            {
+                char *Data;
+                OpenClipboard(NULL);
+                Data = (char*)GetClipboardData(CF_TEXT);
+                CloseClipboard();
+                if(Data)
+                {
+                    int i = 0;
+                    while(Data[i]) // Parse the string
+                    {
+                        // void ProcessInput(IInput::CEvent e);
+                        m_Input.ProcessCharInput(Data[i]); // Maybe remove \n?
+                        i++;
+                    }
+                }
+            }
+        }
+        else if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == 'c' || Event.m_Key == 'x' && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL))) // Copy
+        {
+            if(m_Mode != MODE_NONE)
+            {
+                OpenClipboard(NULL);
+                EmptyClipboard();
+                HGLOBAL h = GlobalAlloc(GHND | GMEM_SHARE, strlen(m_Input.GetString()) + 1);
+                strcpy((LPSTR)GlobalLock(h), m_Input.GetString());
+                GlobalUnlock(h);
+
+                SetClipboardData(CF_TEXT, h);
+                CloseClipboard();
+
+                if(Event.m_Key == 'x')
+                    m_Mode = MODE_NONE;
+            }
+            // Dunedune: Could we implement a way to copy other stuff when not chatting? Like last message sent over chat?
+        }
+    #endif
+
 	if(m_Mode == MODE_NONE)
 		return false;
 
@@ -132,25 +186,25 @@ bool CChat::OnInput(IInput::CEvent Event)
 
 		// find next possible name
 		const char *pCompletionString = 0;
-		m_CompletionChosen = (m_CompletionChosen+1)%(2*MAX_CLIENTS);
-		for(int i = 0; i < 2*MAX_CLIENTS; ++i)
+        m_CompletionChosen = (m_CompletionChosen+1)%(2*MAX_CLIENTS);
+        for(int i = 0; i < 2*MAX_CLIENTS; ++i)
 		{
-			int SearchType = ((m_CompletionChosen+i)%(2*MAX_CLIENTS))/MAX_CLIENTS;
+		    int SearchType = ((m_CompletionChosen+i)%(2*MAX_CLIENTS))/MAX_CLIENTS;
 			int Index = (m_CompletionChosen+i)%MAX_CLIENTS;
 			if(!m_pClient->m_Snap.m_paPlayerInfos[Index])
 				continue;
 
-			bool Found = false;
-			if(SearchType == 1)
-			{
-				if(str_comp_nocase_num(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer, str_length(m_aCompletionBuffer)) &&
-					str_find_nocase(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer))
-					Found = true;
-			}
-			else if(!str_comp_nocase_num(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer, str_length(m_aCompletionBuffer)))
-				Found = true;
+            bool Found = false;
+            if(SearchType == 1)
+            {
+                if(str_comp_nocase_num(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer, str_length(m_aCompletionBuffer)) &&
+                    str_find_nocase(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer))
+                Found = true;
+            }
+            else if(!str_comp_nocase_num(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer, str_length(m_aCompletionBuffer)))
+                Found = true;
 
-			if(Found)
+            if(Found)
 			{
 				pCompletionString = m_pClient->m_aClients[Index].m_aName;
 				m_CompletionChosen = Index+SearchType*MAX_CLIENTS;
@@ -210,7 +264,11 @@ bool CChat::OnInput(IInput::CEvent Event)
 			m_pHistoryEntry = m_History.Last();
 
 		if (m_pHistoryEntry)
-			m_Input.Set(m_pHistoryEntry);
+		{
+			unsigned int Len = str_length(m_pHistoryEntry);
+			if (Len < sizeof(m_Input) - 1) // TODO: WTF?
+				m_Input.Set(m_pHistoryEntry);
+		}
 	}
 	else if (Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_DOWN)
 	{
@@ -218,7 +276,11 @@ bool CChat::OnInput(IInput::CEvent Event)
 			m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
 
 		if (m_pHistoryEntry)
-			m_Input.Set(m_pHistoryEntry);
+		{
+			unsigned int Len = str_length(m_pHistoryEntry);
+			if (Len < sizeof(m_Input) - 1) // TODO: WTF?
+				m_Input.Set(m_pHistoryEntry);
+		}
 		else
 			m_Input.Clear();
 	}
@@ -250,7 +312,14 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-		AddLine(pMsg->m_ClientID, pMsg->m_Team, pMsg->m_pMessage);
+		m_pClient->m_pLua->m_EventListener.m_pChatText = (char *)pMsg->m_pMessage;
+		m_pClient->m_pLua->m_EventListener.m_ChatClientID = pMsg->m_ClientID;
+		m_pClient->m_pLua->m_EventListener.m_ChatTeam = pMsg->m_Team;
+		m_pClient->m_pLua->m_EventListener.m_ChatHide = false;
+		m_pClient->m_pLua->m_EventListener.OnEvent("OnChat");
+
+		if (m_pClient->m_pLua->m_EventListener.m_ChatHide == false)
+            AddLine(pMsg->m_ClientID, pMsg->m_Team, pMsg->m_pMessage);
 	}
 }
 

@@ -3,6 +3,7 @@
 #ifndef VERSIONSRV_VERSIONSRV_H
 #define VERSIONSRV_VERSIONSRV_H
 static const int VERSIONSRV_PORT = 8302;
+static const int VERSIONSRVLUA_PORT = 8301;
 
 struct CMapVersion
 {
@@ -35,4 +36,10 @@ static const unsigned char VERSIONSRV_VERSION[] = {255, 255, 255, 255, 'v', 'e',
 
 static const unsigned char VERSIONSRV_GETMAPLIST[] = {255, 255, 255, 255, 'v', 'm', 'l', 'g'};
 static const unsigned char VERSIONSRV_MAPLIST[] = {255, 255, 255, 255, 'v', 'm', 'l', 's'};
+
+//Lua
+
+static const unsigned char VERSIONSRV_GETLUAVERSION[] = {255, 255, 255, 255, 'v', 'n', 'l', 'g'};
+static const unsigned char VERSIONSRV_LUAVERSION[] = {255, 255, 255, 255, 'v', 'n', 'l', 's'};
+
 #endif

@@ -326,11 +326,15 @@ void CScoreboard::OnRender()
 	if(m_pClient->m_pMotd->IsActive())
 		m_pClient->m_pMotd->Clear();
 
-
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
 	float Height = 400*3.0f;
 
 	Graphics()->MapScreen(0, 0, Width, Height);
+
+	m_pClient->m_pLua->m_EventListener.m_ScoreboardSkipRender = false;
+	m_pClient->m_pLua->m_EventListener.OnEvent("OnScoreboardRender");
+	if (m_pClient->m_pLua->m_EventListener.m_ScoreboardSkipRender)
+        return;
 
 	float w = 700.0f;
 

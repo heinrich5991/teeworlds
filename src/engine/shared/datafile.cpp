@@ -266,6 +266,10 @@ int CDataFileReader::GetDataSize(int Index)
 
 void *CDataFileReader::GetDataImpl(int Index, int Swap)
 {
+    #if defined(CONF_ARCH_ENDIAN_BIG)
+    if (Index > 255) // a "farmersolution" but it works ;)
+        swap_endian(&Index, sizeof(int), 1); //i hate those fuckin' big endian cpus
+    #endif
 	if(!m_pDataFile) { return 0; }
 
 	// load it if needed

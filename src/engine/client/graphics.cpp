@@ -160,15 +160,14 @@ CGraphics_OpenGL::CGraphics_OpenGL()
 
 void CGraphics_OpenGL::ClipEnable(int x, int y, int w, int h)
 {
-	if(x < 0)
-		w += x;
-	if(y < 0)
-		h += y;
-
-	x = clamp(x, 0, ScreenWidth());
-	y = clamp(y, 0, ScreenHeight());
-	w = clamp(w, 0, ScreenWidth()-x);
-	h = clamp(h, 0, ScreenHeight()-y);
+    if(x < 0)
+        w += x;
+    if(y < 0)
+        h += y;
+    x = clamp(x, 0, ScreenWidth());
+    y = clamp(y, 0, ScreenHeight());
+    w = clamp(w, 0, ScreenWidth()-x);
+    h = clamp(h, 0, ScreenHeight()-y);
 
 	glScissor(x, ScreenHeight()-(y+h), w, h);
 	glEnable(GL_SCISSOR_TEST);
@@ -219,6 +218,19 @@ void CGraphics_OpenGL::GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBot
 	*pTopLeftY = m_ScreenY0;
 	*pBottomRightX = m_ScreenX1;
 	*pBottomRightY = m_ScreenY1;
+}
+
+bool CGraphics_OpenGL::OnScreen(float X, float Y, float W, float H)
+{
+    if (X+W < m_ScreenX0)
+        return false;
+    if (Y+H < m_ScreenY0)
+        return false;
+    if (X-W > m_ScreenX1)
+        return false;
+    if (Y-H > m_ScreenY1)
+        return false;
+    return true;
 }
 
 void CGraphics_OpenGL::LinesBegin()
@@ -437,6 +449,37 @@ int CGraphics_OpenGL::LoadPNG(CImageInfo *pImg, const char *pFilename, int Stora
 	return 1;
 }
 
+void CGraphics_OpenGL::ScreenShotThread(void *pUser)
+{
+    ScreenshotThreadStruct *pScreenshotData = (ScreenshotThreadStruct *)pUser;
+    unsigned char *pTempRow = pScreenshotData->m_pPixelData+pScreenshotData->m_w*pScreenshotData->m_h*3;
+    // flip the pixel because opengl works from bottom left corner
+    for(int y = 0; y < pScreenshotData->m_h/2; y++)
+    {
+        mem_copy(pTempRow, pScreenshotData->m_pPixelData+y*pScreenshotData->m_w*3, pScreenshotData->m_w*3);
+        mem_copy(pScreenshotData->m_pPixelData+y*pScreenshotData->m_w*3, pScreenshotData->m_pPixelData+(pScreenshotData->m_h-y-1)*pScreenshotData->m_w*3, pScreenshotData->m_w*3);
+        mem_copy(pScreenshotData->m_pPixelData+(pScreenshotData->m_h-y-1)*pScreenshotData->m_w*3, pTempRow,pScreenshotData->m_w*3);
+    }
+
+    // find filename
+    {
+        char aWholePath[1024];
+        png_t Png; // ignore_convention
+
+        IOHANDLE File  = pScreenshotData->m_pSelf->m_pStorage->OpenFile(pScreenshotData->m_aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE, aWholePath, sizeof(aWholePath));
+        if(File)
+            io_close(File);
+
+        // save png
+        dbg_msg("client", "saved screenshot to '%s'", aWholePath);
+        png_open_file_write(&Png, aWholePath); // ignore_convention
+        png_set_data(&Png, pScreenshotData->m_w, pScreenshotData->m_h, 8, PNG_TRUECOLOR, (unsigned char *)pScreenshotData->m_pPixelData); // ignore_convention
+        png_close_file(&Png); // ignore_convention
+    }
+    mem_free(pScreenshotData->m_pPixelData);
+    delete pScreenshotData;
+}
+
 void CGraphics_OpenGL::ScreenshotDirect(const char *pFilename)
 {
 	// fetch image data
@@ -451,35 +494,142 @@ void CGraphics_OpenGL::ScreenshotDirect(const char *pFilename)
 	glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pPixelData);
 	glPixelStorei(GL_PACK_ALIGNMENT, Alignment);
 
-	// flip the pixel because opengl works from bottom left corner
-	for(y = 0; y < h/2; y++)
+	if (g_Config.m_ClScreenShotThread)
 	{
-		mem_copy(pTempRow, pPixelData+y*w*3, w*3);
-		mem_copy(pPixelData+y*w*3, pPixelData+(h-y-1)*w*3, w*3);
-		mem_copy(pPixelData+(h-y-1)*w*3, pTempRow,w*3);
+        ScreenshotThreadStruct *ScreenshotData = new ScreenshotThreadStruct();
+        str_copy(ScreenshotData->m_aFilename, pFilename, sizeof(ScreenshotData->m_aFilename));
+        ScreenshotData->m_h = h;
+        ScreenshotData->m_w = w;
+        ScreenshotData->m_pPixelData = pPixelData;
+        ScreenshotData->m_pSelf = this;
+        thread_create(ScreenShotThread, ScreenshotData);
 	}
-
-	// find filename
+	else
 	{
-		char aWholePath[1024];
-		png_t Png; // ignore_convention
+        // flip the pixel because opengl works from bottom left corner
+        for(y = 0; y < h/2; y++)
+        {
+            mem_copy(pTempRow, pPixelData+y*w*3, w*3);
+            mem_copy(pPixelData+y*w*3, pPixelData+(h-y-1)*w*3, w*3);
+            mem_copy(pPixelData+(h-y-1)*w*3, pTempRow,w*3);
+        }
 
-		IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE, aWholePath, sizeof(aWholePath));
-		if(File)
-			io_close(File);
+        // find filename
+        {
+            char aWholePath[1024];
+            png_t Png; // ignore_convention
 
-		// save png
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "saved screenshot to '%s'", aWholePath);
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
-		png_open_file_write(&Png, aWholePath); // ignore_convention
-		png_set_data(&Png, w, h, 8, PNG_TRUECOLOR, (unsigned char *)pPixelData); // ignore_convention
-		png_close_file(&Png); // ignore_convention
+            IOHANDLE File  = m_pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE, aWholePath, sizeof(aWholePath));
+            if(File)
+                io_close(File);
+
+            // save png
+            char aBuf[256];
+            str_format(aBuf, sizeof(aBuf), "saved screenshot to '%s'", aWholePath);
+            m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
+            png_open_file_write(&Png, aWholePath); // ignore_convention
+            png_set_data(&Png, w, h, 8, PNG_TRUECOLOR, (unsigned char *)pPixelData); // ignore_convention
+            png_close_file(&Png); // ignore_convention
+        }
+
+        // clean up
+        mem_free(pPixelData);
 	}
-
-	// clean up
-	mem_free(pPixelData);
 }
+
+void CGraphics_OpenGL::CapturePixelStreamDirect(const char *pPath, int Frame)
+{
+	// fetch image data
+    int y;
+    int w = m_ScreenWidth;
+    int h = m_ScreenHeight;
+    static unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
+    GLint Alignment;
+    glGetIntegerv(GL_PACK_ALIGNMENT, &Alignment);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pPixelData);
+    glPixelStorei(GL_PACK_ALIGNMENT, Alignment);
+
+    static int i = 0;
+    if (i == 0)
+    {
+        i = 1;
+        CaptureThreadStruct *CaptureData = new CaptureThreadStruct();
+        str_copy(CaptureData->m_aPath, pPath, sizeof(CaptureData->m_aPath));
+        CaptureData->m_Frame = 0;
+        CaptureData->m_w = w;
+        CaptureData->m_h = h;
+        CaptureData->m_pPixelData = pPixelData;
+        CaptureData->m_pSelf = this;
+        thread_create(CapturePixelStreamThread, CaptureData);
+    }
+    /*// find filename
+    {
+        char aWholePath[1024];
+        png_t Png; // ignore_convention
+
+        char aFilename[1024];
+        str_format(aFilename, sizeof(aFilename), "%s/%i.png", pPath, Frame);
+        IOHANDLE File = m_pStorage->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE, aWholePath, sizeof(aWholePath));
+        if(File)
+        {
+            //io_write(File, pPixelData, w*(h)*3);
+            io_close(File);
+        }
+
+        // save png
+        png_open_file_write(&Png, aWholePath); // ignore_convention
+        png_set_data(&Png, w, h, 8, PNG_TRUECOLOR, (unsigned char *)pPixelData); // ignore_convention
+        png_close_file(&Png); // ignore_convention
+    }
+
+    // clean up
+    mem_free(pPixelData);*/
+}
+
+void CGraphics_OpenGL::CapturePixelStreamThread(void *pUser)
+{
+    CaptureThreadStruct *pCaptureData = (CaptureThreadStruct *)pUser;
+	// fetch image data
+	while (1)
+	{
+        unsigned int Size = pCaptureData->m_w * pCaptureData->m_h * 3;
+        dbg_msg("", "%i", Size);
+
+        char aFilename[1024];
+        str_format(aFilename, sizeof(aFilename), "%s/video.stream", pCaptureData->m_aPath, pCaptureData->m_Frame);
+        static IOHANDLE File = pCaptureData->m_pSelf->m_pStorage->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+        if(File)
+        {
+            int64 t = time_get();
+            char *pHeader = new char[sizeof(t) + sizeof(Size) + sizeof(pCaptureData->m_w) + sizeof(pCaptureData->m_h)];
+            char *pItem = pHeader;
+
+            mem_copy(pItem, &t, sizeof(t));
+            pItem = pItem + sizeof(t);
+
+            mem_copy(pItem, &Size, sizeof(Size));
+            pItem = pItem + sizeof(Size);
+
+            mem_copy(pItem, &pCaptureData->m_w, sizeof(pCaptureData->m_w));
+            pItem = pItem + sizeof(pCaptureData->m_w);
+
+            mem_copy(pItem, &pCaptureData->m_h, sizeof(pCaptureData->m_h));
+            pItem = pItem + sizeof(pCaptureData->m_h);
+
+            io_write(File, pHeader, sizeof(t) + sizeof(Size) + sizeof(pCaptureData->m_w) + sizeof(pCaptureData->m_h));
+            io_write(File, pCaptureData->m_pPixelData, Size);
+
+            delete []pHeader;
+            //io_close(File);
+        }
+	}
+
+    // clean up
+    mem_free(pCaptureData->m_pPixelData);
+    delete pCaptureData;
+}
+
 
 void CGraphics_OpenGL::TextureSet(int TextureID)
 {
@@ -897,6 +1047,31 @@ void CGraphics_SDL::Swap()
 		ScreenshotDirect(m_aScreenshotName);
 		m_DoScreenshot = false;
 	}
+
+	if (0)
+	{
+        int w = m_ScreenWidth;
+        int h = m_ScreenHeight;
+
+        static unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
+        GLint Alignment;
+        glGetIntegerv(GL_PACK_ALIGNMENT, &Alignment);
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pPixelData);
+        glPixelStorei(GL_PACK_ALIGNMENT, Alignment);
+
+        unsigned int Size = w*h*3; //Just save a 800x600 image (cause of fps)
+
+        static IOHANDLE File = m_pStorage->OpenFile("pixelstream/video.mrw", IOFLAG_WRITE, IStorage::TYPE_SAVE);
+        if(File)
+        {
+            io_write(File, pPixelData, Size);
+            //io_close(File);
+        }
+	}
+	static int Frame = 0;
+    Frame++;
+    //CapturePixelStreamDirect("tmp/pixelstream", Frame);
 
 	SDL_GL_SwapBuffers();
 

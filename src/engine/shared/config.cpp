@@ -19,7 +19,7 @@ class CConfig : public IConfig
 
 	enum
 	{
-		MAX_CALLBACKS = 16
+		MAX_CALLBACKS = 1024,
 	};
 
 	CCallback m_aCallbacks[MAX_CALLBACKS];
@@ -76,7 +76,7 @@ public:
 	{
 		if(!m_pStorage)
 			return;
-		m_ConfigFile = m_pStorage->OpenFile("settings.cfg", IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		m_ConfigFile = m_pStorage->OpenFile("nsettings.cfg", IOFLAG_WRITE, IStorage::TYPE_SAVE);
 
 		if(!m_ConfigFile)
 			return;

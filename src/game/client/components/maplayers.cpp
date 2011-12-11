@@ -81,34 +81,22 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	if(pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = pThis->DemoPlayer()->BaseInfo();
-		
-		if(!pInfo->m_Paused || pThis->m_EnvelopeUpdate)
-		{
-			if(pThis->m_CurrentLocalTick != pInfo->m_CurrentTick)
-			{
-				pThis->m_LastLocalTick = pThis->m_CurrentLocalTick;
-				pThis->m_CurrentLocalTick = pInfo->m_CurrentTick;
-			}
+		static int LastLocalTick = pInfo->m_CurrentTick;
 
-			Time = mix(pThis->m_LastLocalTick / (float)pThis->Client()->GameTickSpeed(),
-						pThis->m_CurrentLocalTick / (float)pThis->Client()->GameTickSpeed(),
-						pThis->Client()->IntraGameTick());
-		}
+		if(!pInfo->m_Paused)
+			Time += (pInfo->m_CurrentTick-LastLocalTick) / (float)pThis->Client()->GameTickSpeed() * pInfo->m_Speed;
 
 		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
+
+		LastLocalTick = pInfo->m_CurrentTick;
 	}
 	else
 	{
-		if(pItem->m_Version < 2 || pItem->m_Synchronized)
-		{
-			if(pThis->m_pClient->m_Snap.m_pGameInfoObj)
-				Time = mix((pThis->Client()->PrevGameTick()-pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)pThis->Client()->GameTickSpeed(),
-							(pThis->Client()->GameTick()-pThis->m_pClient->m_Snap.m_pGameInfoObj->m_RoundStartTick) / (float)pThis->Client()->GameTickSpeed(),
-							pThis->Client()->IntraGameTick());
-		}
-		else
-			Time = pThis->Client()->LocalTime();
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
+        unsigned long long Time = (unsigned long long)pThis->Client()->GameTick();
+        Time = Time * (1000 / SERVER_TICK_SPEED);
+	    if (pItem->m_NumPoints > 1)
+            Time = Time % (unsigned long long)(pPoints+pItem->m_StartPoint)[pItem->m_NumPoints-1].m_Time + (unsigned long long)(pPoints+pItem->m_StartPoint)[pItem->m_NumPoints-1].m_Time;
+	    pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, (float)((int)Time) / 1000.0f + TimeOffset, pChannels);
 	}
 }
 

@@ -4,12 +4,13 @@
 #define ENGINE_SERVER_SERVER_H
 
 #include <engine/server.h>
+#include <base/tl/array.h>
 
 class CSnapIDPool
 {
 	enum
 	{
-		MAX_IDS = 16*1024,
+		MAX_IDS = MAX_CLIENTS*1024,
 	};
 
 	class CID
@@ -133,6 +134,24 @@ public:
 	unsigned char *m_pCurrentMapData;
 	int m_CurrentMapSize;
 
+	class CModFile //may move this to shared?
+	{
+    public:
+	    char m_aName[256];
+	    enum FILETYPE
+	    {
+	        FILETYPEINVALID = 0,
+	        FILETYPELUA,
+	        FILETYPEPNG,
+	        FILETYPEWAV,
+	        FILETYPEOTHER,
+	    } m_Type;
+        int m_Size;
+        int m_Crc;
+        unsigned char *m_pCurrentData;
+	};
+    array<CModFile> m_lModFiles;
+
 	CDemoRecorder m_DemoRecorder;
 	CRegister m_Register;
 	CMapChecker m_MapChecker;
@@ -174,6 +193,7 @@ public:
 	static int DelClientCallback(int ClientID, const char *pReason, void *pUser);
 
 	void SendMap(int ClientID);
+	void SendFile(int ClientID);
 	void SendConnectionReady(int ClientID);
 	void SendRconLine(int ClientID, const char *pLine);
 	static void SendRconLineAuthed(const char *pLine, void *pUser);
@@ -195,6 +215,8 @@ public:
 
 	char *GetMapName();
 	int LoadMap(const char *pMapName);
+
+	void AddModFile(const char *pFileName, int Type);
 
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
 	int Run();

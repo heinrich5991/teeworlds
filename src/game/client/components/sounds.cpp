@@ -81,21 +81,20 @@ void CSounds::OnStateChange(int NewState, int OldState)
 void CSounds::OnRender()
 {
 	// check for sound initialisation
-	if(m_WaitForSoundJob)
-	{
-		if(m_SoundJob.Status() == CJob::STATE_DONE)
-			m_WaitForSoundJob = false;
-		else
-			return;
-	}
-
+    if(m_WaitForSoundJob)
+    {
+        if(m_SoundJob.Status() == CJob::STATE_DONE)
+            m_WaitForSoundJob = false;
+        else
+            return;
+    }
 	// set listner pos
 	Sound()->SetListenerPos(m_pClient->m_pCamera->m_Center.x, m_pClient->m_pCamera->m_Center.y);
 
 	// play sound from queue
 	if(m_QueuePos > 0)
 	{
-		int64 Now = time_get();
+		int64 Now =  time_get();
 		if(m_QueueWaitTime <= Now)
 		{
 			Play(m_aQueue[0].m_Channel, m_aQueue[0].m_SetId, 1.0f, vec2(0,0));
@@ -116,14 +115,14 @@ void CSounds::ClearQueue()
 void CSounds::Enqueue(int Channel, int SetId)
 {
 	// add sound to the queue
-	if(m_QueuePos < QUEUE_SIZE)
-	{
-		if(Channel == CHN_MUSIC || !g_Config.m_ClEditor)
-		{
-			m_aQueue[m_QueuePos].m_Channel = Channel;
-			m_aQueue[m_QueuePos++].m_SetId = SetId;
-		}
-	}
+    if(m_QueuePos < QUEUE_SIZE)
+    {
+        if(Channel == CHN_MUSIC || !g_Config.m_ClEditor)
+        {
+            m_aQueue[m_QueuePos].m_Channel = Channel;
+            m_aQueue[m_QueuePos++].m_SetId = SetId;
+        }
+    }
 }
 
 void CSounds::PlayAndRecord(int Chn, int SetId, float Vol, vec2 Pos)
@@ -137,7 +136,8 @@ void CSounds::PlayAndRecord(int Chn, int SetId, float Vol, vec2 Pos)
 
 void CSounds::Play(int Chn, int SetId, float Vol, vec2 Pos)
 {
-	if(!g_Config.m_SndEnable || !Sound()->IsSoundEnabled() || (Chn == CHN_MUSIC && !g_Config.m_SndMusic) || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
+    //Music - not used
+	if(!g_Config.m_SndEnable || (/*Chn == CHN_MUSIC && !g_Config.m_SndMusic*/ 0) || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
 		return;
 
 	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
@@ -145,9 +145,9 @@ void CSounds::Play(int Chn, int SetId, float Vol, vec2 Pos)
 	if(!pSet->m_NumSounds)
 		return;
 
-	int Flags = 0;
-	if(Chn == CHN_MUSIC)
-		Flags = ISound::FLAG_LOOP;
+    int Flags = 0;
+    if(Chn == CHN_MUSIC)
+        Flags = ISound::FLAG_LOOP;
 
 	if(pSet->m_NumSounds == 1)
 	{
@@ -170,9 +170,9 @@ void CSounds::Stop(int SetId)
 {
 	if(m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
 		return;
-
+	
 	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
-
+	
 	for(int i = 0; i < pSet->m_NumSounds; i++)
 		Sound()->Stop(pSet->m_aSounds[i].m_Id);
 }

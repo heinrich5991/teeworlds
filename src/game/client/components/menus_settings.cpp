@@ -208,7 +208,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 	{
-		const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
+        const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
+
 		if(pEntry->m_CountryCode == g_Config.m_PlayerCountry)
 			OldSelected = i;
 
@@ -273,7 +274,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Label.x+30.0f, Label.y+28.0f));
 	Label.HSplitTop(15.0f, 0, &Label);;
 	Label.VSplitLeft(70.0f, 0, &Label);
-	UI()->DoLabelScaled(&Label, g_Config.m_PlayerSkin, 14.0f, -1, 150.0f);
+	UI()->DoLabelScaled(&Label,  g_Config.m_PlayerSkin, 14.0f, -1, 150.0f);
 
 	// custom colour selector
 	MainView.HSplitTop(20.0f, 0, &MainView);
@@ -322,7 +323,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 				Label.VSplitLeft(100.0f, &Label, &Button);
 				Button.HMargin(2.0f, &Button);
 
-				float k = ((PrevColor>>((2-s)*8))&0xff) / 255.0f;
+				float k = ((PrevColor>>((2-s)*8))&0xff)  / 255.0f;
 				k = DoScrollbarH(&s_aColorSlider[i][s], &Button, k);
 				Color <<= 8;
 				Color += clamp((int)(k*255), 0, 255);
@@ -440,19 +441,18 @@ static CKeyInfo gs_aKeys[] =
 	{ "Show chat", "+show_chat", 0 },
 	{ "Emoticon", "+emote", 0 },
 	{ "Spectator mode", "+spectate", 0 },
-	{ "Spectate next", "spectate_next", 0 },
-	{ "Spectate previous", "spectate_previous", 0 },
+    { "Spectate next", "spectate_next", 0 },
+    { "Spectate previous", "spectate_previous", 0 },
 	{ "Console", "toggle_local_console", 0 },
 	{ "Remote console", "toggle_remote_console", 0 },
 	{ "Screenshot", "screenshot", 0 },
 	{ "Scoreboard", "+scoreboard", 0 },
 };
-
 /*	This is for scripts/update_localization.py to work, don't remove!
 	Localize("Move left");Localize("Move right");Localize("Jump");Localize("Fire");Localize("Hook");Localize("Hammer");
 	Localize("Pistol");Localize("Shotgun");Localize("Grenade");Localize("Rifle");Localize("Next weapon");Localize("Prev. weapon");
 	Localize("Vote yes");Localize("Vote no");Localize("Chat");Localize("Team chat");Localize("Show chat");Localize("Emoticon");
-	Localize("Spectator mode");Localize("Spectate next");Localize("Spectate previous");Localize("Console");Localize("Remote console");Localize("Screenshot");Localize("Scoreboard");
+    Localize("Spectator mode");Localize("Spectate next");Localize("Spectate previous");Localize("Console");Localize("Remote console");Localize("Screenshot");Localize("Scoreboard");
 */
 
 const int g_KeyCount = sizeof(gs_aKeys) / sizeof(CKeyInfo);
@@ -504,11 +504,10 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	}
 
 	CUIRect MovementSettings, WeaponSettings, VotingSettings, ChatSettings, MiscSettings, ResetButton;
-	MainView.VSplitMid(&MovementSettings, &VotingSettings);
+	MainView.VSplitLeft(MainView.w/2-5.0f, &MovementSettings, &VotingSettings);
 
 	// movement settings
 	{
-		MovementSettings.VMargin(5.0f, &MovementSettings);
 		MovementSettings.HSplitTop(MainView.h/3+60.0f, &MovementSettings, &WeaponSettings);
 		RenderTools()->DrawUIRect(&MovementSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		MovementSettings.Margin(10.0f, &MovementSettings);
@@ -545,21 +544,21 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		UiDoGetButtons(5, 12, WeaponSettings);
 	}
 
-	// defaults
-	{
-		ResetButton.HSplitTop(10.0f, 0, &ResetButton);
-		RenderTools()->DrawUIRect(&ResetButton, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
-		ResetButton.HMargin(10.0f, &ResetButton);
-		ResetButton.VMargin(30.0f, &ResetButton);
-		ResetButton.HSplitTop(20.0f, &ResetButton, 0);
-		static int s_DefaultButton = 0;
-		if(DoButton_Menu((void*)&s_DefaultButton, Localize("Reset to defaults"), 0, &ResetButton))
-			m_pClient->m_pBinds->SetDefaults();
-	}
+    // defaults
+
+    {
+        ResetButton.HSplitTop(10.0f, 0, &ResetButton);
+        RenderTools()->DrawUIRect(&ResetButton, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
+        ResetButton.HMargin(10.0f, &ResetButton);
+        ResetButton.VMargin(30.0f, &ResetButton);
+        static int s_DefaultButton = 0;
+        if(DoButton_Menu((void*)&s_DefaultButton, Localize("Reset to defaults"), 0, &ResetButton))
+            m_pClient->m_pBinds->SetDefaults();
+    }
 
 	// voting settings
 	{
-		VotingSettings.VMargin(5.0f, &VotingSettings);
+		VotingSettings.VSplitLeft(10.0f, 0, &VotingSettings);
 		VotingSettings.HSplitTop(MainView.h/3-75.0f, &VotingSettings, &ChatSettings);
 		RenderTools()->DrawUIRect(&VotingSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		VotingSettings.Margin(10.0f, &VotingSettings);
@@ -594,7 +593,6 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		MiscSettings.HSplitTop(14.0f+5.0f+10.0f, 0, &MiscSettings);
 		UiDoGetButtons(17, 25, MiscSettings);
 	}
-
 }
 
 void CMenus::RenderSettingsGraphics(CUIRect MainView)
@@ -773,7 +771,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	if(!g_Config.m_SndEnable)
 		return;
 
-	MainView.HSplitTop(20.0f, &Button, &MainView);
+	/*MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_SndMusic, Localize("Play background music"), g_Config.m_SndMusic, &Button))
 	{
 		g_Config.m_SndMusic ^= 1;
@@ -781,7 +779,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f, vec2(0, 0));
 		else
 			m_pClient->m_pSounds->Stop(SOUND_MENU);
-	}
+	}*/
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_SndNonactiveMute, Localize("Mute when not active"), g_Config.m_SndNonactiveMute, &Button))
@@ -797,6 +795,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		static float Offset = 0.0f;
 		DoEditBox(&g_Config.m_SndRate, &Button, aBuf, sizeof(aBuf), 14.0f, &Offset);
 		g_Config.m_SndRate = max(1, str_toint(aBuf));
+
 		m_NeedRestartSound = !s_SndEnable || s_SndRate != g_Config.m_SndRate;
 	}
 
@@ -811,6 +810,198 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		g_Config.m_SndVolume = (int)(DoScrollbarH(&g_Config.m_SndVolume, &Button, g_Config.m_SndVolume/100.0f)*100.0f);
 		MainView.HSplitTop(20.0f, 0, &MainView);
 	}
+}
+
+int CMenus::LuaFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser)
+{
+	CMenus *pSelf = (CMenus *)pUser;
+	int Length = str_length(pName);
+	if (IsDir)
+		return 0;
+	if (str_comp(pName+Length-4, ".lua"))
+		return 0;
+    for (int i = 0; i < MAX_LUA_FILES; i++)
+        if (!str_comp(pName, pSelf->m_pClient->m_pLuaCore->GetFileName(i)))
+            return 0;
+
+
+	CLuaItem Item;
+	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
+	if(IsDir)
+	{
+		str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", pName);
+	}
+	else
+	{
+		str_copy(Item.m_aName, pName, min(static_cast<int>(sizeof(Item.m_aName)), Length-3));
+	}
+	pSelf->m_lLuaFiles.add_unsorted(Item);
+
+	return 0;
+}
+
+void CMenus::LuaPopulate()
+{
+	m_lLuaFiles.clear();
+	Storage()->ListDirectory(IStorage::TYPE_ALL, "lua", LuaFetchCallback, this);
+	m_lLuaFiles.sort_range();
+}
+
+void CMenus::RenderSettingsLua(CUIRect MainView)
+{
+	CUIRect Button;
+	static int s_ClLua = g_Config.m_ClLua;
+    static int s_AddButton = 0;
+    static int s_AddScriptMode = 0;
+
+    if (m_ActivLuaFile == -1)
+    {
+        MainView.HSplitTop(20.0f, &Button, &MainView);
+        CUIRect AddButton;
+        Button.VSplitRight(100.0f, &Button, &AddButton);
+        if (DoButton_MenuTab(&s_AddScriptMode, Localize("Add script"), s_AddScriptMode, &AddButton, CUI::CORNER_ALL))
+        {
+            s_AddScriptMode ^=1;
+            LuaPopulate();
+        }
+        if(DoButton_CheckBox(&g_Config.m_ClLua, Localize("Use lua"), g_Config.m_ClLua, &Button))
+        {
+            g_Config.m_ClLua ^= 1;
+        }
+
+        if(!g_Config.m_ClLua)
+            return;
+
+        if (s_AddScriptMode == 0)
+        {
+            static int s_NumNodes = -1;
+            if (s_NumNodes == -1)
+            {
+                s_NumNodes = 0;
+                for (int i = 0; i < MAX_LUA_FILES; i++)
+                    if (m_pClient->m_pLua->m_aLuaFiles[i].GetScriptName()[0])
+                        s_NumNodes++;
+
+            }
+
+            // display mode list
+            static float s_ScrollValue = 0;
+            static int pIDItem[MAX_LUA_FILES];
+            static int pIDButtonDeactivate[MAX_LUA_FILES];
+            static int pIDButtonSettings[MAX_LUA_FILES];
+            int OldSelected = -1;
+
+            UiDoListboxStart(&s_NumNodes , &MainView, 50.0f, Localize("Lua files"), "", s_NumNodes, 1, OldSelected, s_ScrollValue);
+
+            for(int i = 0; i < MAX_LUA_FILES; i++)
+            {
+                if (m_pClient->m_pLua->m_aLuaFiles[i].GetScriptName()[0] == 0)
+                    continue;
+                CListboxItem Item = UiDoListboxNextItem(&pIDItem[i], 0);
+                if(Item.m_Visible)
+                {
+                    CUIRect LabelTitle;
+                    CUIRect LabelInfo;
+                    CUIRect ButtonDeactivate;
+                    CUIRect ButtonSettings;
+
+                    if (i % 2 == 0)
+                        RenderTools()->DrawUIRect(&Item.m_Rect, vec4(0,0,0,0.3f), CUI::CORNER_ALL, 5.0f);
+                    else
+                        RenderTools()->DrawUIRect(&Item.m_Rect, vec4(0,0,0,0.5f), CUI::CORNER_ALL, 5.0f);
+
+                    Item.m_Rect.HSplitTop(24.0f, &LabelTitle, &LabelInfo);
+
+                    Item.m_Rect.VSplitRight(100.0f, &ButtonSettings, &ButtonDeactivate);
+                    ButtonSettings.VSplitRight(100.0f, 0, &ButtonSettings);
+                    ButtonDeactivate.HMargin(15.0f, &ButtonDeactivate);
+                    ButtonDeactivate.VMargin(5.0f, &ButtonDeactivate);
+                    ButtonSettings.HMargin(15.0f, &ButtonSettings);
+                    ButtonSettings.VMargin(5.0f, &ButtonSettings);
+
+                    if (m_pClient->m_pLuaCore->GetFileName(i)[0] == 0)
+                    {
+                        UI()->DoLabelScaled(&ButtonDeactivate, "Deactivated", 14.0f, -1);
+                    }
+                    else if (DoButton_Menu(&pIDButtonDeactivate[i], Localize("Deactivate"), false, &ButtonDeactivate))
+                    {
+                        m_pClient->m_pLuaCore->DeleteLuaFile(i);
+                        m_NeedRestartLua = true;
+                    }
+                    if (m_pClient->m_pLua->m_aLuaFiles[i].m_HaveSettings)
+                    {
+                        if (DoButton_Menu(&pIDButtonSettings[i], Localize("Settings"), false, &ButtonSettings))
+                        {
+                            if (m_pClient->m_pLua->m_aLuaFiles[i].FunctionExist("ConfigOpen"))
+                            {
+                                m_pClient->m_pLua->m_aLuaFiles[i].FunctionPrepare("ConfigOpen");
+                                MainView.HSplitTop(10.0f, 0, &MainView);
+                                m_pClient->m_pLua->m_aLuaFiles[i].PushInteger(MainView.x);
+                                m_pClient->m_pLua->m_aLuaFiles[i].PushInteger(MainView.y);
+                                m_pClient->m_pLua->m_aLuaFiles[i].PushInteger(MainView.w);
+                                m_pClient->m_pLua->m_aLuaFiles[i].PushInteger(MainView.h);
+                                m_pClient->m_pLua->m_aLuaFiles[i].FunctionExec();
+                                m_ActivLuaFile = i;
+                            }
+                        }
+                    }
+                    if (m_pClient->m_pLua->m_aLuaFiles[i].m_aTitle[0])
+                        UI()->DoLabelScaled(&LabelTitle, m_pClient->m_pLua->m_aLuaFiles[i].m_aTitle, 16.0f, -1);
+                    else
+                        UI()->DoLabelScaled(&LabelTitle, m_pClient->m_pLuaCore->GetFileName(i), 16.0f, -1);
+                    UI()->DoLabelScaled(&LabelInfo, m_pClient->m_pLua->m_aLuaFiles[i].m_aInfo, 14.0f, -1);
+                }
+            }
+
+            const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
+
+        }
+        else
+        {
+            static int s_LuaListId = 0;
+            static int s_LuaSelectedIndex = 0;
+            static float s_ScrollValue = 0;
+            UiDoListboxStart(&s_LuaListId, &MainView, 17.0f, Localize("Add lua files"), "", m_lLuaFiles.size(), 1, s_LuaSelectedIndex, s_ScrollValue);
+            for(sorted_array<CLuaItem>::range r = m_lLuaFiles.all(); !r.empty(); r.pop_front())
+            {
+                CListboxItem Item = UiDoListboxNextItem((void*)(&r.front()));
+                if(Item.m_Visible)
+                {
+                    UI()->DoLabel(&Item.m_Rect, r.front().m_aName, Item.m_Rect.h*ms_FontmodHeight, -1);
+                }
+            }
+            bool Activated = false;
+            s_LuaSelectedIndex = UiDoListboxEnd(&s_ScrollValue, &Activated);
+            if (Activated)
+            {
+                m_pClient->m_pLuaCore->AddLuaFile(m_lLuaFiles[s_LuaSelectedIndex].m_aFilename);
+                LuaPopulate();
+            }
+        }
+    }
+    else
+    {
+        CUIRect Button;
+        CUIRect Label;
+        MainView.HSplitTop(20.0f, &Button, &MainView);
+        Button.VSplitLeft(100.0f, &Button, &Label);
+        static int s_ButtonBack = 0;
+        UI()->DoLabelScaled(&Label, m_pClient->m_pLua->m_aLuaFiles[m_ActivLuaFile].m_aTitle, 16.0f, 0);
+        if(DoButton_Menu(&s_ButtonBack, Localize("Back"), 0, &Button))
+        {
+            m_pClient->m_pLua->m_aLuaFiles[m_ActivLuaFile].ConfigClose();
+            m_ActivLuaFile = -1;
+        }
+
+        //|_______________
+        //|Back|Title |Tab
+        //|           |Tab
+        //|The Script |Tab
+        //|can place  |Lua
+        //|Ui Elements|
+        //|Here       |
+        //|_______________
+    }
 }
 
 class CLanguage
@@ -888,7 +1079,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 
 void CMenus::RenderLanguageSelection(CUIRect MainView)
 {
-	static int s_LanguageList = 0;
+	static int s_LanguageList  = 0;
 	static int s_SelectedLanguage = 0;
 	static sorted_array<CLanguage> s_Languages;
 	static float s_ScrollValue = 0;
@@ -961,7 +1152,9 @@ void CMenus::RenderSettings(CUIRect MainView)
 		("Tee"),
 		Localize("Controls"),
 		Localize("Graphics"),
-		Localize("Sound")};
+		Localize("Sound"),
+		("Lua")
+		};
 
 	int NumTabs = (int)(sizeof(aTabs)/sizeof(*aTabs));
 
@@ -989,6 +1182,13 @@ void CMenus::RenderSettings(CUIRect MainView)
 		RenderSettingsGraphics(MainView);
 	else if(s_SettingsPage == 6)
 		RenderSettingsSound(MainView);
+	else if(s_SettingsPage == 7)
+		RenderSettingsLua(MainView);
+	if(s_SettingsPage != 7 && m_ActivLuaFile != -1)
+	{
+        m_pClient->m_pLua->m_aLuaFiles[m_ActivLuaFile].ConfigClose();
+        m_ActivLuaFile = -1;
+	}
 
 	if(m_NeedRestartGraphics || m_NeedRestartSound)
 		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), 15.0f, -1);

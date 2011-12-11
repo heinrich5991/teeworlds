@@ -3,6 +3,7 @@
 #include <engine/editor.h>
 #include <engine/engine.h>
 #include <engine/friends.h>
+#include <engine/lua.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/demo.h>
@@ -49,6 +50,10 @@
 #include "components/sounds.h"
 #include "components/spectator.h"
 #include "components/voting.h"
+#include "components/emitter.h"
+#include "components/stats.h"
+
+#include <game/pathfinder.h>
 
 CGameClient g_GameClient;
 
@@ -65,6 +70,8 @@ static CMenus gs_Menus;
 static CSkins gs_Skins;
 static CCountryFlags gs_CountryFlags;
 static CFlow gs_Flow;
+static CEmitters gs_Emitter;
+static CStats gs_Stat;
 static CHud gs_Hud;
 static CDebugHud gs_DebugHud;
 static CControls gs_Controls;
@@ -89,6 +96,7 @@ void CGameClient::CStack::Add(class CComponent *pComponent) { m_paComponents[m_N
 
 const char *CGameClient::Version() { return GAME_VERSION; }
 const char *CGameClient::NetVersion() { return GAME_NETVERSION; }
+const char *CGameClient::NetVersionLua() { return GAME_NETVERSION_LUA; }
 const char *CGameClient::GetItemName(int Type) { return m_NetObjHandler.GetObjName(Type); }
 
 void CGameClient::OnConsoleInit()
@@ -106,6 +114,7 @@ void CGameClient::OnConsoleInit()
 	m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
+	m_pLuaCore = Kernel()->RequestInterface<ILua>();
 
 	// setup pointers
 	m_pBinds = &::gs_Binds;
@@ -116,6 +125,8 @@ void CGameClient::OnConsoleInit()
 	m_pCountryFlags = &::gs_CountryFlags;
 	m_pChat = &::gs_Chat;
 	m_pFlow = &::gs_Flow;
+	m_pEmitter = &::gs_Emitter;
+	m_pStat = &::gs_Stat;
 	m_pCamera = &::gs_Camera;
 	m_pControls = &::gs_Controls;
 	m_pEffects = &::gs_Effects;
@@ -141,6 +152,9 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(m_pSounds);
 	m_All.Add(m_pVoting);
 	m_All.Add(m_pParticles); // doesn't render anything, just updates all the particles
+	m_All.Add(m_pFlow); // doesn't render anything, just updates the flow
+	m_All.Add(m_pEmitter); // doesn't render anything, just updates the flow
+	m_All.Add(m_pStat); // doesn't render anything, just save the stats
 
 	m_All.Add(&gs_MapLayersBackGround); // first to render
 	m_All.Add(&m_pParticles->m_RenderTrail);
@@ -178,6 +192,7 @@ void CGameClient::OnConsoleInit()
 	// add the some console commands
 	Console()->Register("team", "i", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself");
+	Console()->Register("music", "s?sssssssssss", CFGFLAG_CLIENT, ConMusic, this, "Musicplayer cmds 'next, prev, pause, play, +, -'");
 
 	// register server dummy commands for tab completion
 	Console()->Register("tune", "si", CFGFLAG_SERVER, 0, 0, "Tune variable to value");
@@ -228,7 +243,7 @@ void CGameClient::OnInit()
 	// set the language
 	g_Localization.Load(g_Config.m_ClLanguagefile, Storage(), Console());
 
-	// TODO: this should be different
+	// init all components
 	// setup item sizes
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)
 		Client()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
@@ -259,6 +274,8 @@ void CGameClient::OnInit()
 
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
+
+    g_GameClient.m_pMenus->RenderLoading();
 
 	int64 End = time_get();
 	char aBuf[256];
@@ -307,12 +324,20 @@ int CGameClient::OnSnapInput(int *pData)
 	return m_pControls->SnapInput(pData);
 }
 
+static void RenderTilemapGenerateSkipThread(void *pUser)
+{
+    CGameClient *pSelf = (CGameClient *)pUser;
+    pSelf->RenderTools()->RenderTilemapGenerateSkip(pSelf->Layers());
+}
+
 void CGameClient::OnConnected()
 {
 	m_Layers.Init(Kernel());
 	m_Collision.Init(Layers());
 
-	RenderTools()->RenderTilemapGenerateSkip(Layers());
+    //TODO:add config
+	//RenderTools()->RenderTilemapGenerateSkip(Layers());
+	thread_create(RenderTilemapGenerateSkipThread, this);
 
 	for(int i = 0; i < m_All.m_Num; i++)
 	{
@@ -343,9 +368,9 @@ void CGameClient::OnReset()
 		m_All.m_paComponents[i]->OnReset();
 
 	m_DemoSpecID = SPEC_FREEVIEW;
-	m_FlagDropTick[TEAM_RED] = 0;
-	m_FlagDropTick[TEAM_BLUE] = 0;
-	m_Tuning = CTuningParams();
+    m_FlagDropTick[TEAM_RED] = 0;
+    m_FlagDropTick[TEAM_BLUE] = 0;
+    m_Tuning = CTuningParams();
 }
 
 
@@ -412,33 +437,115 @@ static void Evolve(CNetObj_Character *pCharacter, int Tick)
 	TempCore.Write(pCharacter);
 }
 
+void CGameClient::ConPlusLua(IConsole::IResult *pResult, void *pUserData)
+{
+    for (int i = 0; i < MAX_LUA_FILES; i++)
+    {
+        if (((CGameClient*)pUserData)->m_pLua->m_aLuaFiles[i].FunctionExist(pResult->GetString(1))) //function exist
+        {
+            ((CGameClient*)pUserData)->m_pLua->m_aLuaFiles[i].FunctionPrepare(pResult->GetString(1));
+            ((CGameClient*)pUserData)->m_pLua->m_aLuaFiles[i].PushParameter(pResult->GetString(0)); // Pressed?
+            for (int x = 2; x < pResult->NumArguments(); x++)
+            {
+                ((CGameClient*)pUserData)->m_pLua->m_aLuaFiles[i].PushParameter(pResult->GetString(x));
+            }
+            ((CGameClient*)pUserData)->m_pLua->m_aLuaFiles[i].FunctionExec();
+        }
+    }
+}
+
+void CGameClient::ConLua(IConsole::IResult *pResult, void *pUserData)
+{
+    for (int i = 0; i < MAX_LUA_FILES; i++)
+    {
+        if (((CGameClient*)pUserData)->m_pLua->m_aLuaFiles[i].FunctionExist(pResult->GetString(0))) //function exist
+        {
+            ((CGameClient*)pUserData)->m_pLua->m_aLuaFiles[i].FunctionPrepare(pResult->GetString(0));
+            for (int x = 1; x < pResult->NumArguments(); x++)
+            {
+                ((CGameClient*)pUserData)->m_pLua->m_aLuaFiles[i].PushParameter(pResult->GetString(x));
+            }
+            ((CGameClient*)pUserData)->m_pLua->m_aLuaFiles[i].FunctionExec();
+        }
+    }
+}
 
 void CGameClient::OnRender()
 {
-	/*Graphics()->Clear(1,0,0);
+    if (!m_Music)
+    {
+        m_Music = new CMusic(this);
+    }
+    if (!m_Msgs)
+    {
+        m_Msgs = new CNMsg(this);
+    }
+    if (!m_NChat)
+    {
+        m_NChat = new CNChat(this);
+    }
+    if (!m_pLua)
+    {
+        m_pLua = new CLua(this);
+        m_pLuaBinding = new CLuaBinding(this);
+        Console()->Register("lua", "s?ssssssss", CFGFLAG_CLIENT, ConLua, this, "Exec a lua function");
+        Console()->Register("+lua", "s?ssssssss", CFGFLAG_CLIENT, ConPlusLua, this, "Exec a lua function");
 
-	menus->render_background();
-	return;*/
-	/*
-	Graphics()->Clear(1,0,0);
-	Graphics()->MapScreen(0,0,100,100);
+        /*static ivec3 Map[] = {
+        ivec3(0, 0, 0), ivec3(1, 0, 0), ivec3(2, 0, 0), ivec3(3, 0, 0), ivec3(4, 0, 0),
+        ivec3(0, 1, 0), ivec3(1, 1, 0), ivec3(2, 1, 0), ivec3(3, 1, 0), ivec3(4, 1, 0),
+        ivec3(0, 2, 0), ivec3(1, 2, 0), ivec3(2, 2, 0), ivec3(3, 2, 0), ivec3(4, 2, 0),
+        ivec3(0, 3, 0), ivec3(1, 3, 0), ivec3(2, 3, 0), ivec3(3, 3, 0), ivec3(4, 3, 0),
+        ivec3(0, 4, 0), ivec3(1, 4, 0), ivec3(2, 4, 0), ivec3(3, 4, 0), ivec3(4, 4, 0),
+        };*/
+        //CPathfinder Finder(ivec2(0, 0), ivec2(4, 4), Map, 5, 5);
+        //thread_sleep(10000);
+        //dbg_break();
+        //Finder.Search();
+    }
 
-	Graphics()->QuadsBegin();
-		Graphics()->SetColor(1,1,1,1);
-		Graphics()->QuadsDraw(50, 50, 30, 30);
-	Graphics()->QuadsEnd();
+    int64 overalltime = time_get(); //Debug timing
+    //m_NChat->Tick();
+    m_Music->Tick();
+    m_Msgs->Tick();
+    m_pLua->Tick();
 
-	return;*/
-
-	// update the local character and spectate position
+    if (Client()->State() != IClient::STATE_OFFLINE && m_pMenus->GetGamePage() != CMenus::PAGE_SETTINGS && !m_pMenus->IsActive() && m_pMenus->m_ActivLuaFile != -1 && m_pLua)
+    {
+        m_pLua->m_aLuaFiles[m_pMenus->m_ActivLuaFile].ConfigClose();
+        m_pMenus->m_ActivLuaFile = -1;
+    }
+	// update the local character position
 	UpdatePositions();
 
 	// dispatch all input to systems
 	DispatchInput();
 
 	// render all systems
+	static int64 times[128];
+	static int64 timestmp[128];
+	int64 worsttime = 0;
+	int worstinterface = 0;
 	for(int i = 0; i < m_All.m_Num; i++)
-		m_All.m_paComponents[i]->OnRender();
+	{
+	    timestmp[i] = time_get();
+        m_All.m_paComponents[i]->OnRender();
+		timestmp[i] = time_get() - timestmp[i];
+		times[i] += timestmp[i];
+		if (worsttime < timestmp[i])
+		{
+		    worsttime = timestmp[i];
+		    worstinterface = i;
+		}
+	}
+	if (g_Config.m_Debug && 0)
+	{
+	    dbg_msg("interface debug", "worstinterfaceid:%i - time:%f", worstinterface, ((float)worsttime) / time_freq());
+	    overalltime = time_get() - overalltime;
+	    dbg_msg("interface debug", "timetotal:%f", ((float)overalltime) / time_freq());
+	    dbg_msg("", "fps:%f", (1.0f / (float)((float)overalltime) / time_freq()));
+	}
+
 
 	// clear new tick flags
 	m_NewTick = false;
@@ -468,6 +575,14 @@ void CGameClient::OnRelease()
 	// release all systems
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnRelease();
+}
+
+void CGameClient::OnLuaPacket(CUnpacker *pUnpacker)
+{
+    int Size = pUnpacker->GetInt();
+    g_GameClient.m_pLua->m_EventListener.m_pNetData = (char *)pUnpacker->GetRaw(Size); //Fetch Data
+    g_GameClient.m_pLua->m_EventListener.OnEvent("OnNetData"); //Call lua
+    g_GameClient.m_pLua->m_EventListener.m_pNetData = 0; //Null-Pointer
 }
 
 void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
@@ -573,6 +688,7 @@ void CGameClient::OnGameOver()
 
 void CGameClient::OnStartGame()
 {
+
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		Client()->DemoRecorder_HandleAutoStart();
 }
@@ -746,7 +862,6 @@ void CGameClient::OnNewSnapshot()
 						m_Snap.m_SpecInfo.m_SpectatorID = SPEC_FREEVIEW;
 					}
 				}
-
 				// calculate team-balance
 				if(pInfo->m_Team != TEAM_SPECTATORS)
 					m_Snap.m_aTeamSize[pInfo->m_Team]++;
@@ -788,21 +903,21 @@ void CGameClient::OnNewSnapshot()
 			{
 				m_Snap.m_pGameDataObj = (const CNetObj_GameData *)pData;
 				m_Snap.m_GameDataSnapID = Item.m_ID;
-				if(m_Snap.m_pGameDataObj->m_FlagCarrierRed == FLAG_TAKEN)
-				{
-					if(m_FlagDropTick[TEAM_RED] == 0)
-						m_FlagDropTick[TEAM_RED] = Client()->GameTick();
-				}
-				else if(m_FlagDropTick[TEAM_RED] != 0)
-						m_FlagDropTick[TEAM_RED] = 0;
-				if(m_Snap.m_pGameDataObj->m_FlagCarrierBlue == FLAG_TAKEN)
-				{
-					if(m_FlagDropTick[TEAM_BLUE] == 0)
-						m_FlagDropTick[TEAM_BLUE] = Client()->GameTick();
-				}
-				else if(m_FlagDropTick[TEAM_BLUE] != 0)
-						m_FlagDropTick[TEAM_BLUE] = 0;
-			}
+                if(m_Snap.m_pGameDataObj->m_FlagCarrierRed == FLAG_TAKEN)
+                {
+                    if(m_FlagDropTick[TEAM_RED] == 0)
+                        m_FlagDropTick[TEAM_RED] = Client()->GameTick();
+                }
+                else if(m_FlagDropTick[TEAM_RED] != 0)
+                    m_FlagDropTick[TEAM_RED] = 0;
+                if(m_Snap.m_pGameDataObj->m_FlagCarrierBlue == FLAG_TAKEN)
+                {
+                    if(m_FlagDropTick[TEAM_BLUE] == 0)
+                        m_FlagDropTick[TEAM_BLUE] = Client()->GameTick();
+                }
+                else if(m_FlagDropTick[TEAM_BLUE] != 0)
+                    m_FlagDropTick[TEAM_BLUE] = 0;
+            }
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;
 		}
@@ -1115,6 +1230,41 @@ void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
 void CGameClient::ConKill(IConsole::IResult *pResult, void *pUserData)
 {
 	((CGameClient*)pUserData)->SendKill(-1);
+}
+
+void CGameClient::ConMusic(IConsole::IResult *pResult, void *pUserData)
+{
+    for (int i = 0; i < pResult->NumArguments(); i++)
+    {
+        if(str_comp(pResult->GetString(i), "next") == 0)
+        {
+            ((CGameClient*)pUserData)->Sound()->m_MusicPlayIndex++;
+        }
+        if(str_comp(pResult->GetString(i), "prev") == 0)
+        {
+            ((CGameClient*)pUserData)->Sound()->m_MusicPlayIndex--;
+        }
+        if(str_comp(pResult->GetString(i), "play") == 0)
+        {
+            ((CGameClient*)pUserData)->Sound()->m_MusicPlaying = true;
+            ((CGameClient*)pUserData)->m_Music->m_MusicListActivated = true;
+        }
+        if(str_comp(pResult->GetString(i), "pause") == 0)
+        {
+            ((CGameClient*)pUserData)->Sound()->m_MusicPlaying = ((CGameClient*)pUserData)->Sound()->m_MusicPlaying ^ 1;
+            if (((CGameClient*)pUserData)->m_Music->m_MusicFirstPlay)
+                ((CGameClient*)pUserData)->m_Music->m_MusicListActivated = true;
+        }
+        if(str_comp(pResult->GetString(i), "+") == 0)
+        {
+            g_Config.m_SndMusicVolume = min(g_Config.m_SndMusicVolume + 1, 100);
+        }
+        if(str_comp(pResult->GetString(i), "-") == 0)
+        {
+            g_Config.m_SndMusicVolume = max(g_Config.m_SndMusicVolume - 1, 0);
+        }
+        ((CGameClient*)pUserData)->m_Music->Tick();
+    }
 }
 
 void CGameClient::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)

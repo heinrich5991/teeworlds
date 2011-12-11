@@ -53,10 +53,17 @@ void CCollision::Init(class CLayers *pLayers)
 
 int CCollision::GetTile(int x, int y)
 {
+	return GetTileRaw(x, y) > 128 ? 0 : GetTileRaw(x, y);
+}
+
+int CCollision::GetTileRaw(int x, int y)
+{
 	int Nx = clamp(x/32, 0, m_Width-1);
 	int Ny = clamp(y/32, 0, m_Height-1);
 
-	return m_pTiles[Ny*m_Width+Nx].m_Index > 128 ? 0 : m_pTiles[Ny*m_Width+Nx].m_Index;
+    if (!m_pTiles)
+        return 0;
+	return m_pTiles[Ny*m_Width+Nx].m_Index;
 }
 
 bool CCollision::IsTileSolid(int x, int y)

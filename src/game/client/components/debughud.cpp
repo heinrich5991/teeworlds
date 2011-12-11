@@ -22,9 +22,9 @@ void CDebugHud::RenderNetCorrections()
 	if(!g_Config.m_Debug || g_Config.m_DbgGraphs || !m_pClient->m_Snap.m_pLocalCharacter || !m_pClient->m_Snap.m_pLocalPrevCharacter)
 		return;
 
-	float Width = 300*Graphics()->ScreenAspect();
+	float Width =  300*Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0, 0, Width, 300);
-
+	
 	/*float speed = distance(vec2(netobjects.local_prev_character->x, netobjects.local_prev_character->y),
 		vec2(netobjects.local_character->x, netobjects.local_character->y));*/
 
@@ -75,11 +75,11 @@ void CDebugHud::RenderTuning()
 	// render tuning debugging
 	if(!g_Config.m_DbgTuning)
 		return;
-
+		
 	CTuningParams StandardTuning;
-
+		
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
-
+	
 	float y = 50.0f;
 	int Count = 0;
 	for(int i = 0; i < m_pClient->m_Tuning.Num(); i++)
@@ -88,7 +88,7 @@ void CDebugHud::RenderTuning()
 		float Current, Standard;
 		m_pClient->m_Tuning.Get(i, &Current);
 		StandardTuning.Get(i, &Standard);
-
+		
 		if(Standard == Current)
 			TextRender()->TextColor(1,1,1,1.0f);
 		else
@@ -96,7 +96,7 @@ void CDebugHud::RenderTuning()
 
 		float w;
 		float x = 5.0f;
-
+		
 		str_format(aBuf, sizeof(aBuf), "%.2f", Standard);
 		x += 20.0f;
 		w = TextRender()->TextWidth(0, 5, aBuf, -1);
@@ -109,12 +109,12 @@ void CDebugHud::RenderTuning()
 
 		x += 5.0f;
 		TextRender()->Text(0x0, x, y+Count*6, 5, m_pClient->m_Tuning.m_apNames[i], -1);
-
+		
 		Count++;
 	}
-
+	
 	y = y+Count*6;
-
+	
 	Graphics()->TextureSet(-1);
 	Graphics()->BlendNormal();
 	Graphics()->LinesBegin();

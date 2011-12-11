@@ -8,6 +8,7 @@
 #include <game/client/render.h>
 #include <game/gamecore.h>
 #include "particles.h"
+#include "flow.h"
 
 CParticles::CParticles()
 {
@@ -43,7 +44,6 @@ void CParticles::Add(int Group, CParticle *pPart)
 		if(pInfo->m_Paused)
 			return;
 	}
-
 	if (m_FirstFree == -1)
 		return;
 
@@ -88,21 +88,7 @@ void CParticles::Update(float TimePassed)
 		while(i != -1)
 		{
 			int Next = m_aParticles[i].m_NextPart;
-			//m_aParticles[i].vel += flow_get(m_aParticles[i].pos)*time_passed * m_aParticles[i].flow_affected;
-			m_aParticles[i].m_Vel.y += m_aParticles[i].m_Gravity*TimePassed;
-
-			for(int f = 0; f < FrictionCount; f++) // apply friction
-				m_aParticles[i].m_Vel *= m_aParticles[i].m_Friction;
-
-			// move the point
-			vec2 Vel = m_aParticles[i].m_Vel*TimePassed;
-			Collision()->MovePoint(&m_aParticles[i].m_Pos, &Vel, 0.1f+0.9f*frandom(), NULL);
-			m_aParticles[i].m_Vel = Vel* (1.0f/TimePassed);
-
-			m_aParticles[i].m_Life += TimePassed;
-			m_aParticles[i].m_Rot += TimePassed * m_aParticles[i].m_Rotspeed;
-
-			// check particle death
+            // check particle death
 			if(m_aParticles[i].m_Life > m_aParticles[i].m_LifeSpan)
 			{
 				// remove it from the group list
@@ -120,7 +106,27 @@ void CParticles::Update(float TimePassed)
 				m_aParticles[i].m_PrevPart = -1;
 				m_aParticles[i].m_NextPart = m_FirstFree;
 				m_FirstFree = i;
+
+				//next and continue
+				i = Next;
+				continue;
 			}
+
+			m_aParticles[i].m_Life += TimePassed;
+			m_aParticles[i].m_Vel += m_pClient->m_pFlow->Get(m_aParticles[i].m_Pos)*TimePassed * m_aParticles[i].m_FlowAffected;
+			//m_aParticles[i].vel += flow_get(m_aParticles[i].pos)*time_passed * m_aParticles[i].flow_affected;
+			m_aParticles[i].m_Vel += m_aParticles[i].m_Gravity*TimePassed;
+
+			for(int f = 0; f < FrictionCount; f++) // apply friction
+				m_aParticles[i].m_Vel *= m_aParticles[i].m_Friction;
+
+			// move the point
+			vec2 Vel = m_aParticles[i].m_Vel*TimePassed;
+			Collision()->MovePoint(&m_aParticles[i].m_Pos, &Vel, 0.1f+0.9f*frandom(), NULL);
+			m_aParticles[i].m_Vel = Vel / TimePassed;
+			//m_aParticles[i].m_Vel = Vel* (1.0f/TimePassed); // original. slower?
+
+			m_aParticles[i].m_Rot += TimePassed * m_aParticles[i].m_Rotspeed;
 
 			i = Next;
 		}
@@ -149,6 +155,7 @@ void CParticles::OnRender()
 
 void CParticles::RenderGroup(int Group)
 {
+    int LastTexture = -2; // std
 	Graphics()->BlendNormal();
 	//gfx_blend_additive();
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_PARTICLES].m_Id);
@@ -157,18 +164,39 @@ void CParticles::RenderGroup(int Group)
 	int i = m_aFirstPart[Group];
 	while(i != -1)
 	{
-		RenderTools()->SelectSprite(m_aParticles[i].m_Spr);
-		float a = m_aParticles[i].m_Life / m_aParticles[i].m_LifeSpan;
 		vec2 p = m_aParticles[i].m_Pos;
+		float a = m_aParticles[i].m_Life / m_aParticles[i].m_LifeSpan;
 		float Size = mix(m_aParticles[i].m_StartSize, m_aParticles[i].m_EndSize, a);
+		if(!Graphics()->OnScreen(p.x, p.y, Size, Size)) //@matricks, oy: be lazy, just do what you must do
+		{
+		    i = m_aParticles[i].m_NextPart;
+		    continue;
+		}
+
+        if (m_aParticles[i].m_Texture != LastTexture)
+        {
+            Graphics()->QuadsEnd();
+            if (m_aParticles[i].m_Texture == -2)
+                Graphics()->TextureSet(g_pData->m_aImages[IMAGE_PARTICLES].m_Id);
+            else
+                Graphics()->TextureSet(m_aParticles[i].m_Texture);
+            LastTexture = m_aParticles[i].m_Texture;
+            Graphics()->QuadsBegin();
+        }
+        RenderTools()->SelectSprite(m_aParticles[i].m_Spr);
+		vec4 Color = m_aParticles[i].m_Color;
+		if (m_aParticles[i].m_ColorEnd.r >= 0 && m_aParticles[i].m_ColorEnd.g >= 0 && m_aParticles[i].m_ColorEnd.b >= 0 && m_aParticles[i].m_ColorEnd.a >= 0)
+        {
+            Color = mix(m_aParticles[i].m_Color, m_aParticles[i].m_ColorEnd, a);
+        }
 
 		Graphics()->QuadsSetRotation(m_aParticles[i].m_Rot);
 
 		Graphics()->SetColor(
-			m_aParticles[i].m_Color.r,
-			m_aParticles[i].m_Color.g,
-			m_aParticles[i].m_Color.b,
-			m_aParticles[i].m_Color.a); // pow(a, 0.75f) *
+			Color.r,
+			Color.g,
+			Color.b,
+			Color.a); // pow(a, 0.75f) *
 
 		IGraphics::CQuadItem QuadItem(p.x, p.y, Size, Size);
 		Graphics()->QuadsDraw(&QuadItem, 1);

@@ -36,6 +36,11 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 		Kill.m_ModeSpecial = pMsg->m_ModeSpecial;
 		Kill.m_Tick = Client()->GameTick();
 
+        m_pClient->m_pLua->m_EventListener.m_KillKillerID = Kill.m_KillerID;
+        m_pClient->m_pLua->m_EventListener.m_KillVictimID = Kill.m_VictimID;
+        m_pClient->m_pLua->m_EventListener.m_KillWeapon = Kill.m_Weapon;
+		m_pClient->m_pLua->m_EventListener.OnEvent("OnKill");
+
 		// add the message
 		m_KillmsgCurrent = (m_KillmsgCurrent+1)%MAX_KILLMSGS;
 		m_aKillmsgs[m_KillmsgCurrent] = Kill;

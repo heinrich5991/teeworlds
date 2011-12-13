@@ -141,6 +141,8 @@ public:
 	int ClampTeam(int Team);
 
 	virtual void PostReset();
+	
+	virtual int GetGameFlags(){return m_GameFlags;};
 };
 
 #endif

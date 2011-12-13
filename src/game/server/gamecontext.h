@@ -6,6 +6,7 @@
 #include <engine/server.h>
 #include <engine/console.h>
 #include <engine/shared/memheap.h>
+#include <engine/lua.h>
 
 #include <game/layers.h>
 #include <game/voting.h>
@@ -14,6 +15,8 @@
 #include "gamecontroller.h"
 #include "gameworld.h"
 #include "player.h"
+
+#include "n-client/lua.h"
 
 /*
 	Tick
@@ -151,7 +154,7 @@ public:
 	virtual void OnSnap(int ClientID);
 	virtual void OnPostSnap();
 	
-	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID);
+	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID);	
 
 	virtual void OnClientConnected(int ClientID);
 	virtual void OnClientEnter(int ClientID);
@@ -165,6 +168,15 @@ public:
 	virtual const char *GameType();
 	virtual const char *Version();
 	virtual const char *NetVersion();
+	
+	//Lua n-client
+	
+	//virtual void OnLuaPacket(CUnpacker *pUnpacker, int ClientID); TODO: MAKE THIS FUNCTION !!!>>Important<<!!!
+	
+	class ILua *m_pLuaCore;
+	class CLua *m_pLua;
+	
+	 static void ConAddLuaFile(IConsole::IResult *pResult, void *pUserData);
 };
 
 inline int CmaskAll() { return -1; }

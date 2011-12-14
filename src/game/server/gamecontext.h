@@ -16,7 +16,7 @@
 #include "gameworld.h"
 #include "player.h"
 
-#include "n-client/lua.h"
+#include "lua/lua.h"
 
 /*
 	Tick
@@ -63,6 +63,10 @@ class CGameContext : public IGameServer
 	static void ConClearVotes(IConsole::IResult *pResult, void *pUserData);
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	
+	
+	//lua
+	static void ConLua(IConsole::IResult *pResult, void *pUserData);
 	
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
@@ -171,7 +175,7 @@ public:
 	
 	//Lua n-client
 	
-	//virtual void OnLuaPacket(CUnpacker *pUnpacker, int ClientID); TODO: MAKE THIS FUNCTION !!!>>Important<<!!!
+	virtual void OnLuaPacket(CUnpacker *pUnpacker, int ClientID); // TODO: MAKE THIS FUNCTION !!!>>Important<<!!!
 	
 	class ILua *m_pLuaCore;
 	class CLua *m_pLua;

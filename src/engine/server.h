@@ -34,6 +34,7 @@ public:
 	virtual void GetClientAddr(int ClientID, char *pAddrStr, int Size) = 0;
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID) = 0;
+	virtual int SendMsgEx(CMsgPacker *pMsg, int Flags, int ClientID, bool System) = 0;
 
 	template<class T>
 	int SendPackMsg(T *pMsg, int Flags, int ClientID)
@@ -59,6 +60,7 @@ public:
 	virtual void Kick(int ClientID, const char *pReason) = 0;
 
 	virtual void DemoRecorder_HandleAutoStart() = 0;
+	
 };
 
 class IGameServer : public IInterface
@@ -76,6 +78,8 @@ public:
 	virtual void OnPostSnap() = 0;
 	
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID) = 0;
+	
+	virtual void OnLuaPacket(CUnpacker *pUnpacker, int ClientID) = 0;
 
 	virtual void OnClientConnected(int ClientID) = 0;
 	virtual void OnClientEnter(int ClientID) = 0;

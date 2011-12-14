@@ -29,6 +29,9 @@
 #include "register.h"
 #include "server.h"
 
+
+//lua
+#include "lua.h"
 #include <zlib.h> //crc32
 
 #if defined(CONF_FAMILY_WINDOWS)
@@ -1011,6 +1014,10 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
 			}
 		}
+		 else if(Msg ==NETMSG_LUA_DATA) //lua
+        {
+            GameServer()->OnLuaPacket(&Unpacker, ClientID);
+        }
         else
 		{
 			if(g_Config.m_Debug)
@@ -1255,7 +1262,10 @@ int CServer::Run()
 	m_pGameServer = Kernel()->RequestInterface<IGameServer>();
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
-
+	
+	//lua
+	Kernel()->RegisterInterface(static_cast<ILua*>(&m_Lua));
+	
 	//
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
 
@@ -1298,6 +1308,8 @@ int CServer::Run()
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 
 	GameServer()->OnInit();
+	//lua Init lua after gameserver
+	m_Lua.Init();
 	str_format(aBuf, sizeof(aBuf), "version %s", GameServer()->NetVersion());
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 

@@ -62,6 +62,32 @@ void CLuaFile::Tick()
 
     ErrorFunc(m_pLua);
 }
+void CLuaFile::TickDefered()
+{
+    if (!g_Config.m_ClLua)
+        return;
+
+    ErrorFunc(m_pLua);
+
+    FunctionPrepare("TickDefered");
+    PushInteger((int)(time_get() * 10 / time_freq()));
+    FunctionExec();
+
+    ErrorFunc(m_pLua);
+}
+void CLuaFile::PostTick()
+{
+    if (!g_Config.m_ClLua)
+        return;
+
+    ErrorFunc(m_pLua);
+
+    FunctionPrepare("PostTick");
+    PushInteger((int)(time_get() * 10 / time_freq()));
+    FunctionExec();
+
+    ErrorFunc(m_pLua);
+}
 
 void CLuaFile::End()
 {
@@ -107,11 +133,11 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "RemoveEventListener", this->RemoveEventListener);
 
     //menu browser
-    lua_register(m_pLua, "SetMenuBrowserGameTypeColor", this->SetMenuBrowserGameTypeColor);
+ /* Client   lua_register(m_pLua, "SetMenuBrowserGameTypeColor", this->SetMenuBrowserGameTypeColor);
     lua_register(m_pLua, "GetMenuBrowserGameTypeName", this->GetMenuBrowserGameTypeName);
 
     //menu
-	/*
+	
     lua_register(m_pLua, "MenuActiv", this->MenuActiv);
     lua_register(m_pLua, "MenuGameActiv", this->MenuGameActiv);
     lua_register(m_pLua, "MenuPlayersActiv", this->MenuPlayersActiv);
@@ -499,7 +525,7 @@ int CLuaFile::RemoveEventListener(lua_State *L)
     pSelf->m_pLuaHandler->m_EventListener.RemoveEventListener(pSelf, (char *)lua_tostring(L, 1));
     return 0;
 }
-
+/* Client
 int CLuaFile::SetMenuBrowserGameTypeColor(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
@@ -524,7 +550,7 @@ int CLuaFile::GetMenuBrowserGameTypeName(lua_State *L)
     lua_pushstring(L, pSelf->m_pLuaHandler->m_EventListener.m_pBrowserActivGameTypeName);
     return 1;
 }
-/* Client
+
 int CLuaFile::ScoreboardAbortRender(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
@@ -2512,15 +2538,14 @@ int CLuaFile::SendPacket(lua_State *L)
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
 
-    if(lua_isnil(L, 1))
+    if(lua_isnil(L, 2) || !lua_isnumber(L, 1))
         return 0;
 
-    char *pData = (char *)lua_tostring(L, 1);
+    char *pData = (char *)lua_tostring(L, 2);
     int Size = str_length(pData);
     CMsgPacker P(NETMSG_LUA_DATA);
-    P.AddRaw(pData, Size);
-	//TODO: Check if this correct or SendMsgEx
-	pSelf->m_pServer->Server()->SendMsg(&P, MSGFLAG_VITAL|MSGFLAG_FLUSH, true);
+    P.AddRaw(pData, Size);	
+	pSelf->m_pServer->Server()->SendMsgEx(&P, MSGFLAG_VITAL|MSGFLAG_FLUSH, lua_tointeger(L, 1), true);
 	
 
     return 0;

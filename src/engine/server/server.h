@@ -6,6 +6,7 @@
 #include <engine/server.h>
 #include <base/tl/array.h>
 
+#include "lua.h"
 class CSnapIDPool
 {
 	enum
@@ -49,7 +50,8 @@ public:
 	class IGameServer *GameServer() { return m_pGameServer; }
 	class IConsole *Console() { return m_pConsole; }
 	class IStorage *Storage() { return m_pStorage; }
-
+	//Lua
+	class CLua m_Lua;
 	enum
 	{
 		AUTHED_NO=0,

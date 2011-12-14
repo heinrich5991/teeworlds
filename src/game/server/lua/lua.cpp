@@ -28,6 +28,26 @@ void CLua::Tick()
             m_aLuaFiles[i].Tick();
     }
 }
+void CLua::TickDefered()
+{
+    for (int i = 0; i < MAX_LUA_FILES; i++)
+    {
+       if (m_aLuaFiles[i].GetScriptName()[0] && m_pServer->m_pLuaCore->GetFileName(i)[0] == 0)
+            m_aLuaFiles[i].Close();
+        else if (m_aLuaFiles[i].GetScriptName()[0])
+            m_aLuaFiles[i].TickDefered();
+    }
+}
+void CLua::PostTick()
+{
+    for (int i = 0; i < MAX_LUA_FILES; i++)
+    {
+		if (m_aLuaFiles[i].GetScriptName()[0] && m_pServer->m_pLuaCore->GetFileName(i)[0] == 0)
+            m_aLuaFiles[i].Close();
+        else if (m_aLuaFiles[i].GetScriptName()[0])
+            m_aLuaFiles[i].PostTick();
+    }
+}
 
 void CLua::End()
 {

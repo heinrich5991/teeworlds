@@ -35,6 +35,7 @@ public:
     CLuaEventListener();
     ~CLuaEventListener();
 
+	/* Client
     //values
     //Menu Browser GameType OnRender Color
     char *m_pBrowserActivGameTypeName;
@@ -42,7 +43,7 @@ public:
 
     //Scoreboard On Render
     bool m_ScoreboardSkipRender;
-
+	*/
     //Chat OnChat
     char *m_pChatText;
     int m_ChatClientID;
@@ -158,8 +159,10 @@ public:
     ~CLuaFile();
     class CLua *m_pLuaHandler;
     CGameContext *m_pServer;
-    void UiTick();
+    //void UiTick();
     void Tick();
+    void TickDefered();
+    void PostTick();
     void End();
     void Close();
     void Init(const char *pFile);
@@ -366,6 +369,8 @@ public:
     CLua(CGameContext *pServer);
     ~CLua();
     void Tick();
+	void TickDefered();
+    void PostTick();
     bool Init(const char *pFile);
     void End();
     void Close();

@@ -51,7 +51,7 @@ void CLuaFile::UiTick()
 */
 void CLuaFile::Tick()
 {
-    if (!g_Config.m_ClLua)
+    if (!g_Config.m_SvLua)
         return;
 
     ErrorFunc(m_pLua);
@@ -64,7 +64,7 @@ void CLuaFile::Tick()
 }
 void CLuaFile::TickDefered()
 {
-    if (!g_Config.m_ClLua)
+    if (!g_Config.m_SvLua)
         return;
 
     ErrorFunc(m_pLua);
@@ -77,7 +77,7 @@ void CLuaFile::TickDefered()
 }
 void CLuaFile::PostTick()
 {
-    if (!g_Config.m_ClLua)
+    if (!g_Config.m_SvLua)
         return;
 
     ErrorFunc(m_pLua);

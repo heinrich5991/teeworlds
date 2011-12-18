@@ -2467,6 +2467,7 @@ int CLuaFile::SendPacket(lua_State *L)
     char *pData = (char *)lua_tostring(L, 1);
     int Size = str_length(pData);
     CMsgPacker P(NETMSG_LUA_DATA);
+    P.AddInt(Size);
     P.AddRaw(pData, Size);
 
     pSelf->m_pClient->Client()->SendMsgEx(&P, MSGFLAG_VITAL|MSGFLAG_FLUSH, true);

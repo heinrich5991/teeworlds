@@ -1,5 +1,5 @@
 /* (c) MAP94 and Patafix. See www.n-lvl.com/ndc/nclient/ for more information. */
-#include "..\lua.h"
+#include "../lua.h"
 int CLuaFile::SendChatTarget(lua_State *L)
 {
     lua_getglobal(L, "pLUA");

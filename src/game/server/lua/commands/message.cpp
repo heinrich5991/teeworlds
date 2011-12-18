@@ -11,7 +11,6 @@ int CLuaFile::SendPacket(lua_State *L)
 
     if(!lua_isnumber(L, 2) ||  lua_isnil(L, 1))
         return 0;
-	
     char *pData = (char *)lua_tostring(L, 1);  
     CMsgPacker P(NETMSG_LUA_DATA);
 	P.AddString(pData, 2000);
@@ -30,6 +29,8 @@ int CLuaFile::FetchPacket(lua_State *L)
     if (!pSelf->m_pLuaHandler->m_EventListener.m_pNetData)
         return 0;
 
+    lua_pushstring(L, pSelf->m_pLuaHandler->m_EventListener.m_pNetData);
+
     return 1;
 }
 
@@ -41,7 +42,7 @@ int CLuaFile::AddModFile(lua_State *L)
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
-	
+
 	if(lua_isnil(L, 1) || !lua_isnumber(L, 2))
         return 0;
 	pSelf->m_pServer->Server()->AddModFile((char *)lua_tostring(L, 1), lua_tointeger(L, 2));
@@ -67,7 +68,7 @@ int CLuaFile::SendFile(lua_State *L)
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
-	
+
 	if(!lua_isnumber(L, 1))
         return 0;
 	pSelf->m_pServer->Server()->SendFile(lua_tointeger(L, 1));

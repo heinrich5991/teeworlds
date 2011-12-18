@@ -79,11 +79,11 @@ enum
 	NETMSG_FILE_DATA,       // file transfer, contains a chunk of a file (lua, png, wav)
 
 	//sent by client
-    NETMSG_REQUEST_FILE_INDEX,  // requests the file index
-	NETMSG_REQUEST_FILE_DATA,   // requests file data
+    NETMSG_REQUEST_FILE_INDEX = 28,  // requests the file index
+	NETMSG_REQUEST_FILE_DATA = 29,   // requests file data
 
 	//send by both
-    NETMSG_LUA_DATA
+    NETMSG_LUA_DATA = 30
 };
 
 // this should be revised

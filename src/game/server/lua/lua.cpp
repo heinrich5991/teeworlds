@@ -1,14 +1,6 @@
 /* (c) MAP94 and Patafix. See www.n-lvl.com/ndc/nclient/ for more information. */
 #include "lua.h"
-#include "string.h"/*
-#include "components/flow.h"
-#include "components/particles.h"
-
-#include <game/generated/client_data.h>
-#include <game/client/lineinput.h>
-#include <game/client/components/menus.h>
-#include <game/client/components/chat.h>*/
-
+#include "string.h"
 #include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/sound.h>
@@ -59,7 +51,6 @@ void CLua::End()
 
 CLua::CLua(CGameContext *pServer)
 {
-    mem_zero(this, sizeof(CLua));
     Close();
 
     m_pServer = pServer;

@@ -219,6 +219,7 @@ public:
 	int LoadMap(const char *pMapName);
 
 	void AddModFile(const char *pFileName, int Type);
+	void DeleteModFile(const char *pFileName);
 
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
 	int Run();

@@ -168,6 +168,7 @@ void CLuaFile::Init(const char *pFile)
 	lua_register(m_pLua, "SendPacket", this->SendPacket);
 	lua_register(m_pLua, "FetchPacket", this->FetchPacket);
 	lua_register(m_pLua, "AddModFile", this->AddModFile);
+	lua_register(m_pLua, "DeleteModFile", this->DeleteModFile);
 	lua_register(m_pLua, "SendFile", this->SendFile);
 	
 

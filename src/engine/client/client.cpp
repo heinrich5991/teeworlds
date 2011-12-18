@@ -1509,7 +1509,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
             CMsgPacker Msg(NETMSG_REQUEST_FILE_INDEX);
 			m_lModFiles.clear();
             if (m_ModFileNumber)
-            {				
+            {
                 m_ModFileCurrentNumber = 0;
                 Msg.AddInt(m_ModFileCurrentNumber); //reguest the first Index
                 SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
@@ -1574,7 +1574,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if(m_FileDownloadHandle)
 					io_close(m_FileDownloadHandle);
 				m_FileDownloadHandle = 0;
-				
+
 				CMsgPacker Msg(NETMSG_REQUEST_FILE_INDEX);
                 Msg.AddInt(++m_ModFileCurrentNumber);
                 SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);

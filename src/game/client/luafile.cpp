@@ -240,6 +240,10 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "TextureLoad", this->TextureLoad);
     lua_register(m_pLua, "TextureUnload", this->TextureUnload);
 
+    //Texture
+    lua_register(m_pLua, "FetchPacket", this->FetchPacket);
+    lua_register(m_pLua, "SendPacket", this->SendPacket);
+
     lua_pushlightuserdata(m_pLua, this);
     lua_setglobal(m_pLua, "pLUA");
 

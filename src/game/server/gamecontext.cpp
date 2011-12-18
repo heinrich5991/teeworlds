@@ -384,16 +384,16 @@ void CGameContext::OnTick()
 {
 	 if (!m_pLua)
         m_pLua = new CLua(this);
-    
+
 	// check tuning
 	CheckPureTuning();
 
 	// copy tuning
 	m_pLua->Tick();
-	
+
 	m_World.m_Core.m_Tuning = m_Tuning;
 	m_World.Tick();
-	
+
 	m_pLua->TickDefered();
 	//if(world.paused) // make sure that the game object always updates
 	m_pController->Tick();
@@ -976,6 +976,7 @@ void CGameContext::OnLuaPacket(CUnpacker *pUnpacker, int ClientID)
 	//TODO Check if this row is working without pSelf
     int Size = pUnpacker->GetInt();
     m_pLua->m_EventListener.m_pNetData = (char *)pUnpacker->GetRaw(Size); //Fetch Data
+    m_pLua->m_EventListener.m_pNetClientID = ClientID; //Fetch Data
 	m_pLua->m_EventListener.OnEvent("OnNetData"); //Call lua
 	m_pLua->m_EventListener.m_pNetData = 0; //Null-Pointer
 }
@@ -1315,7 +1316,7 @@ void CGameContext::ConVote(IConsole::IResult *pResult, void *pUserData)
 
 void CGameContext::ConLua(IConsole::IResult *pResult, void *pUserData)
 {
-	CGameContext *pSelf = (CGameContext *)pUserData;	
+	CGameContext *pSelf = (CGameContext *)pUserData;
     for (int i = 0; i < MAX_LUA_FILES; i++)
     {
         if (pSelf->m_pLua->m_aLuaFiles[i].FunctionExist(pResult->GetString(0))) //function exist
@@ -1323,16 +1324,16 @@ void CGameContext::ConLua(IConsole::IResult *pResult, void *pUserData)
             pSelf->m_pLua->m_aLuaFiles[i].FunctionPrepare(pResult->GetString(0));
             for (int x = 1; x < pResult->NumArguments(); x++)
 				pSelf->m_pLua->m_aLuaFiles[i].PushParameter(pResult->GetString(x));
-            
+
             pSelf->m_pLua->m_aLuaFiles[i].FunctionExec();
         }
     }
-	
-	
-	
+
+
+
 }
-	
-	
+
+
 void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
@@ -1368,8 +1369,8 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("force_vote", "ss?r", CFGFLAG_SERVER, ConForceVote, this, "Force a voting option");
 	Console()->Register("clear_votes", "", CFGFLAG_SERVER, ConClearVotes, this, "Clears the voting options");
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Force a vote to yes/no");
-	
-	
+
+
 	//lua
 	Console()->Register("lua", "s?ssssssss", CFGFLAG_CLIENT, ConLua, this, "Exec a lua function");
 
@@ -1379,7 +1380,7 @@ void CGameContext::OnConsoleInit()
 void CGameContext::OnInit(/*class IKernel *pKernel*/)
 {
 	m_pServer = Kernel()->RequestInterface<IServer>();
-	m_pConsole = Kernel()->RequestInterface<IConsole>();	
+	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_World.SetGameServer(this);
 	m_Events.SetGameServer(this);
 

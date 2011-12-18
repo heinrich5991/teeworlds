@@ -696,7 +696,7 @@ void CServer::SendRconCmdRem(const IConsole::CCommandInfo *pCommandInfo, int Cli
 void CServer::UpdateClientRconCommands()
 {
 	int ClientID = Tick() % MAX_CLIENTS;
-		
+
 	if(m_aClients[ClientID].m_State != CClient::STATE_EMPTY && m_aClients[ClientID].m_Authed)
 	{
 		int ConsoleAccessLevel = m_aClients[ClientID].m_Authed == AUTHED_ADMIN ? IConsole::ACCESS_LEVEL_ADMIN : IConsole::ACCESS_LEVEL_MOD;
@@ -1244,12 +1244,19 @@ void CServer::AddModFile(const char *pFileName, int Type)
     str_copy(tmp.m_aName, pFileName, sizeof(tmp.m_aName));
     tmp.m_Type = (CModFile::FILETYPE)Type;
     IOHANDLE File = Storage()->OpenFile(pFileName, IOFLAG_READ, IStorage::TYPE_ALL);
-    tmp.m_Size = (int)io_length(File);
-    tmp.m_pCurrentData = (unsigned char *)mem_alloc(tmp.m_Size, 1);
-    io_read(File, tmp.m_pCurrentData, tmp.m_Size);
-    tmp.m_Crc = crc32(tmp.m_Crc, tmp.m_pCurrentData, tmp.m_Size);
-    io_close(File);
-    m_lModFiles.add(tmp);
+    if (File)
+    {
+        tmp.m_Size = (int)io_length(File);
+        tmp.m_pCurrentData = (unsigned char *)mem_alloc(tmp.m_Size, 1);
+        io_read(File, tmp.m_pCurrentData, tmp.m_Size);
+        tmp.m_Crc = crc32(tmp.m_Crc, tmp.m_pCurrentData, tmp.m_Size);
+        io_close(File);
+        m_lModFiles.add(tmp);
+    }
+    else
+    {
+        dbg_msg("Mod", "Error loading file (%s) with type (%i)", pFileName, Type);
+    }
 }
 
 void CServer::InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole)
@@ -1262,10 +1269,10 @@ int CServer::Run()
 	m_pGameServer = Kernel()->RequestInterface<IGameServer>();
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
-	
+
 	//lua
 	Kernel()->RegisterInterface(static_cast<ILua*>(&m_Lua));
-	
+
 	//
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
 

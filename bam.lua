@@ -319,7 +319,6 @@ release_settings_optimized.debug = 0
 release_settings_optimized.optimize = 1
 release_settings_optimized.cc.defines:Add("CONF_RELEASE")
 release_settings_optimized.link.flags:Add("/subsystem:\"windows\" /entry:\"mainCRTStartup\"") -- hide the console
-
 if family == "unix" then
     release_settings_optimized.cc.flags:Add("-O3")
 elseif family == "windows" then
@@ -329,7 +328,7 @@ elseif family == "windows" then
     --release_settings_optimized.cc.flags:Add("/arch:SSE2")
     release_settings_optimized.link.flags:Add("/LTCG")
 end
-release_settings_optimized.cc.defines:Add("CONF_RELEASE")
+
 
 if platform == "macosx" then
 	debug_settings_ppc = debug_settings:Copy()

@@ -37,6 +37,7 @@ public:
 	virtual int SendMsgEx(CMsgPacker *pMsg, int Flags, int ClientID, bool System) = 0;
 	
 	virtual void AddModFile(const char *pFileName, int Type) = 0;
+	virtual void DeleteModFile(const char *pFileName) = 0;
 	virtual void SendFile(int ClientID) = 0;
 
 	template<class T>

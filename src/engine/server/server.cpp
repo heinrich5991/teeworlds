@@ -1259,6 +1259,16 @@ void CServer::AddModFile(const char *pFileName, int Type)
     }
 }
 
+
+void CServer::DeleteModFile(const char *pFileName)
+{
+	for(int i = 0; i < m_lModFiles.size(); i++)
+	{
+		if(!str_comp(m_lModFiles[i].m_aName, pFileName))
+		m_lModFiles.remove_index(i);
+	}
+}
+
 void CServer::InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole)
 {
 	m_Register.Init(pNetServer, pMasterServer, pConsole);

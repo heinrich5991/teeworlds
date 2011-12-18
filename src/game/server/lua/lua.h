@@ -169,6 +169,7 @@ public:
     static inline int FetchPacket(lua_State *L);
     static inline int SendPacket(lua_State *L);
     static inline int AddModFile(lua_State *L);
+    static inline int DeleteModFile(lua_State *L);
     static inline int SendFile(lua_State *L);
 };
 

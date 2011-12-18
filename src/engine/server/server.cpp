@@ -1275,8 +1275,9 @@ int CServer::Run()
 		dbg_msg("server", "failed to load map. mapname='%s'", g_Config.m_SvMap);
 		return -1;
 	}
-	AddModFile("SDL.dll", 1);
-	AddModFile("freetype.dll", 1);
+	
+	//AddModFile("SDL.dll", 1);
+	//AddModFile("freetype.dll", 1);
 
 	// start server
 	NETADDR BindAddr;

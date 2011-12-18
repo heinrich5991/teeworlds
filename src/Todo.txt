@@ -1,2 +1,45 @@
 TODO:
--add Server Msg "i am a n-server"
+
+CLient:
+
+Server:
+-add Msg "i am a n-server"
+-add Events:
+		CharacterTick
+		Snap (Character, Projectile, laser, entity)
+		Restart
+		Message
+		Input
+		CharacterWeaponSwitch
+		CharacterDie
+		CharacterSpawn
+		PlayerJoinTeam
+		FlagCaptured
+		FlagCarrierDied
+		FlagReset
+		
+-add Function
+		SetScore		
+		SetCharacterCorePos
+		SetCharacterWeapon
+		GetCharacterVel
+		GetCharacterPos
+		GetCharacterCorePos
+		GetCharacterWeapon
+		GiveCharacter
+		GetCharacterLive
+		GetCharacterArmor
+		SetCharacterLive
+		GetCharacterArmor
+		GetFlagState
+		SetFlagState
+		SetFlagBase
+		GetFlagBase
+		GetFlagCarrier
+		SetFlagCarrier
+		(AddEntity)
+		AddProjectile
+		AddLaser
+		
+		
+		

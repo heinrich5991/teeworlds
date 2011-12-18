@@ -587,6 +587,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 	if(MsgID == NETMSGTYPE_CL_SAY)
 	{
+		
 		CNetMsg_Cl_Say *pMsg = (CNetMsg_Cl_Say *)pRawMsg;
 		int Team = pMsg->m_Team;
 		if(Team)
@@ -606,9 +607,13 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if(*pMessage < 32)
 				*pMessage = ' ';
 			pMessage++;
-		}
-
+		}		
 		SendChat(ClientID, Team, pMsg->m_pMessage);
+		
+		m_pLua->m_EventListener.m_pChatText = (char *)pMsg->m_pMessage;
+		m_pLua->m_EventListener.m_ChatClientID = ClientID;
+		m_pLua->m_EventListener.m_ChatTeam = Team;   
+		m_pLua->m_EventListener.OnEvent("OnChat");	
 	}
 	else if(MsgID == NETMSGTYPE_CL_CALLVOTE)
 	{

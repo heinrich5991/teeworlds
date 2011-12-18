@@ -28,6 +28,7 @@ MACRO_CONFIG_INT(ClMouseMaxDistance, cl_mouse_max_distance, 800, 0, 0, CFGFLAG_C
 MACRO_CONFIG_INT(EdShowkeys, ed_showkeys, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "")
 
 MACRO_CONFIG_INT(ClLua, cl_lua, 0, 1, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "")
+MACRO_CONFIG_INT(ClLuaDebug, cl_lua_debug, 0, 1, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "")
 
 //MACRO_CONFIG_INT(ClFlow, cl_flow, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "")
 
@@ -88,7 +89,7 @@ MACRO_CONFIG_INT(SvVoteKickBantime, sv_vote_kick_bantime, 5, 0, 1440, CFGFLAG_SE
 
 //Lua
 MACRO_CONFIG_INT(SvLua, sv_lua, 0, 1, 1, CFGFLAG_SERVER|CFGFLAG_SAVE, "")
-MACRO_CONFIG_INT(SvAllowOtherClients, sv_other_clients, 1, 0, 1, CFGFLAG_SERVER|CFGFLAG_SAVE, "")
+MACRO_CONFIG_INT(SvLuaDebug, sv_lua_debug, 0, 1, 1, CFGFLAG_SERVER|CFGFLAG_SAVE, "")
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly

@@ -1,4 +1,4 @@
-N-Client Copyright (c) 2011 MAP94
+N-Client Copyright (c) 2011 MAP94 and Patafix
 Teeworlds Copyright (c) 2011 Magnus Auvinen
 
 

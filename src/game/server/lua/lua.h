@@ -35,15 +35,7 @@ public:
     CLuaEventListener();
     ~CLuaEventListener();
 
-	/* Client
-    //values
-    //Menu Browser GameType OnRender Color
-    char *m_pBrowserActivGameTypeName;
-    vec4 m_BrowserActivGameTypeColor;
-
-    //Scoreboard On Render
-    bool m_ScoreboardSkipRender;
-	*/
+	
     //Chat OnChat
     char *m_pChatText;
     int m_ChatClientID;
@@ -255,7 +247,9 @@ public:
     //Character
     //static inline int GetLocalCharacterId(lua_State *L);
     static inline int GetCharacterPos(lua_State *L);
+    static inline int SetCharacterPos(lua_State *L);
     static inline int GetCharacterVel(lua_State *L);
+    static inline int SetCharacterVel(lua_State *L);
 
     //collision
     static inline int IntersectLine(lua_State *L);
@@ -306,48 +300,7 @@ public:
     static inline int GetPlayerPing(lua_State *L);
     static inline int GetPlayerTeam(lua_State *L);
     static inline int GetPlayerSkin(lua_State *L);
-	/*
-    static inline int GetPlayerColorFeet(lua_State *L);
-    static inline int GetPlayerColorBody(lua_State *L);
-    static inline int GetPlayerColorSkin(lua_State *L);*/
 
-	/*
-    //Ui
-    static inline int UiDoButton(lua_State *L);
-    static inline int UiDoEditBox(lua_State *L);
-    static inline int UiDoLabel(lua_State *L);
-    static inline int UiDoRect(lua_State *L);
-    static inline int UiDoImage(lua_State *L);
-    static inline int UiDoLine(lua_State *L);
-    static inline int UiDoSlider(lua_State *L);
-    static inline int UiGetText(lua_State *L);
-    static inline int UiSetText(lua_State *L);
-    static inline int UiGetColor(lua_State *L);
-    static inline int UiSetColor(lua_State *L);
-    static inline int UiGetRect(lua_State *L);
-    static inline int UiSetRect(lua_State *L);
-    static inline int UiRemoveElement(lua_State *L);
-    static inline int UiGetScreenWidth(lua_State *L);
-    static inline int UiGetScreenHeight(lua_State *L);
-    static inline int UiGetGameTextureID(lua_State *L);
-    static inline int UiGetParticleTextureID(lua_State *L);
-    static inline int UiGetFlagTextureID(lua_State *L);
-
-    //Texture
-    static inline int TextureLoad(lua_State *L);
-    static inline int TextureUnload(lua_State *L);
-
-    //Music
-    static inline int MusicPlay(lua_State *L);
-    static inline int MusicPause(lua_State *L);
-    static inline int MusicStop(lua_State *L);
-    static inline int MusicNext(lua_State *L);
-    static inline int MusicPrev(lua_State *L);
-    static inline int MusicSetVol(lua_State *L);
-    static inline int MusicGetVol(lua_State *L);
-    static inline int MusicGetState(lua_State *L);
-    static inline int MusicGetPlayedIndex(lua_State *L);
-	*/
     //Config
     static inline int GetConfigValue(lua_State *L);
     static inline int SetConfigValue(lua_State *L);
@@ -360,6 +313,8 @@ public:
     //LuaNetWork
     static inline int FetchPacket(lua_State *L);
     static inline int SendPacket(lua_State *L);
+    static inline int AddModFile(lua_State *L);
+    static inline int SendFile(lua_State *L);
 };
 
 class CLua

@@ -1507,12 +1507,15 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
             m_FileDownloadTotalSize = Unpacker.GetInt();
 
             CMsgPacker Msg(NETMSG_REQUEST_FILE_INDEX);
+			m_lModFiles.clear();
             if (m_ModFileNumber)
-            {
+            {				
                 m_ModFileCurrentNumber = 0;
                 Msg.AddInt(m_ModFileCurrentNumber); //reguest the first Index
                 SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
             }
+			else
+				SendReady();
         }
         else if(Msg == NETMSG_FILE_INDEX)
         {
@@ -1532,9 +1535,9 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
             if ((CModFile::FILETYPE)FileType == CModFile::FILETYPELUA)
                 str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.lua", pFileName, FileCrc);
             else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEPNG)
-                str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.wav", pFileName, FileCrc);
-            else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEWAV)
                 str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.png", pFileName, FileCrc);
+            else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEWAV)
+                str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.wav", pFileName, FileCrc);
             else
                 str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.inv", pFileName, FileCrc);
 
@@ -1571,10 +1574,9 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if(m_FileDownloadHandle)
 					io_close(m_FileDownloadHandle);
 				m_FileDownloadHandle = 0;
-
-				m_ModFileCurrentNumber++;
+				
 				CMsgPacker Msg(NETMSG_REQUEST_FILE_INDEX);
-                Msg.AddInt(m_ModFileCurrentNumber);
+                Msg.AddInt(++m_ModFileCurrentNumber);
                 SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
                 if (m_FileDownloadAmount == m_FileDownloadTotalSize)
                 {

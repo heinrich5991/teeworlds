@@ -1,5 +1,5 @@
 /* (c) MAP94 and Patafix. See www.n-lvl.com/ndc/nclient/ for more information. */
-#include "..\lua.h"
+#include "../lua.h"
 
 int CLuaFile::SendPacket(lua_State *L)
 {

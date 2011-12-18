@@ -205,7 +205,6 @@ void CLuaFile::Close()
     m_pLua = 0;
 
     //clear
-  //  mem_zero(m_aUiElements, sizeof(m_aUiElements));
     mem_zero(m_aTitle, sizeof(m_aTitle));
     mem_zero(m_aInfo, sizeof(m_aInfo));
     mem_zero(m_aFilename, sizeof(m_aFilename));

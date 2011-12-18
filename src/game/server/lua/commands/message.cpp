@@ -52,6 +52,19 @@ int CLuaFile::AddModFile(lua_State *L)
 	pSelf->m_pServer->Server()->AddModFile((char *)lua_tostring(L, 1), lua_tointeger(L, 2));
 	return 1;
 }
+int CLuaFile::DeleteModFile(lua_State *L)
+{
+	lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	
+	if(lua_isnil(L, 1) || !lua_isnumber(L, 2))
+        return 0;
+	pSelf->m_pServer->Server()->DeleteModFile((char *)lua_tostring(L, 1));
+	return 1;
+}
 int CLuaFile::SendFile(lua_State *L)
 {
 	lua_getglobal(L, "pLUA");

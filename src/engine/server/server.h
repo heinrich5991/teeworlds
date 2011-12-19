@@ -140,6 +140,7 @@ public:
 	{
     public:
 	    char m_aName[256];
+	    char *m_pFileDir;
 	    enum FILETYPE
 	    {
 	        FILETYPEINVALID = 0,
@@ -218,8 +219,8 @@ public:
 	char *GetMapName();
 	int LoadMap(const char *pMapName);
 
-	void AddModFile(const char *pFileName, int Type);
-	void DeleteModFile(const char *pFileName);
+	void AddModFile(const char *pFileDir, const char *pFileName, int Type);
+	void DeleteModFile(const char *pFileDir);
 
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
 	int Run();

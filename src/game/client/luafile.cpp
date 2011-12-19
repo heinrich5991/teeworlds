@@ -2464,9 +2464,10 @@ int CLuaFile::SendPacket(lua_State *L)
     if(lua_isnil(L, 1))
         return 0;
 
-    char *pData = (char *)lua_tostring(L, 1);
+	char aBuf[2000];
+	str_format(aBuf, sizeof(aBuf), " %s", (char *)lua_tostring(L, 1));
     CMsgPacker P(NETMSG_LUA_DATA);
-    P.AddString(pData, 2000);
+    P.AddString(aBuf, 2000);
 
     pSelf->m_pClient->Client()->SendMsgEx(&P, MSGFLAG_VITAL|MSGFLAG_FLUSH, true);
 
@@ -2483,6 +2484,6 @@ int CLuaFile::FetchPacket(lua_State *L)
 
     if (!pSelf->m_pLuaHandler->m_EventListener.m_pNetData)
         return 0;
-
+	lua_pushstring(L, pSelf->m_pLuaHandler->m_EventListener.m_pNetData);
     return 1;
 }

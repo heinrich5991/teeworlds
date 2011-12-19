@@ -1238,12 +1238,13 @@ int CServer::LoadMap(const char *pMapName)
 	return 1;
 }
 
-void CServer::AddModFile(const char *pFileName, int Type)
+void CServer::AddModFile(const char *pFileDir, const char *pFileName, int Type)
 {
     CModFile tmp;
     str_copy(tmp.m_aName, pFileName, sizeof(tmp.m_aName));
+    tmp.m_pFileDir = (char *)pFileDir;
     tmp.m_Type = (CModFile::FILETYPE)Type;
-    IOHANDLE File = Storage()->OpenFile(pFileName, IOFLAG_READ, IStorage::TYPE_ALL);
+    IOHANDLE File = Storage()->OpenFile(pFileDir, IOFLAG_READ, IStorage::TYPE_ALL);
     if (File)
     {
         tmp.m_Size = (int)io_length(File);
@@ -1255,16 +1256,16 @@ void CServer::AddModFile(const char *pFileName, int Type)
     }
     else
     {
-        dbg_msg("Mod", "Error loading file (%s) with type (%i)", pFileName, Type);
+        dbg_msg("Mod", "Error loading file (%s) with type (%i)", pFileDir, Type);
     }
 }
 
 
-void CServer::DeleteModFile(const char *pFileName)
+void CServer::DeleteModFile(const char *pFileDir)
 {
 	for(int i = 0; i < m_lModFiles.size(); i++)
 	{
-		if(!str_comp(m_lModFiles[i].m_aName, pFileName))
+		if(!str_comp(m_lModFiles[i].m_pFileDir, pFileDir))
 		m_lModFiles.remove_index(i);
 	}
 }

@@ -11,9 +11,11 @@ int CLuaFile::SendPacket(lua_State *L)
 
     if(!lua_isnumber(L, 2) ||  lua_isnil(L, 1))
         return 0;
-    char *pData = (char *)lua_tostring(L, 1);  
+		
+	char aData[2000]=" ";
+	str_append(aData, (char *)lua_tostring(L, 1), 2000);	
     CMsgPacker P(NETMSG_LUA_DATA);
-	P.AddString(pData, 2000);
+    P.AddString(aData, 2000);
 	pSelf->m_pServer->Server()->SendMsgEx(&P, MSGFLAG_VITAL|MSGFLAG_FLUSH, lua_tointeger(L, 2), true);
     return 1;
 }
@@ -43,9 +45,9 @@ int CLuaFile::AddModFile(lua_State *L)
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
 
-	if(lua_isnil(L, 1) || !lua_isnumber(L, 2))
+	if(lua_isnil(L, 1) || lua_isnil(L, 2) || !lua_isnumber(L, 3))
         return 0;
-	pSelf->m_pServer->Server()->AddModFile((char *)lua_tostring(L, 1), lua_tointeger(L, 2));
+	pSelf->m_pServer->Server()->AddModFile((char *)lua_tostring(L, 1), (char *)lua_tostring(L, 2), lua_tointeger(L, 3));
 	return 1;
 }
 int CLuaFile::DeleteModFile(lua_State *L)
@@ -56,7 +58,7 @@ int CLuaFile::DeleteModFile(lua_State *L)
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
 	
-	if(lua_isnil(L, 1) || !lua_isnumber(L, 2))
+	if(lua_isnil(L, 1))
         return 0;
 	pSelf->m_pServer->Server()->DeleteModFile((char *)lua_tostring(L, 1));
 	return 1;

@@ -609,12 +609,16 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				*pMessage = ' ';
 			pMessage++;
 		}
-		SendChat(ClientID, Team, pMsg->m_pMessage);
-
 		m_pLua->m_EventListener.m_pChatText = (char *)pMsg->m_pMessage;
 		m_pLua->m_EventListener.m_ChatClientID = ClientID;
 		m_pLua->m_EventListener.m_ChatTeam = Team;
+		m_pLua->m_EventListener.m_ChatHide = false;
 		m_pLua->m_EventListener.OnEvent("OnChat");
+
+		if (m_pLua->m_EventListener.m_ChatHide == false)
+            SendChat(ClientID, Team, pMsg->m_pMessage);
+
+
 	}
 	else if(MsgID == NETMSGTYPE_CL_CALLVOTE)
 	{

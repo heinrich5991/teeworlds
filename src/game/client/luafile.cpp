@@ -2464,10 +2464,10 @@ int CLuaFile::SendPacket(lua_State *L)
     if(lua_isnil(L, 1))
         return 0;
 
-	char aBuf[2000];
-	str_format(aBuf, sizeof(aBuf), " %s", (char *)lua_tostring(L, 1));
+	char aData[2000]=" ";
+	str_append(aData, (char *)lua_tostring(L, 1), 2000);	
     CMsgPacker P(NETMSG_LUA_DATA);
-    P.AddString(aBuf, 2000);
+    P.AddString(aData, 2000);
 
     pSelf->m_pClient->Client()->SendMsgEx(&P, MSGFLAG_VITAL|MSGFLAG_FLUSH, true);
 

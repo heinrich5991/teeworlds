@@ -47,6 +47,8 @@ int CLuaFile::AddModFile(lua_State *L)
 
 	if(lua_isnil(L, 1) || lua_isnil(L, 2) || !lua_isnumber(L, 3))
         return 0;
+
+    dbg_msg("loading", "");
 	pSelf->m_pServer->Server()->AddModFile((char *)lua_tostring(L, 1), (char *)lua_tostring(L, 2), lua_tointeger(L, 3));
 	return 0;
 }

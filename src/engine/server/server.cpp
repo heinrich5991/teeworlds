@@ -1329,6 +1329,7 @@ int CServer::Run()
 	GameServer()->OnInit();
 	//lua Init lua after gameserver
 	m_Lua.Init();
+
 	str_format(aBuf, sizeof(aBuf), "version %s", GameServer()->NetVersion());
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 
@@ -1780,6 +1781,8 @@ void CServer::RegisterCommands()
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
 	Console()->Chain("mod_command", ConchainModCommandUpdate, this);
 	Console()->Chain("console_output_level", ConchainConsoleOutputLevelUpdate, this);
+
+	Console()->Register("add_lua_file", "s", CFGFLAG_SERVER, m_Lua.ConAddLuaFile, this, "Add a Lua file");
 }
 
 

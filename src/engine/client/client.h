@@ -148,6 +148,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	        FILETYPELUA,
 	        FILETYPEPNG,
 	        FILETYPEWAV,
+	        FILETYPEWV,
 	        FILETYPEOTHER,
 	    } m_Type;
         int m_Size;

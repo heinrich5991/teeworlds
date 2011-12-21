@@ -1538,6 +1538,8 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
                 str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.png", pFileName, FileCrc);
             else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEWAV)
                 str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.wav", pFileName, FileCrc);
+            else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEWV)
+                str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.wv", pFileName, FileCrc);
             else
                 str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.inv", pFileName, FileCrc);
 

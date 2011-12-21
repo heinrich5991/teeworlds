@@ -11,7 +11,7 @@ void CLua::Tick()
         if (m_aLuaFiles[i].GetScriptName()[0] == 0 && m_pServer->m_pLuaCore->GetFileName(i)[0])
         {
             char aFilename[256];
-            str_format(aFilename, sizeof(aFilename), "%s", m_pServer->m_pLuaCore->GetFileName(i));
+            str_format(aFilename, sizeof(aFilename), "lua/%s", m_pServer->m_pLuaCore->GetFileName(i));
             m_aLuaFiles[i].Init(aFilename);
         }
         else if (m_aLuaFiles[i].GetScriptName()[0] && m_pServer->m_pLuaCore->GetFileName(i)[0] == 0)

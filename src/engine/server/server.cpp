@@ -1294,9 +1294,6 @@ int CServer::Run()
 		return -1;
 	}
 
-	//AddModFile("SDL.dll", 1);
-	//AddModFile("freetype.dll", 1);
-
 	// start server
 	NETADDR BindAddr;
 	if(g_Config.m_SvBindaddr[0] && net_host_lookup(g_Config.m_SvBindaddr, &BindAddr, NETTYPE_ALL) == 0)
@@ -1782,7 +1779,7 @@ void CServer::RegisterCommands()
 	Console()->Chain("mod_command", ConchainModCommandUpdate, this);
 	Console()->Chain("console_output_level", ConchainConsoleOutputLevelUpdate, this);
 
-	Console()->Register("add_lua_file", "s", CFGFLAG_SERVER, m_Lua.ConAddLuaFile, this, "Add a Lua file");
+	Console()->Register("add_lua_file", "s", CFGFLAG_SERVER, m_Lua.ConAddLuaFile, &m_Lua, "Add a Lua file");
 }
 
 

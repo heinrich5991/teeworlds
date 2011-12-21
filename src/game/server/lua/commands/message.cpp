@@ -45,6 +45,7 @@ int CLuaFile::AddModFile(lua_State *L)
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
 
+    dbg_msg("loading...", "");
 	if(lua_isnil(L, 1) || lua_isnil(L, 2) || !lua_isnumber(L, 3))
         return 0;
 	 dbg_msg("loading", "");

@@ -7,6 +7,8 @@
 #include <base/tl/array.h>
 
 #include "lua.h"
+
+#include <engine/modfile.h>
 class CSnapIDPool
 {
 	enum
@@ -135,24 +137,6 @@ public:
 	unsigned m_CurrentMapCrc;
 	unsigned char *m_pCurrentMapData;
 	int m_CurrentMapSize;
-
-	class CModFile //may move this to shared?
-	{
-    public:
-	    char m_aName[256];
-	    char *m_pFileDir;
-	    enum FILETYPE
-	    {
-	        FILETYPEINVALID = 0,
-	        FILETYPELUA,
-	        FILETYPEPNG,
-	        FILETYPEWAV,
-	        FILETYPEOTHER,
-	    } m_Type;
-        int m_Size;
-        int m_Crc;
-        unsigned char *m_pCurrentData;
-	};
     array<CModFile> m_lModFiles;
 
 	CDemoRecorder m_DemoRecorder;
@@ -219,7 +203,7 @@ public:
 	char *GetMapName();
 	int LoadMap(const char *pMapName);
 
-	void AddModFile(const char *pFileDir, const char *pFileName, int Type);
+	void AddModFile(const char *pFileDir, const char *pFileName, int Type, int Flags);
 	void DeleteModFile(const char *pFileDir);
 
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);

@@ -5,6 +5,8 @@
 
 #include <base/tl/array.h>
 
+#include <engine/modfile.h>
+
 class CGraph
 {
 public:
@@ -138,24 +140,8 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	IOHANDLE m_FileDownloadHandle;
 	int m_FileDownloadAmount;
 	int m_FileDownloadTotalSize;
-	class CModFile //may move this to shared?
-	{
-    public:
-	    char m_aName[256];
-	    enum FILETYPE
-	    {
-	        FILETYPEINVALID = 0,
-	        FILETYPELUA,
-	        FILETYPEPNG,
-	        FILETYPEWAV,
-	        FILETYPEWV,
-	        FILETYPEOTHER,
-	    } m_Type;
-        int m_Size;
-        int m_Crc;
-        unsigned char *m_pCurrentData;
-	};
-    array<CModFile> m_lModFiles;
+	
+	array<CModFile> m_lModFiles;
 
 	// time
 	CSmoothTime m_GameTime;

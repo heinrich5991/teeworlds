@@ -161,7 +161,9 @@ public:
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker) = 0;
 	virtual void OnPredict() = 0;
 	virtual void OnActivateEditor() = 0;
-
+	
+	virtual void AddLuaFile(char *pFileName) = 0;
+	
 	virtual void OnLuaPacket(CUnpacker *pUnpacker) = 0;
 
 	virtual int OnSnapInput(int *pData) = 0;

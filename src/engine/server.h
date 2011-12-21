@@ -36,7 +36,7 @@ public:
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID) = 0;
 	virtual int SendMsgEx(CMsgPacker *pMsg, int Flags, int ClientID, bool System) = 0;
 	
-	virtual void AddModFile(const char *pFileDir, const char *pFileName, int Type) = 0;
+	virtual void AddModFile(const char *pFileDir, const char *pFileName, int Type, int Flags) = 0;
 	virtual void DeleteModFile(const char *pFileDir) = 0;
 	virtual void SendFile(int ClientID) = 0;
 

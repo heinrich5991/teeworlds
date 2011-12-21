@@ -1508,6 +1508,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
             CMsgPacker Msg(NETMSG_REQUEST_FILE_INDEX);
 			m_lModFiles.clear();
+			m_FileDownloadAmount = 0;
             if (m_ModFileNumber)
             {
                 m_ModFileCurrentNumber = 0;
@@ -1521,29 +1522,52 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
         {
             const char *pFileName = Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES);
 			int FileType = Unpacker.GetInt();
+			int FileFlags = Unpacker.GetInt();
 			int FileCrc = Unpacker.GetInt();
 			int FileSize = Unpacker.GetInt();
+			bool bLaunch = (FileFlags&CModFile::FILEFLAG_LAUNCH);			
 
             CModFile tmp;
             str_copy(tmp.m_aName, pFileName, sizeof(tmp.m_aName));
             tmp.m_Size = FileSize;
             tmp.m_Crc = FileCrc;
             tmp.m_Type = (CModFile::FILETYPE)FileType;
-            m_lModFiles.add(tmp);
-
-            char aFileName[256];
-            if ((CModFile::FILETYPE)FileType == CModFile::FILETYPELUA)
-                str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.lua", pFileName, FileCrc);
-            else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEPNG)
-                str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.png", pFileName, FileCrc);
-            else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEWAV)
-                str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.wav", pFileName, FileCrc);
-            else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEWV)
-                str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.wv", pFileName, FileCrc);
-            else
-                str_format(aFileName, sizeof(aFileName), "downloadedfiles/%s_%08x.inv", pFileName, FileCrc);
-
-
+            tmp.m_Flags = FileFlags;            
+		
+			char aFileName[256];
+			char aFileCrc[9];
+			
+			str_format(aFileCrc, sizeof(aFileCrc), "_%08x", FileCrc);
+			str_format(aFileName, sizeof(aFileName), "downloadedfiles/");
+			
+			
+			if((tmp.m_Flags&CModFile::FILEFLAG_IGNORETYPE))
+			{
+				if (!(tmp.m_Flags&CModFile::FILEFLAG_NOCRC))
+					str_format(aFileName, sizeof(aFileName), "%s%08x_%s",aFileName, FileCrc, pFileName);
+				else
+					str_append(aFileName, pFileName, sizeof(aFileName));
+			}
+			else
+			{			
+				str_append(aFileName, pFileName, sizeof(aFileName));
+				
+				if (!(tmp.m_Flags&CModFile::FILEFLAG_NOCRC))				
+					str_append(aFileName, aFileCrc, sizeof(aFileName));
+			
+				if ((CModFile::FILETYPE)FileType == CModFile::FILETYPELUA)
+					str_append(aFileName, ".lua", sizeof(aFileName));
+				else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEPNG)
+					str_append(aFileName, ".png", sizeof(aFileName));
+				else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEWAV)
+					str_append(aFileName, ".wav", sizeof(aFileName));
+				else
+					str_append(aFileName, ".inv", sizeof(aFileName));		
+			}
+			
+			//str_copy(tmp.m_pFileDir, aFileName, sizeof(aFileName)); //copy final filename into memory (for launch)
+			tmp.m_pFileDir = (char *)aFileName;
+			m_lModFiles.add(tmp);
             if(m_FileDownloadHandle)
                 io_close(m_FileDownloadHandle);
             m_FileDownloadHandle = Storage()->OpenFile(aFileName, IOFLAG_WRITE, IStorage::TYPE_SAVE);
@@ -1576,7 +1600,13 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if(m_FileDownloadHandle)
 					io_close(m_FileDownloadHandle);
 				m_FileDownloadHandle = 0;
-
+				
+				
+				if ((m_lModFiles[m_ModFileCurrentNumber].m_Flags&CModFile::FILEFLAG_LAUNCH))
+				{
+					GameClient()->AddLuaFile(m_lModFiles[m_ModFileCurrentNumber].m_pFileDir);			
+				}
+				
 				CMsgPacker Msg(NETMSG_REQUEST_FILE_INDEX);
                 Msg.AddInt(++m_ModFileCurrentNumber);
                 SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);

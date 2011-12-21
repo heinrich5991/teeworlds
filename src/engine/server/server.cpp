@@ -971,6 +971,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			CMsgPacker Msg(NETMSG_FILE_INDEX);
 			Msg.AddString(m_lModFiles[Index].m_aName, 0);
 			Msg.AddInt(m_lModFiles[Index].m_Type);
+			Msg.AddInt(m_lModFiles[Index].m_Flags);
 			Msg.AddInt(m_lModFiles[Index].m_Crc);
 			Msg.AddInt(m_lModFiles[Index].m_Size);
 			SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID, true);
@@ -1238,12 +1239,13 @@ int CServer::LoadMap(const char *pMapName)
 	return 1;
 }
 
-void CServer::AddModFile(const char *pFileDir, const char *pFileName, int Type)
+void CServer::AddModFile(const char *pFileDir, const char *pFileName, int Type, int Flags)
 {
     CModFile tmp;
     str_copy(tmp.m_aName, pFileName, sizeof(tmp.m_aName));
     tmp.m_pFileDir = (char *)pFileDir;
     tmp.m_Type = (CModFile::FILETYPE)Type;
+    tmp.m_Flags = Flags;
     IOHANDLE File = Storage()->OpenFile(pFileDir, IOFLAG_READ, IStorage::TYPE_ALL);
     if (File)
     {

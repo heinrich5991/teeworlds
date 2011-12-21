@@ -255,6 +255,7 @@ void CLuaFile::Init(const char *pFile)
     {
         lua_pcall(m_pLua, 0, LUA_MULTRET, 0);
         ErrorFunc(m_pLua);
+		dbg_msg("Lua", "Error loading Lua file");
     }
     lua_getglobal(m_pLua, "errorfunc");
     ErrorFunc(m_pLua);

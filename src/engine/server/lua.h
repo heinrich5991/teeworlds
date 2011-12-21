@@ -6,7 +6,6 @@
 
 class CLua : public ILua
 {
-	static void ConAddLuaFile(IConsole::IResult *pResult, void *pUserData);
     static void ConfigSaveCallback(IConfig *pConfig, void *pUserData);
     static void ConListLuaFiles(IConsole::IResult *pResult, void *pUserData);
     static void ConDeleteAllLuaFiles(IConsole::IResult *pResult, void *pUserData);
@@ -23,8 +22,10 @@ public:
     void DeleteAllLuaFiles();
     void AddLuaFile(char *pFilename);
 
+	static void ConAddLuaFile(IConsole::IResult *pResult, void *pUserData);
+
 	void Init();
-	
+
 	IConsole* Console() {return m_pConsole;};
 };
 

@@ -19,7 +19,7 @@ void CLua::ConAddLuaFile(IConsole::IResult *pResult, void *pUserData)
 
 void CLua::AddLuaFile(char *pFilename)
 {
-	int Free = -1;	
+	int Free = -1;
     for (int i = 0; i < MAX_LUA_FILES; i++)
     {
 		if (m_aLuaFiles[i] && !str_comp_nocase(m_aLuaFiles[i], pFilename))
@@ -29,7 +29,7 @@ void CLua::AddLuaFile(char *pFilename)
 		if(Free == -2)
 			break;
     }
-	
+
     if (Free > -1 && Free < MAX_LUA_FILES)
 		str_copy(m_aLuaFiles[Free], pFilename, sizeof(m_aLuaFiles[Free]));
 }
@@ -38,7 +38,7 @@ void CLua::ConListLuaFiles(IConsole::IResult *pResult, void *pUserData)
     CLua *pSelf = ((CLua*)pUserData);
 	if(!pSelf || !pSelf->Console())
 		return;
-	
+
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Lua", "Lua files:");
 	bool Files = false;
 	for(int i = 0; i < MAX_LUA_FILES; i++)
@@ -74,14 +74,14 @@ void CLua::DeleteLuaFile(char *pFilename)
     {
         if (m_aLuaFiles[i] && str_comp_nocase(m_aLuaFiles[i], pFilename)==0) //lua inactiv
         {
-			str_copy(m_aLuaFiles[i], "", sizeof(m_aLuaFiles[i])); 
+			str_copy(m_aLuaFiles[i], "", sizeof(m_aLuaFiles[i]));
         }
-    }   
+    }
 }
 void CLua::DeleteAllLuaFiles()
 {
-	for (int i = 0; i < MAX_LUA_FILES; i++)    
-		str_copy(m_aLuaFiles[i], "", sizeof(m_aLuaFiles[i]));    
+	for (int i = 0; i < MAX_LUA_FILES; i++)
+		str_copy(m_aLuaFiles[i], "", sizeof(m_aLuaFiles[i]));
 }
 
 void CLua::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
@@ -121,10 +121,10 @@ void CLua::Init()
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	if(m_pConsole)
 	{
-		m_pConsole->Register("add_lua_file", "s", CFGFLAG_SERVER, ConAddLuaFile, this, "Add a Lua file");
+		//m_pConsole->Register("add_lua_file", "s", CFGFLAG_SERVER, ConAddLuaFile, this, "Add a Lua file");
 		m_pConsole->Register("delete_lua_file", "s", CFGFLAG_SERVER, ConDeleteLuaFile, this, "Delete a Lua file");
 		m_pConsole->Register("delete_all_lua_files", "", CFGFLAG_SERVER, ConDeleteAllLuaFiles, this, "Delete all lua files");
 		m_pConsole->Register("list_lua_files", "", CFGFLAG_SERVER, ConListLuaFiles, this, "List active Lua files");
-	}	
+	}
 }
 

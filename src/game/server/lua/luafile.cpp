@@ -104,7 +104,7 @@ void CLuaFile::Init(const char *pFile)
 {
     //close first
     Close();
-	
+
     str_copy(m_aFilename, pFile, sizeof(m_aFilename));
 
     m_pLua = lua_open();
@@ -119,16 +119,16 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "SetScriptUseSettingPage", this->SetScriptUseSettingPage);
     lua_register(m_pLua, "SetScriptTitle", this->SetScriptTitle);
     lua_register(m_pLua, "SetScriptInfo", this->SetScriptInfo);
-    
+
     //events
 		lua_register(m_pLua, "AddEventListener", this->AddEventListener);
-		lua_register(m_pLua, "RemoveEventListener", this->RemoveEventListener);	
+		lua_register(m_pLua, "RemoveEventListener", this->RemoveEventListener);
 		 //chat
 		lua_register(m_pLua, "ChatGetText", this->ChatGetText);
 		lua_register(m_pLua, "ChatGetClientID", this->ChatGetClientID);
 		lua_register(m_pLua, "ChatGetTeam", this->ChatGetTeam);
 		lua_register(m_pLua, "ChatHide", this->ChatHide);
-		
+
 		//kill
 		lua_register(m_pLua, "KillGetKillerID", this->KillGetKillerID);
 		lua_register(m_pLua, "KillGetVictimID", this->KillGetVictimID);
@@ -154,7 +154,7 @@ void CLuaFile::Init(const char *pFile)
 	//config
     lua_register(m_pLua, "GetConfigValue", this->GetConfigValue);
     lua_register(m_pLua, "SetConfigValue", this->SetConfigValue);
-	
+
     //console
     lua_register(m_pLua, "Print", this->Print);
     lua_register(m_pLua, "Console", this->Console);
@@ -170,7 +170,7 @@ void CLuaFile::Init(const char *pFile)
 	lua_register(m_pLua, "AddModFile", this->AddModFile);
 	lua_register(m_pLua, "DeleteModFile", this->DeleteModFile);
 	lua_register(m_pLua, "SendFile", this->SendFile);
-	
+
 
     //collision
     lua_register(m_pLua, "IntersectLine", this->IntersectLine);
@@ -193,6 +193,12 @@ void CLuaFile::Init(const char *pFile)
     {
         lua_pcall(m_pLua, 0, LUA_MULTRET, 0);
         ErrorFunc(m_pLua);
+    }
+    else
+    {
+        dbg_msg("lua", "fail to load file: %s", pFile);
+        Close();
+        return;
     }
     lua_getglobal(m_pLua, "errorfunc");
     ErrorFunc(m_pLua);

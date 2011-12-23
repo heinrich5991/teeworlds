@@ -13,8 +13,9 @@ class CModFile
 	        FILETYPELUA,
 	        FILETYPEPNG,
 	        FILETYPEWAV,
+	        FILETYPEWV,
 	        FILETYPEOTHER,
-	    } m_Type; 
+	    } m_Type;
 		enum FILEFLAGS
 	    {
 	        FILEFLAG_IGNORETYPE = 1,
@@ -24,7 +25,7 @@ class CModFile
 	    };
 		int m_Flags;
         int m_Size;
-        int m_Crc;	
+        int m_Crc;
         unsigned char *m_pCurrentData;
 };
 #endif

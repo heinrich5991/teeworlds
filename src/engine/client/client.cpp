@@ -1525,22 +1525,22 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			int FileFlags = Unpacker.GetInt();
 			int FileCrc = Unpacker.GetInt();
 			int FileSize = Unpacker.GetInt();
-			bool bLaunch = (FileFlags&CModFile::FILEFLAG_LAUNCH);			
+			bool bLaunch = (FileFlags&CModFile::FILEFLAG_LAUNCH);
 
             CModFile tmp;
             str_copy(tmp.m_aName, pFileName, sizeof(tmp.m_aName));
             tmp.m_Size = FileSize;
             tmp.m_Crc = FileCrc;
             tmp.m_Type = (CModFile::FILETYPE)FileType;
-            tmp.m_Flags = FileFlags;            
-		
+            tmp.m_Flags = FileFlags;
+
 			char aFileName[256];
 			char aFileCrc[9];
-			
+
 			str_format(aFileCrc, sizeof(aFileCrc), "_%08x", FileCrc);
 			str_format(aFileName, sizeof(aFileName), "downloadedfiles/");
-			
-			
+
+
 			if((tmp.m_Flags&CModFile::FILEFLAG_IGNORETYPE))
 			{
 				if (!(tmp.m_Flags&CModFile::FILEFLAG_NOCRC))
@@ -1549,22 +1549,24 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					str_append(aFileName, pFileName, sizeof(aFileName));
 			}
 			else
-			{			
+			{
 				str_append(aFileName, pFileName, sizeof(aFileName));
-				
-				if (!(tmp.m_Flags&CModFile::FILEFLAG_NOCRC))				
+
+				if (!(tmp.m_Flags&CModFile::FILEFLAG_NOCRC))
 					str_append(aFileName, aFileCrc, sizeof(aFileName));
-			
+
 				if ((CModFile::FILETYPE)FileType == CModFile::FILETYPELUA)
 					str_append(aFileName, ".lua", sizeof(aFileName));
 				else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEPNG)
 					str_append(aFileName, ".png", sizeof(aFileName));
 				else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEWAV)
 					str_append(aFileName, ".wav", sizeof(aFileName));
+				else if ((CModFile::FILETYPE)FileType == CModFile::FILETYPEWV)
+					str_append(aFileName, ".wv", sizeof(aFileName));
 				else
-					str_append(aFileName, ".inv", sizeof(aFileName));		
+					str_append(aFileName, ".inv", sizeof(aFileName));
 			}
-			
+
 			//str_copy(tmp.m_pFileDir, aFileName, sizeof(aFileName)); //copy final filename into memory (for launch)
 			tmp.m_pFileDir = (char *)aFileName;
 			m_lModFiles.add(tmp);
@@ -1600,13 +1602,13 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if(m_FileDownloadHandle)
 					io_close(m_FileDownloadHandle);
 				m_FileDownloadHandle = 0;
-				
-				
+
+
 				if ((m_lModFiles[m_ModFileCurrentNumber].m_Flags&CModFile::FILEFLAG_LAUNCH))
 				{
-					GameClient()->AddLuaFile(m_lModFiles[m_ModFileCurrentNumber].m_pFileDir);			
+					GameClient()->AddLuaFile(m_lModFiles[m_ModFileCurrentNumber].m_pFileDir);
 				}
-				
+
 				CMsgPacker Msg(NETMSG_REQUEST_FILE_INDEX);
                 Msg.AddInt(++m_ModFileCurrentNumber);
                 SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);

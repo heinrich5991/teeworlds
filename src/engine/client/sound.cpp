@@ -16,7 +16,7 @@ extern "C" { // wavpack
 
 enum
 {
-	NUM_SAMPLES = 512,
+	NUM_SAMPLES = 1024, //some more ;)
 	NUM_VOICES = 64,
 	NUM_CHANNELS = 16,
 

@@ -346,6 +346,10 @@ int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const vo
 			StoreOglformat = GL_ALPHA;
 	}
 
+    m_aTextures[Tex].m_Width = Width;
+    m_aTextures[Tex].m_Height = Height;
+
+
 	glGenTextures(1, &m_aTextures[Tex].m_Tex);
 	glBindTexture(GL_TEXTURE_2D, m_aTextures[Tex].m_Tex);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -375,6 +379,20 @@ int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const vo
 	m_TextureMemoryUsage += m_aTextures[Tex].m_MemSize;
 	mem_free(pTmpData);
 	return Tex;
+}
+
+int CGraphics_OpenGL::GetTextureWidth(int TextureID)
+{
+    if (TextureID >= MAX_TEXTURES || TextureID < 0)
+        return 0;
+    return m_aTextures[TextureID].m_Width;
+}
+
+int CGraphics_OpenGL::GetTextureHeight(int TextureID)
+{
+    if (TextureID >= MAX_TEXTURES || TextureID < 0)
+        return 0;
+    return m_aTextures[TextureID].m_Height;
 }
 
 // simple uncompressed RGBA loaders

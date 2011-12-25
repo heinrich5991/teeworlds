@@ -239,6 +239,7 @@ void CLuaFile::Init(const char *pFile)
     //Texture
     lua_register(m_pLua, "TextureLoad", this->TextureLoad);
     lua_register(m_pLua, "TextureUnload", this->TextureUnload);
+    lua_register(m_pLua, "RenderTexture", this->RenderTexture);
 
     //Texture
     lua_register(m_pLua, "FetchPacket", this->FetchPacket);
@@ -2454,6 +2455,65 @@ int CLuaFile::TextureUnload(lua_State *L)
     return 0;
 }
 
+int CLuaFile::RenderTexture(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    //1 texture
+    //2 x
+    //3 y
+    //4 (width)
+    //5 (height)
+    //6 (clip_x1)
+    //7 (clip_y1)
+    //8 (clip_x2)
+    //9 (clip_y2)
+    if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3))
+        return 0;
+
+    dbg_msg("render", "omg");
+    int x = lua_tointeger(L, 2);
+    int y = lua_tointeger(L, 3);
+    int ImgWidth = pSelf->m_pClient->Graphics()->GetTextureWidth(lua_tointeger(L, 1));
+    int ImgHeight = pSelf->m_pClient->Graphics()->GetTextureHeight(lua_tointeger(L, 1));
+    float ClipX1 = 0.0f;
+    float ClipY1 = 0.0f;
+    float ClipX2 = 1.0f;
+    float ClipY2 = 1.0f;
+    if (lua_isnumber(L, 6))
+        ClipX1 = clamp((float)lua_tointeger(L, 6) / (float)ImgWidth, 0.0f, 1.0f);
+    if (lua_isnumber(L, 7))
+        ClipY1 = clamp((float)lua_tointeger(L, 7) / (float)ImgHeight, 0.0f, 1.0f);
+    if (lua_isnumber(L, 8))
+        ClipX2 = clamp((float)lua_tointeger(L, 8) / (float)ImgWidth, 0.0f, 1.0f);
+    if (lua_isnumber(L, 9))
+        ClipY2 = clamp((float)lua_tointeger(L, 9) / (float)ImgHeight, 0.0f, 1.0f);
+
+
+    int Width = abs(ClipX2 - ClipX1) * ImgWidth;
+    int Height = abs(ClipY2 - ClipY1) * ImgHeight;
+    if (lua_tointeger(L, 4))
+        Width = lua_tointeger(L, 4);
+    if (lua_tointeger(L, 5))
+        Height = lua_tointeger(L, 5);
+
+    pSelf->m_pClient->Graphics()->TextureSet(lua_tointeger(L, 1));
+    pSelf->m_pClient->Graphics()->QuadsBegin();
+    if (lua_isnumber(L, 10) && lua_isnumber(L, 11) && lua_isnumber(L, 12) && lua_isnumber(L, 13))
+        pSelf->m_pClient->Graphics()->SetColor(lua_tonumber(L, 10), lua_tonumber(L, 11), lua_tonumber(L, 12), lua_tonumber(L, 13));
+    if (lua_isnumber(L, 14))
+        pSelf->m_pClient->Graphics()->QuadsSetRotation(lua_tonumber(L, 14));
+    pSelf->m_pClient->Graphics()->QuadsSetSubset(ClipX1, ClipY1, ClipX2, ClipY2);
+    IGraphics::CQuadItem QuadItem(x, y, Width, Height);
+    pSelf->m_pClient->Graphics()->QuadsDrawTL(&QuadItem, 1);
+    pSelf->m_pClient->Graphics()->QuadsEnd();
+    return 0;
+}
+
 int CLuaFile::SendPacket(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
@@ -2465,8 +2525,8 @@ int CLuaFile::SendPacket(lua_State *L)
     if(lua_isnil(L, 1))
         return 0;
 
-	char aData[2000]=" ";
-	str_append(aData, (char *)lua_tostring(L, 1), 2000);	
+	char aData[2000] = " ";
+	str_append(aData, (char *)lua_tostring(L, 1), 2000);
     CMsgPacker P(NETMSG_LUA_DATA);
     P.AddString(aData, 2000);
 

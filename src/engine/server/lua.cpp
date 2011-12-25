@@ -17,21 +17,23 @@ void CLua::ConAddLuaFile(IConsole::IResult *pResult, void *pUserData)
     ((CLua*)pUserData)->AddLuaFile((char *)pResult->GetString(0));
 }
 
-void CLua::AddLuaFile(char *pFilename)
+void CLua::AddLuaFile(char *pFileDir)
 {
+	char aBuf[1024];
+	str_format(aBuf, sizeof(aBuf), "lua/%s", pFileDir);	
 	int Free = -1;
     for (int i = 0; i < MAX_LUA_FILES; i++)
     {
-		if (m_aLuaFiles[i] && !str_comp_nocase(m_aLuaFiles[i], pFilename))
+		if (m_aLuaFiles[i] && !str_comp_nocase(m_aLuaFiles[i], aBuf))
 			Free = -2;
-        if (m_aLuaFiles[i][0] == 0 && str_comp(m_aLuaFiles[i], pFilename) && Free == -1) //lua inactiv
+        if (m_aLuaFiles[i][0] == 0 && str_comp(m_aLuaFiles[i], aBuf) && Free == -1) //lua inactiv
         	Free = i;
 		if(Free == -2)
 			break;
     }
-
+	
     if (Free > -1 && Free < MAX_LUA_FILES)
-		str_copy(m_aLuaFiles[Free], pFilename, sizeof(m_aLuaFiles[Free]));
+		str_copy(m_aLuaFiles[Free], aBuf, sizeof(m_aLuaFiles[Free]));	
 }
 void CLua::ConListLuaFiles(IConsole::IResult *pResult, void *pUserData)
 {
@@ -68,11 +70,11 @@ void CLua::DeleteLuaFile(int i)
     if (i >= 0 && i < MAX_LUA_FILES)
         str_copy(m_aLuaFiles[i], "", sizeof(m_aLuaFiles[i]));
 }
-void CLua::DeleteLuaFile(char *pFilename)
+void CLua::DeleteLuaFile(char *pFileDir)
 {
 	for (int i = 0; i < MAX_LUA_FILES; i++)
     {
-        if (m_aLuaFiles[i] && str_comp_nocase(m_aLuaFiles[i], pFilename)==0) //lua inactiv
+        if (m_aLuaFiles[i] && str_comp_nocase(m_aLuaFiles[i], pFileDir)==0) //lua inactiv
         {
 			str_copy(m_aLuaFiles[i], "", sizeof(m_aLuaFiles[i]));
         }

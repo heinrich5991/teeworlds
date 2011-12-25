@@ -18,15 +18,20 @@ void CLua::ConAddLuaFile(IConsole::IResult *pResult, void *pUserData)
 }
 
 void CLua::AddLuaFile(char *pFileDir)
-{
+{	
+	int Free = -1;
     for (int i = 0; i < MAX_LUA_FILES; i++)
     {
-        if (m_aLuaFiles[i][0] == 0 && str_comp(m_aLuaFiles[i], pFileDir)) //lua inactiv
-        {
-            str_copy(m_aLuaFiles[i], pFileDir, sizeof(m_aLuaFiles[i]));
-            break;
-        }
+		if (m_aLuaFiles[i] && !str_comp_nocase(m_aLuaFiles[i], pFileDir))
+			Free = -2;
+        if (m_aLuaFiles[i][0] == 0 && str_comp(m_aLuaFiles[i], pFileDir) && Free == -1) //lua inactiv
+        	Free = i;
+		if(Free == -2)
+			break;
     }
+	
+    if (Free > -1 && Free < MAX_LUA_FILES)
+		str_copy(m_aLuaFiles[Free], pFileDir, sizeof(m_aLuaFiles[Free]));	
 }
 
 void CLua::DeleteLuaFile(int i)

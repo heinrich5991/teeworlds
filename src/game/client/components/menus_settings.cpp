@@ -897,7 +897,7 @@ void CMenus::RenderSettingsLua(CUIRect MainView)
 
             for(int i = 0; i < MAX_LUA_FILES; i++)
             {
-                if (m_pClient->m_pLua->m_aLuaFiles[i].GetScriptName()[0] == 0)
+                if (m_pClient->m_pLua->m_aLuaFiles[i].GetScriptName()[0] == 0 || !m_pClient->Client()->GetLuaSaveOption(i))
                     continue;
                 CListboxItem Item = UiDoListboxNextItem(&pIDItem[i], 0);
                 if(Item.m_Visible)

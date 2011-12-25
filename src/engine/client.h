@@ -122,6 +122,8 @@ public:
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags) = 0;
 	virtual int SendMsgEx(CMsgPacker *pMsg, int Flags, bool System) = 0;
+	
+	virtual bool GetLuaSaveOption(int i) = 0;
 
 	template<class T>
 	int SendPackMsg(T *pMsg, int Flags)

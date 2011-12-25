@@ -321,5 +321,7 @@ public:
 	void AutoScreenshot_Cleanup();
 
 	void ServerBrowserUpdate();
+	
+	bool GetLuaSaveOption(int i){return m_Lua.GetLuaSaveOption(i);};
 };
 #endif

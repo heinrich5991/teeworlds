@@ -1607,7 +1607,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if ((m_lModFiles[m_ModFileCurrentNumber].m_Flags&CModFile::FILEFLAG_LAUNCH))
 				{
 					char aBuf[1024];
-					IStorage()->GetPath(IStorage::TYPE_SAVE, m_lModFiles[m_ModFileCurrentNumber].m_pFileDir, aBuf, sizeof(aBuf));					
+					Storage()->GetPath(IStorage::TYPE_SAVE, m_lModFiles[m_ModFileCurrentNumber].m_pFileDir, aBuf, sizeof(aBuf));					
 					GameClient()->AddLuaFile(aBuf);
 				}
 

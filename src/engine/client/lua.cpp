@@ -17,8 +17,8 @@ void CLua::ConAddLuaFile(IConsole::IResult *pResult, void *pUserData)
     ((CLua*)pUserData)->AddLuaFile((char *)pResult->GetString(0));
 }
 
-void CLua::AddLuaFile(char *pFileDir)
-{	
+void CLua::AddLuaFile(char *pFileDir, bool NoSave)
+{
 	int Free = -1;
     for (int i = 0; i < MAX_LUA_FILES; i++)
     {
@@ -31,7 +31,10 @@ void CLua::AddLuaFile(char *pFileDir)
     }
 	
     if (Free > -1 && Free < MAX_LUA_FILES)
-		str_copy(m_aLuaFiles[Free], pFileDir, sizeof(m_aLuaFiles[Free]));	
+	{		
+		m_aLuaFilesSave[Free] = NoSave? false : true;
+		str_copy(m_aLuaFiles[Free], pFileDir, sizeof(m_aLuaFiles[Free]));
+	}
 }
 
 void CLua::DeleteLuaFile(int i)
@@ -46,6 +49,8 @@ void CLua::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 	char aBuf[128];
     for (int i = 0; i < MAX_LUA_FILES; i++)
     {
+		if(!pSelf->m_aLuaFilesSave[i])
+			continue;
         const char *pEnd = aBuf+sizeof(aBuf)-4;
         str_copy(aBuf, "add_lua_file ", sizeof(aBuf));
 

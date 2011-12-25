@@ -14,8 +14,9 @@ class ILua : public IInterface
 public:
 	virtual void Init() = 0;
 	virtual char *GetFileDir(int i) = 0;
-	virtual void AddLuaFile(char *pFilename) = 0;
+	virtual void AddLuaFile(char *pFilename, bool NoSave = false) = 0;
 	virtual void DeleteLuaFile(int i) = 0;
+	virtual bool GetLuaSaveOption(int i) = 0;
 };
 
 #endif

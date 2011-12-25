@@ -17,7 +17,7 @@ void CLua::ConAddLuaFile(IConsole::IResult *pResult, void *pUserData)
     ((CLua*)pUserData)->AddLuaFile((char *)pResult->GetString(0));
 }
 
-void CLua::AddLuaFile(char *pFileDir)
+void CLua::AddLuaFile(char *pFileDir, bool NoSave)
 {
 	char aBuf[1024];
 	str_format(aBuf, sizeof(aBuf), "lua/%s", pFileDir);	

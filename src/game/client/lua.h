@@ -328,6 +328,7 @@ public:
     //Texture
     static inline int TextureLoad(lua_State *L);
     static inline int TextureUnload(lua_State *L);
+    static inline int RenderTexture(lua_State *L);
 
     //Music
     static inline int MusicPlay(lua_State *L);

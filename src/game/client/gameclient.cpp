@@ -52,6 +52,7 @@
 #include "components/voting.h"
 #include "components/emitter.h"
 #include "components/stats.h"
+#include "components/luarender.h"
 
 #include <game/pathfinder.h>
 
@@ -90,6 +91,12 @@ static CMapImages gs_MapImages;
 
 static CMapLayers gs_MapLayersBackGround(CMapLayers::TYPE_BACKGROUND);
 static CMapLayers gs_MapLayersForeGround(CMapLayers::TYPE_FOREGROUND);
+
+static CLuaRender gs_LuaRenderLayerLevel1(1);
+static CLuaRender gs_LuaRenderLayerLevel2(2);
+static CLuaRender gs_LuaRenderLayerLevel3(3);
+static CLuaRender gs_LuaRenderLayerLevel4(4);
+static CLuaRender gs_LuaRenderLayerLevel5(5);
 
 CGameClient::CStack::CStack() { m_Num = 0; }
 void CGameClient::CStack::Add(class CComponent *pComponent) { m_paComponents[m_Num++] = pComponent; }
@@ -156,11 +163,16 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(m_pEmitter); // doesn't render anything, just updates the flow
 	m_All.Add(m_pStat); // doesn't render anything, just save the stats
 
+	m_All.Add(&gs_LuaRenderLayerLevel1); // lua
 	m_All.Add(&gs_MapLayersBackGround); // first to render
+	m_All.Add(&gs_LuaRenderLayerLevel2); // lua
 	m_All.Add(&m_pParticles->m_RenderTrail);
 	m_All.Add(m_pItems);
+	m_All.Add(&gs_LuaRenderLayerLevel3); // lua
 	m_All.Add(&gs_Players);
+	m_All.Add(&gs_LuaRenderLayerLevel4); // lua
 	m_All.Add(&gs_MapLayersForeGround);
+	m_All.Add(&gs_LuaRenderLayerLevel5); // lua
 	m_All.Add(&m_pParticles->m_RenderExplosions);
 	m_All.Add(&gs_NamePlates);
 	m_All.Add(&m_pParticles->m_RenderGeneral);

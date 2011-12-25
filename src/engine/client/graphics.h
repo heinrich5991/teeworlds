@@ -54,6 +54,8 @@ protected:
 	{
 		GLuint m_Tex;
 		int m_MemSize;
+		int m_Width;
+		int m_Height;
 		int m_Flags;
 		int m_Next;
 	};
@@ -94,6 +96,9 @@ public:
 	// simple uncompressed RGBA loaders
 	virtual int LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags);
 	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType);
+
+    virtual int GetTextureWidth(int TextureID);
+    virtual int GetTextureHeight(int TextureID);
 
 	void ScreenshotDirect(const char *pFilename);
     void CapturePixelStreamDirect(const char *pPath, int Frame);

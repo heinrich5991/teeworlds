@@ -83,6 +83,10 @@ public:
 	virtual int LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) = 0;
 	virtual void TextureSet(int TextureID) = 0;
 
+
+	virtual int GetTextureWidth(int TextureID) = 0;
+	virtual int GetTextureHeight(int TextureID) = 0;
+
 	struct CLineItem
 	{
 		float m_X0, m_Y0, m_X1, m_Y1;

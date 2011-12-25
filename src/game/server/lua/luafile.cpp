@@ -175,6 +175,7 @@ void CLuaFile::Init(const char *pFile)
     //collision
     lua_register(m_pLua, "IntersectLine", this->IntersectLine);
     lua_register(m_pLua, "GetTile", this->GetTile);
+    lua_register(m_pLua, "SetTile", this->SetTile);
     lua_register(m_pLua, "GetMapWidth", this->GetMapWidth);
     lua_register(m_pLua, "GetMapHeight", this->GetMapHeight);
 

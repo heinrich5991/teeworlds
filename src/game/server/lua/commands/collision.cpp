@@ -26,7 +26,18 @@ int CLuaFile::GetTile(lua_State *L)
     lua_pushnumber(L, pSelf->m_pServer->Collision()->GetTileRaw(lua_tonumber(L, 1), lua_tonumber(L, 2)));
     return 1;
 }
-
+int CLuaFile::SetTile(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	if(!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3))
+		return 0;
+    pSelf->m_pServer->Collision()->SetTile(lua_tointeger(L, 1), lua_tointeger(L, 2), lua_tointeger(L, 3));
+    return 1;
+}
 int CLuaFile::GetMapWidth(lua_State *L)
 {
     lua_getglobal(L, "pLUA");

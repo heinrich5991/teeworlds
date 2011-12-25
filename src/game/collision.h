@@ -35,6 +35,8 @@ public:
 	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity);
 	bool TestBox(vec2 Pos, vec2 Size);
     int GetTileRaw(int x, int y);
+	
+	void SetTile(int x, int y, int index);
 };
 
 #endif

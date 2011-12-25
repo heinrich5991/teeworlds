@@ -12,8 +12,8 @@ class CLua : public ILua
 public:
 	CLua();
 
-	char m_aLuaFiles[MAX_LUA_FILES][256];
-	char *GetFileName(int i);
+	char *m_aLuaFiles[MAX_LUA_FILES];
+	char *GetFileDir(int i);
     void DeleteLuaFile(int i);
     void AddLuaFile(char *pFilename);
 

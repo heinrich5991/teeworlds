@@ -533,14 +533,19 @@ int CSound::LoadWV(const char *pFilename)
 
 	if(!m_pStorage)
 		return -1;
-
-	ms_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "downloadfiles/%s", pFileName);
+	ms_File = m_pStorage->OpenFile((char *)aBuf, IOFLAG_READ, IStorage::TYPE_SAVE);
 	if(!ms_File)
 	{
-		dbg_msg("sound/wv", "failed to open file. filename='%s'", pFilename);
-		return -1;
+		ms_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+		if(!ms_File)
+		{
+			dbg_msg("sound/wv", "failed to open file. filename='%s'", pFilename);
+			return -1;
+		}
 	}
-
 	SampleID = AllocID();
 	if(SampleID < 0)
 		return -1;

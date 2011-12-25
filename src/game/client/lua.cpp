@@ -15,13 +15,9 @@ void CLua::Tick()
 {
     for (int i = 0; i < MAX_LUA_FILES; i++)
     {
-        if (m_aLuaFiles[i].GetScriptName()[0] == 0 && m_pClient->m_pLuaCore->GetFileName(i)[0])
-        {
-            char aFilename[256];
-            str_format(aFilename, sizeof(aFilename), "lua/%s", m_pClient->m_pLuaCore->GetFileName(i));
-            m_aLuaFiles[i].Init(aFilename);
-        }
-        else if (m_aLuaFiles[i].GetScriptName()[0] && m_pClient->m_pLuaCore->GetFileName(i)[0] == 0)
+        if (m_aLuaFiles[i].GetScriptName()[0] == 0 && m_pClient->m_pLuaCore->GetFileDir(i)[0])
+            m_aLuaFiles[i].Init(m_pClient->m_pLuaCore->GetFileDir(i));        
+        else if (m_aLuaFiles[i].GetScriptName()[0] && m_pClient->m_pLuaCore->GetFileDir(i)[0] == 0)
             m_aLuaFiles[i].Close();
         else if (m_aLuaFiles[i].GetScriptName()[0])
             m_aLuaFiles[i].Tick();
@@ -60,19 +56,19 @@ void CLua::Close()
     End();
 }
 
-int CLua::GetFileId(char *pFilename)
+int CLua::GetFileId(char *pFileDir)
 {
     for (int i = 0; i < MAX_LUA_FILES; i++)
     {
-        if (str_comp(m_aLuaFiles[i].GetScriptName(), pFilename) == 0)
+        if (str_comp(m_aLuaFiles[i].GetScriptName(), pFileDir) == 0)
             return i;
     }
     return -1;
 }
 
-void CLua::ConfigClose(char *pFilename)
+void CLua::ConfigClose(char *pFileDir)
 {
-    int Id = GetFileId(pFilename);
+    int Id = GetFileId(pFileDir);
     if (Id == -1)
         return;
     m_aLuaFiles[Id].ConfigClose();

@@ -821,7 +821,7 @@ int CMenus::LuaFetchCallback(const char *pName, int IsDir, int StorageType, void
 	if (str_comp(pName+Length-4, ".lua"))
 		return 0;
     for (int i = 0; i < MAX_LUA_FILES; i++)
-        if (!str_comp(pName, pSelf->m_pClient->m_pLuaCore->GetFileName(i)))
+        if (!str_comp(pName, pSelf->m_pClient->m_pLuaCore->GetFileDir(i)))
             return 0;
 
 
@@ -919,7 +919,7 @@ void CMenus::RenderSettingsLua(CUIRect MainView)
                     ButtonSettings.HMargin(15.0f, &ButtonSettings);
                     ButtonSettings.VMargin(5.0f, &ButtonSettings);
 
-                    if (m_pClient->m_pLuaCore->GetFileName(i)[0] == 0)
+                    if (m_pClient->m_pLuaCore->GetFileDir(i)[0] == 0)
                     {
                         UI()->DoLabelScaled(&ButtonDeactivate, "Deactivated", 14.0f, -1);
                     }
@@ -948,7 +948,7 @@ void CMenus::RenderSettingsLua(CUIRect MainView)
                     if (m_pClient->m_pLua->m_aLuaFiles[i].m_aTitle[0])
                         UI()->DoLabelScaled(&LabelTitle, m_pClient->m_pLua->m_aLuaFiles[i].m_aTitle, 16.0f, -1);
                     else
-                        UI()->DoLabelScaled(&LabelTitle, m_pClient->m_pLuaCore->GetFileName(i), 16.0f, -1);
+                        UI()->DoLabelScaled(&LabelTitle, m_pClient->m_pLuaCore->GetFileDir(i), 16.0f, -1);
                     UI()->DoLabelScaled(&LabelInfo, m_pClient->m_pLua->m_aLuaFiles[i].m_aInfo, 14.0f, -1);
                 }
             }

@@ -15,12 +15,12 @@ class CLua : public ILua
 public:
 	CLua();
 
-	char m_aLuaFiles[MAX_LUA_FILES][256];
+	char m_aLuaFiles[MAX_LUA_FILES][1024];
 	char *GetFileDir(int i);
     void DeleteLuaFile(int i);
-    void DeleteLuaFile(char *pFilename);
+    void DeleteLuaFile(char *pFileDir);
     void DeleteAllLuaFiles();
-    void AddLuaFile(char *pFilename);
+    void AddLuaFile(char *pFileDir);
 
 	static void ConAddLuaFile(IConsole::IResult *pResult, void *pUserData);
 

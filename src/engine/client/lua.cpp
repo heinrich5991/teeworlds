@@ -17,13 +17,13 @@ void CLua::ConAddLuaFile(IConsole::IResult *pResult, void *pUserData)
     ((CLua*)pUserData)->AddLuaFile((char *)pResult->GetString(0));
 }
 
-void CLua::AddLuaFile(char *pFilename)
+void CLua::AddLuaFile(char *pFileDir)
 {
     for (int i = 0; i < MAX_LUA_FILES; i++)
     {
-        if (m_aLuaFiles[i][0] == 0 && str_comp(m_aLuaFiles[i], pFilename)) //lua inactiv
+        if (m_aLuaFiles[i][0] == 0 && str_comp(m_aLuaFiles[i], pFileDir)) //lua inactiv
         {
-            str_copy(m_aLuaFiles[i], pFilename, sizeof(m_aLuaFiles[i]));
+            str_copy(m_aLuaFiles[i], pFileDir, sizeof(m_aLuaFiles[i]));
             break;
         }
     }

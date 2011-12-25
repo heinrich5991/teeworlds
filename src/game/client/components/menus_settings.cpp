@@ -825,8 +825,10 @@ int CMenus::LuaFetchCallback(const char *pName, int IsDir, int StorageType, void
             return 0;
 
 
-	CLuaItem Item;
-	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
+	CLuaItem Item;	
+	char aBuf[1024];
+	str_format(aBuf, sizeof(aBuf),"lua/%s", pName);
+	str_copy(Item.m_aFilename, aBuf, sizeof(Item.m_aFilename));
 	if(IsDir)
 	{
 		str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", pName);

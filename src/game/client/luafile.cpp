@@ -26,8 +26,8 @@ CLuaFile::CLuaFile()
 
 CLuaFile::~CLuaFile()
 {
-    #ifndef CONF_PLATFORM_MACOSX
     End();
+    #ifndef CONF_PLATFORM_MACOSX
     if (m_pLua)
         lua_close(m_pLua);
     m_pLua = 0;
@@ -63,6 +63,11 @@ void CLuaFile::Tick()
 
 void CLuaFile::End()
 {
+    for (array<int>::range r = m_lTextures.all(); !r.empty(); r.pop_front())
+    {
+        m_pClient->Graphics()->UnloadTexture(r.front());
+    }
+
     if (m_pLua == 0)
         return;
 
@@ -241,9 +246,13 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "TextureUnload", this->TextureUnload);
     lua_register(m_pLua, "RenderTexture", this->RenderTexture);
 
-    //Texture
+    //Net
     lua_register(m_pLua, "FetchPacket", this->FetchPacket);
     lua_register(m_pLua, "SendPacket", this->SendPacket);
+
+    //Sound
+    lua_register(m_pLua, "LoadWvFile", this->LoadWvFile);
+    lua_register(m_pLua, "PlayWv", this->PlayWv);
 
     lua_pushlightuserdata(m_pLua, this);
     lua_setglobal(m_pLua, "pLUA");
@@ -2436,7 +2445,10 @@ int CLuaFile::TextureLoad(lua_State *L)
     if (!lua_isstring(L, 1))
         return 0;
 
-    lua_pushinteger(L, pSelf->m_pClient->Graphics()->LoadTexture(lua_tostring(L, 1), IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_NORESAMPLE));
+    int ID = pSelf->m_pClient->Graphics()->LoadTexture(lua_tostring(L, 1), IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_NORESAMPLE);
+    pSelf->m_lTextures.add(ID);
+
+    lua_pushinteger(L, ID);
     return 1;
 }
 
@@ -2511,6 +2523,53 @@ int CLuaFile::RenderTexture(lua_State *L)
     IGraphics::CQuadItem QuadItem(x, y, Width, Height);
     pSelf->m_pClient->Graphics()->QuadsDrawTL(&QuadItem, 1);
     pSelf->m_pClient->Graphics()->QuadsEnd();
+    return 0;
+}
+
+int CLuaFile::LoadWvFile(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if(!lua_isstring(L, 1))
+        return 0;
+
+    int ID = pSelf->m_pClient->Sound()->LoadWV(lua_tostring(L, 1));
+    pSelf->m_lSounds.add(ID);
+    lua_pushinteger(L, ID);
+    return 1;
+}
+
+int CLuaFile::PlayWv(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if(!lua_isnumber(L, 1))
+        return 0;
+
+    int Flags = ISound::FLAG_POS;
+    if (lua_isnumber(L, 2) && lua_tonumber(L, 2) == 1)
+        Flags = 0;
+
+    float x = 0;
+    float y = 0;
+
+    if (lua_isnumber(L, 3) && lua_isnumber(L, 4))
+    {
+        x = lua_tonumber(L, 3);
+        y = lua_tonumber(L, 3);
+    }
+
+    dbg_msg("", "play sound");
+
+    pSelf->m_pClient->Sound()->PlayAt(2, lua_tointeger(L, 1), Flags, x, y);
     return 0;
 }
 

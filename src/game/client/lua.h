@@ -5,6 +5,7 @@
 #include "gameclient.h"
 #include <engine/shared/config.h>
 #include <engine/config.h>
+#include <base/tl/array.h>
 #include <base/tl/sorted_array.h>
 
 extern "C" { // lua
@@ -178,6 +179,9 @@ public:
 
     char *GetScriptName() {return m_aFilename;};
 
+    array<int> m_lTextures;
+    array<int> m_lSounds;
+
     //Settings
     void ConfigClose(); //Helper function
     bool m_HaveSettings;
@@ -349,6 +353,10 @@ public:
     static inline int GetControlValue(lua_State *L);
     static inline int SetControlValue(lua_State *L);
     static inline int UnSetControlValue(lua_State *L);
+
+    //Sound
+    static inline int LoadWvFile(lua_State *L);
+    static inline int PlayWv(lua_State *L);
 
     //LuaNetWork
     static inline int FetchPacket(lua_State *L);

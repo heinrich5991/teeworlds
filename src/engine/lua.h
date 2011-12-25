@@ -13,7 +13,7 @@ class ILua : public IInterface
 	MACRO_INTERFACE("lua", 0)
 public:
 	virtual void Init() = 0;
-	virtual char *GetFileName(int i) = 0;
+	virtual char *GetFileDir(int i) = 0;
 	virtual void AddLuaFile(char *pFilename) = 0;
 	virtual void DeleteLuaFile(int i) = 0;
 };

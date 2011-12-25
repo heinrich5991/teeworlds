@@ -16,7 +16,7 @@ public:
 	CLua();
 
 	char m_aLuaFiles[MAX_LUA_FILES][256];
-	char *GetFileName(int i);
+	char *GetFileDir(int i);
     void DeleteLuaFile(int i);
     void DeleteLuaFile(char *pFilename);
     void DeleteAllLuaFiles();

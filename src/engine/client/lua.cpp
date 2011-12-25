@@ -59,7 +59,7 @@ void CLua::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
         pConfig->WriteLine(aBuf);
     }
 }
-char *CLua::GetFileName(int i)
+char *CLua::GetFileDir(int i)
 {
     return m_aLuaFiles[i];
 }

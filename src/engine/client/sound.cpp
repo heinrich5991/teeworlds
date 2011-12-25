@@ -535,7 +535,7 @@ int CSound::LoadWV(const char *pFilename)
 		return -1;
 	
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "downloadfiles/%s", pFileName);
+	str_format(aBuf, sizeof(aBuf), "downloadfiles/%s", pFilename);
 	ms_File = m_pStorage->OpenFile((char *)aBuf, IOFLAG_READ, IStorage::TYPE_SAVE);
 	if(!ms_File)
 	{

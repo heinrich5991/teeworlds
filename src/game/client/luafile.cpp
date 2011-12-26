@@ -2682,6 +2682,11 @@ int CLuaFile::GetGroupNumLayers(lua_State *L)
 		lua_pushnumber(L, -1);
 		return 1;
 	}
+	if(!pSelf->m_pClient->Layers()->GetGroup(lua_tointeger(L, 1)))
+	{
+		lua_pushnumber(L, -1);			
+		return 1;
+	}
 	lua_pushnumber(L, pSelf->m_pClient->Layers()->GetGroup(lua_tointeger(L, 1))->m_NumLayers);
     return 1;
 }
@@ -2714,7 +2719,11 @@ int CLuaFile::GetLayerType(lua_State *L)
 	}
 	else	
 		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
-	
+	if(!pSelf->m_pClient->Layers()->GetGroup(Group))
+	{
+			lua_pushnumber(L, -1);			
+			return 1;
+	}
     lua_pushnumber(L, pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index)->m_Type);
     return 1;
 }
@@ -2746,7 +2755,14 @@ int CLuaFile::GetLayerFlags(lua_State *L)
 	}
 	else	
 		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
-		
+	
+	if(!pSelf->m_pClient->Layers()->GetGroup(Group))
+	{
+		lua_pushnumber(L, -1);
+		lua_pushnumber(L, -1);
+		return 2;
+	}
+	
 	CMapItemLayerTilemap *pTmap = (CMapItemLayerTilemap *)pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index);
     lua_pushnumber(L, pTmap->m_Flags);
     return 1;
@@ -2780,6 +2796,13 @@ int CLuaFile::GetLayerSize(lua_State *L)
 	}
 	else	
 		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
+		
+	if(!pSelf->m_pClient->Layers()->GetGroup(Group))
+	{
+		lua_pushnumber(L, -1);
+		lua_pushnumber(L, -1);
+		return 2;
+	}
 	CMapItemLayerTilemap *pTmap = (CMapItemLayerTilemap *)pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index);
 	
 	if(!pTmap)
@@ -2826,7 +2849,11 @@ int CLuaFile::GetLayerTileFlags(lua_State *L)
 	}
 	else	
 		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
-		
+	if(!pSelf->m_pClient->Layers()->GetGroup(Group))
+	{
+		lua_pushnumber(L, -1);			
+		return 1;
+	}
 	CMapItemLayer *pLayer = pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index);
 	if(!pLayer)
 	{
@@ -2876,7 +2903,8 @@ int CLuaFile::SetLayerTileFlags(lua_State *L)
 	}
 	else	
 		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
-		
+	if(!pSelf->m_pClient->Layers()->GetGroup(Group))
+		return 0;
 	CMapItemLayer *pLayer = pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index);
 	if(!pLayer)
 		return 0;
@@ -2922,7 +2950,13 @@ int CLuaFile::GetLayerTileIndex(lua_State *L)
 	}
 	else	
 		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
-		
+	
+	if(!pSelf->m_pClient->Layers()->GetGroup(Group))
+	{
+		lua_pushnumber(L, -1);			
+		return 1;
+	}
+			
 	CMapItemLayer *pLayer = pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index);
 	if(!pLayer)
 	{
@@ -2971,7 +3005,9 @@ int CLuaFile::SetLayerTileIndex(lua_State *L)
 	}
 	else	
 		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
-		
+	
+	if(!pSelf->m_pClient->Layers()->GetGroup(Group))
+			return 0;
 	CMapItemLayer *pLayer = pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index);
 	if(!pLayer)
 		return 0;

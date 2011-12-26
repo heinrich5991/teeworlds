@@ -214,6 +214,19 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "GetMapWidth", this->GetMapWidth);
     lua_register(m_pLua, "GetMapHeight", this->GetMapHeight);
     lua_register(m_pLua, "SetTile", this->SetTile);
+	
+	//layer
+	lua_register(m_pLua, "GetNumGroups", this->GetNumGroups);
+	lua_register(m_pLua, "GetNumLayers", this->GetNumLayers);
+	lua_register(m_pLua, "GetGroupNumLayers", this->GetGroupNumLayers);
+	lua_register(m_pLua, "GetLayerType", this->GetLayerType);
+	lua_register(m_pLua, "GetLayerFlags", this->GetLayerFlags);
+	lua_register(m_pLua, "GetLayerTileFlags", this->GetLayerTileFlags);
+	lua_register(m_pLua, "GetLayerTileIndex", this->GetLayerTileIndex);
+	lua_register(m_pLua, "SetLayerTileFlags", this->SetLayerTileFlags);
+	lua_register(m_pLua, "SetLayerTileIndex", this->SetLayerTileIndex);
+	lua_register(m_pLua, "GetLayerSize", this->GetLayerSize);
+	lua_register(m_pLua, "RenderTilemapGenerateSkip", this->RenderTilemapGenerateSkip);
 
     //Chat
     lua_register(m_pLua, "ChatSend", this->ChatSend);
@@ -2618,4 +2631,370 @@ int CLuaFile::FetchPacket(lua_State *L)
         return 0;
 	lua_pushstring(L, pSelf->m_pLuaHandler->m_EventListener.m_pNetData);
     return 1;
+}
+
+
+
+int CLuaFile::GetNumGroups(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	
+	if(!pSelf->m_pClient->Layers())
+	{
+		lua_pushnumber(L, -1);
+		return 1;
+	}
+	
+    lua_pushnumber(L, pSelf->m_pClient->Layers()->NumGroups());
+    return 1;
+}
+int CLuaFile::GetNumLayers(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	
+	if(!pSelf->m_pClient->Layers())
+	{
+		lua_pushnumber(L, -1);
+		return 1;
+	}
+	
+    lua_pushnumber(L, pSelf->m_pClient->Layers()->NumLayers());
+    return 1;
+}
+int CLuaFile::GetGroupNumLayers(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	
+	if(!lua_isnumber(L, 1) || !pSelf->m_pClient->Layers() || pSelf->m_pClient->Layers()->NumGroups() < 1)
+	{
+		lua_pushnumber(L, -1);
+		return 1;
+	}
+	lua_pushnumber(L, pSelf->m_pClient->Layers()->GetGroup(lua_tointeger(L, 1))->m_NumLayers);
+    return 1;
+}
+
+int CLuaFile::GetLayerType(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	
+	if(!lua_isnumber(L, 1) || !pSelf->m_pClient->Layers() || pSelf->m_pClient->Layers()->NumGroups() < 1)
+	{
+		lua_pushnumber(L, -1);
+		return 1;
+	}
+	int Group = 0;	
+	int Index = lua_tointeger(L, 1);	
+	if(lua_isnumber(L, 2))
+	{
+		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		if(pSelf->m_pClient->Layers()->GetGroup(Group))
+			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+		else
+		{
+			lua_pushnumber(L, -1);			
+			return 1;
+		}
+	}
+	else	
+		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
+	
+    lua_pushnumber(L, pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index)->m_Type);
+    return 1;
+}
+int CLuaFile::GetLayerFlags(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	
+	if(!lua_isnumber(L, 1) || !pSelf->m_pClient->Layers() || pSelf->m_pClient->Layers()->NumGroups() < 1)
+	{
+		lua_pushnumber(L, -1);
+		return 1;
+	}
+	int Group = 0;	
+	int Index = lua_tointeger(L, 1);	
+	if(lua_isnumber(L, 2))
+	{
+		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		if(pSelf->m_pClient->Layers()->GetGroup(Group))
+			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+		else
+		{
+			lua_pushnumber(L, -1);			
+			return 1;
+		}
+	}
+	else	
+		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
+		
+	CMapItemLayerTilemap *pTmap = (CMapItemLayerTilemap *)pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index);
+    lua_pushnumber(L, pTmap->m_Flags);
+    return 1;
+}
+int CLuaFile::GetLayerSize(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	
+	if(!lua_isnumber(L, 1) || !pSelf->m_pClient->Layers() || pSelf->m_pClient->Layers()->NumGroups() < 1)
+	{
+		lua_pushnumber(L, -1);
+		return 1;
+	}
+	int Group = 0;	
+	int Index = lua_tointeger(L, 1);	
+	if(lua_isnumber(L, 2))
+	{				
+		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		if(pSelf->m_pClient->Layers()->GetGroup(Group))
+			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+		else
+		{
+			lua_pushnumber(L, -1);
+			lua_pushnumber(L, -1);
+			return 2;
+		}
+	}
+	else	
+		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
+	CMapItemLayerTilemap *pTmap = (CMapItemLayerTilemap *)pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index);
+	
+	if(!pTmap)
+	{
+		lua_pushnumber(L, -1);
+		lua_pushnumber(L, -1);
+		return 2;
+	}
+	
+    lua_pushnumber(L, pTmap->m_Width);
+    lua_pushnumber(L, pTmap->m_Height);
+    return 2;
+}
+
+int CLuaFile::GetLayerTileFlags(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	
+	if(!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3)  || !pSelf->m_pClient->Layers()  || pSelf->m_pClient->Layers()->NumGroups() < 1)
+	{
+		lua_pushnumber(L, -1);
+		return 1;
+	}
+	int Group = 0;	
+	int Index = lua_tointeger(L, 1);
+	int x = lua_tointeger(L, 2);
+	int y = lua_tointeger(L, 3);
+	if(lua_isnumber(L, 4))
+	{
+		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		if(pSelf->m_pClient->Layers()->GetGroup(Group))
+			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+		else
+		{
+			lua_pushnumber(L, -1);			
+			return 1;
+		}
+		x = lua_tointeger(L, 3);
+		y = lua_tointeger(L, 4);
+	}
+	else	
+		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
+		
+	CMapItemLayer *pLayer = pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index);
+	if(!pLayer)
+	{
+		lua_pushnumber(L, -1);		
+		return 1;
+	}
+	if(pLayer->m_Type != LAYERTYPE_TILES)
+    {
+		lua_pushnumber(L, -1);
+		return 1;
+	}
+	CMapItemLayerTilemap *pTmap = (CMapItemLayerTilemap *)pLayer;
+    CTile *pTiles = (CTile *)pSelf->m_pClient->Layers()->Map()->GetData(pTmap->m_Data);
+	
+					
+    lua_pushnumber(L, pTiles[y*pTmap->m_Width+x].m_Flags);
+    return 1;
+}
+
+int CLuaFile::SetLayerTileFlags(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	
+	if(!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3) || !lua_isnumber(L, 4) || !pSelf->m_pClient->Layers()  || pSelf->m_pClient->Layers()->NumGroups() < 1)
+		return 0;
+	
+	int Group = 0;	
+	int Index = lua_tointeger(L, 1);
+	int x = lua_tointeger(L, 2);
+	int y = lua_tointeger(L, 3);
+	int NewFlags = lua_tointeger(L, 4);
+	if(lua_isnumber(L, 5))
+	{
+		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		if(pSelf->m_pClient->Layers()->GetGroup(Group))
+			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+		else
+			return 0;
+		
+		x = lua_tointeger(L, 3);
+		y = lua_tointeger(L, 4);		
+		NewFlags = lua_tointeger(L, 5);
+	}
+	else	
+		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
+		
+	CMapItemLayer *pLayer = pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index);
+	if(!pLayer)
+		return 0;
+	if(pLayer->m_Type != LAYERTYPE_TILES)
+		return 0;
+	
+	CMapItemLayerTilemap *pTmap = (CMapItemLayerTilemap *)pLayer;
+    CTile *pTiles = (CTile *)pSelf->m_pClient->Layers()->Map()->GetData(pTmap->m_Data);
+	
+					
+	pTiles[y*pTmap->m_Width+x].m_Flags = NewFlags;
+    return 0;
+}
+int CLuaFile::GetLayerTileIndex(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	
+	if(!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3)  || !pSelf->m_pClient->Layers()  || pSelf->m_pClient->Layers()->NumGroups() < 1)
+	{
+		lua_pushnumber(L, -1);
+		return 1;
+	}
+	int Group = 0;	
+	int Index = lua_tointeger(L, 1);
+	int x = lua_tointeger(L, 2);
+	int y = lua_tointeger(L, 3);
+	if(lua_isnumber(L, 4))
+	{
+		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		if(pSelf->m_pClient->Layers()->GetGroup(Group))
+			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+		else
+		{
+			lua_pushnumber(L, -1);			
+			return 1;
+		}
+		x = lua_tointeger(L, 3);
+		y = lua_tointeger(L, 4);
+	}
+	else	
+		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
+		
+	CMapItemLayer *pLayer = pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index);
+	if(!pLayer)
+	{
+		lua_pushnumber(L, -1);		
+		return 1;
+	}
+	if(pLayer->m_Type != LAYERTYPE_TILES)
+    {
+		lua_pushnumber(L, -1);
+		return 1;
+	}
+	CMapItemLayerTilemap *pTmap = (CMapItemLayerTilemap *)pLayer;
+    CTile *pTiles = (CTile *)pSelf->m_pClient->Layers()->Map()->GetData(pTmap->m_Data);
+	
+					
+    lua_pushnumber(L, pTiles[y*pTmap->m_Width+x].m_Index);
+    return 1;
+}
+
+int CLuaFile::SetLayerTileIndex(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	
+	if(!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3) || !lua_isnumber(L, 4) || !pSelf->m_pClient->Layers()  || pSelf->m_pClient->Layers()->NumGroups() < 1)
+		return 0;
+	
+	int Group = 0;	
+	int Index = lua_tointeger(L, 1);
+	int x = lua_tointeger(L, 2);
+	int y = lua_tointeger(L, 3);
+	int NewIndex = lua_tointeger(L, 4);
+	if(lua_isnumber(L, 5))
+	{
+		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		if(pSelf->m_pClient->Layers()->GetGroup(Group))
+			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+		else
+			return 0;
+		x = lua_tointeger(L, 3);
+		y = lua_tointeger(L, 4);		
+		NewIndex = lua_tointeger(L, 5);
+	}
+	else	
+		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
+		
+	CMapItemLayer *pLayer = pSelf->m_pClient->Layers()->GetLayer(pSelf->m_pClient->Layers()->GetGroup(Group)->m_StartLayer+Index);
+	if(!pLayer)
+		return 0;
+	if(pLayer->m_Type != LAYERTYPE_TILES)
+		return 0;
+	
+	CMapItemLayerTilemap *pTmap = (CMapItemLayerTilemap *)pLayer;
+    CTile *pTiles = (CTile *)pSelf->m_pClient->Layers()->Map()->GetData(pTmap->m_Data);
+	
+					
+	pTiles[y*pTmap->m_Width+x].m_Index = NewIndex;
+    return 0;
+}
+
+int CLuaFile::RenderTilemapGenerateSkip(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+	
+	if(pSelf->m_pClient->Layers() && pSelf->m_pClient->RenderTools())
+		pSelf->m_pClient->RenderTools()->RenderTilemapGenerateSkip(pSelf->m_pClient->Layers());
+    return 0;
 }

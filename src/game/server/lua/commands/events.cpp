@@ -108,3 +108,26 @@ int CLuaFile::ChatHide(lua_State *L)
     pSelf->m_pLuaHandler->m_EventListener.m_ChatHide = true;
     return 0;
 }
+
+int CLuaFile::WeaponFireGetWeaponID(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_WeaponID);
+    return 1;
+}
+int CLuaFile::WeaponFireGetClientID(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_ClientID);
+    return 1;
+}

@@ -49,6 +49,10 @@ public:
     //OnNetData
     char *m_pNetData;
     int m_pNetClientID;
+	
+	//OnWeaponFire	
+	int m_ClientID;
+	int m_WeaponID;
 };
 
 class CLuaFile
@@ -116,6 +120,10 @@ public:
     static inline int KillGetVictimID(lua_State *L);
     static inline int KillGetWeapon(lua_State *L);
 
+	
+	//Kill
+    static inline int WeaponFireGetClientID(lua_State *L);
+    static inline int WeaponFireGetWeaponID(lua_State *L);
     //
     //Include
     static inline int Include(lua_State *L);

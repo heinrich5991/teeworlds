@@ -275,7 +275,11 @@ void CCharacter::FireWeapon()
 	}
 
 	vec2 ProjStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
-
+	
+	GameServer()->m_pLua->m_EventListener.m_ClientID = m_pPlayer->GetCID();
+	GameServer()->m_pLua->m_EventListener.m_WeaponID = m_ActiveWeapon;
+	GameServer()->m_pLua->m_EventListener.OnEvent("OnWeaponFire");
+	
 	switch(m_ActiveWeapon)
 	{
 		case WEAPON_HAMMER:

@@ -120,6 +120,18 @@ int CLuaFile::WeaponFireGetWeaponID(lua_State *L)
     lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_OnWeaponFireWeaponID);
     return 1;
 }
+int CLuaFile::WeaponFireGetDir(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushnumber(L, pSelf->m_pLuaHandler->m_EventListener.m_OnWeaponFireDir.x);
+    lua_pushnumber(L, pSelf->m_pLuaHandler->m_EventListener.m_OnWeaponFireDir.y);
+    return 2;
+}
 int CLuaFile::WeaponFireGetClientID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");

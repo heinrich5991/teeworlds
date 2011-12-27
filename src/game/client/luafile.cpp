@@ -1406,6 +1406,7 @@ int CLuaFile::SetTile(lua_State *L)
     lua_getinfo(L, "nlSf", &Frame);
 	if(!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3))
 		return 0;
+
     pSelf->m_pClient->Collision()->SetTile(lua_tointeger(L, 1), lua_tointeger(L, 2), lua_tointeger(L, 3));
     return 1;
 }

@@ -12,14 +12,14 @@ int CLuaFile::GetCharacterPos(lua_State *L)
 
     if (!lua_isnumber(L, 1))
         return 0;
-	
+
 	 if(pSelf->m_pServer->m_apPlayers[lua_tointeger(L, 1)] && pSelf->m_pServer->m_apPlayers[lua_tointeger(L, 1)]->GetCharacter())
-		{	
-				lua_pushnumber(L, pSelf->m_pServer->m_World.m_Core.m_apCharacters[lua_tointeger(L, 1)]->m_Pos.x);
-				lua_pushnumber(L, pSelf->m_pServer->m_World.m_Core.m_apCharacters[lua_tointeger(L, 1)]->m_Pos.y);
-			//lua_pushnumber(L, pSelf->m_pServer->m_World.m_Core.m_aCharacters[lua_tointeger(L, 1)].m_Vel.y);
-		}
-	
+    {
+        lua_pushnumber(L, pSelf->m_pServer->m_apPlayers[lua_tointeger(L, 1)]->GetCharacter()->m_Pos.x);
+        lua_pushnumber(L, pSelf->m_pServer->m_apPlayers[lua_tointeger(L, 1)]->GetCharacter()->m_Pos.y);
+        return 2;
+    }
+
     lua_pushnumber(L, 0);
     lua_pushnumber(L, 0);
     return 2;
@@ -37,9 +37,9 @@ int CLuaFile::SetCharacterPos(lua_State *L)
 		int Id = lua_tointeger(L, 1);
 		if(Id < 0 || Id > MAX_CLIENTS)
 			return 0;
-		
+
 		if(pSelf->m_pServer->m_apPlayers[Id] && pSelf->m_pServer->m_apPlayers[Id]->GetCharacter())
-		{		
+		{
 			pSelf->m_pServer->m_World.m_Core.m_apCharacters[Id]->m_Pos.x = lua_tointeger(L, 2);
 			pSelf->m_pServer->m_World.m_Core.m_apCharacters[Id]->m_Pos.y = lua_tointeger(L, 3);
 			return 1;
@@ -58,14 +58,14 @@ int CLuaFile::GetCharacterVel(lua_State *L)
 
     if (!lua_isnumber(L, 1))
         return 0;
-		
+
     if(pSelf->m_pServer->m_apPlayers[lua_tointeger(L, 1)] && pSelf->m_pServer->m_apPlayers[lua_tointeger(L, 1)]->GetCharacter())
-		{	
+		{
 			lua_pushnumber(L, pSelf->m_pServer->m_World.m_Core.m_apCharacters[lua_tointeger(L, 1)]->m_Vel.x);
 			lua_pushnumber(L, pSelf->m_pServer->m_World.m_Core.m_apCharacters[lua_tointeger(L, 1)]->m_Vel.y);
-			
+
 			//lua_pushnumber(L, pSelf->m_pServer->m_World.m_Core.m_aCharacters[lua_tointeger(L, 1)].m_Vel.y);
-		}	
+		}
     lua_pushnumber(L, 0);
     lua_pushnumber(L, 0);
     return 2;
@@ -83,9 +83,9 @@ int CLuaFile::SetCharacterVel(lua_State *L)
 		int Id = lua_tointeger(L, 1);
 		if(Id < 0 || Id > MAX_CLIENTS)
 			return 0;
-		
+
 		if(pSelf->m_pServer->m_apPlayers[Id] && pSelf->m_pServer->m_apPlayers[Id]->GetCharacter())
-		{		
+		{
 			pSelf->m_pServer->m_World.m_Core.m_apCharacters[Id]->m_Vel.x = lua_tointeger(L, 2);
 			pSelf->m_pServer->m_World.m_Core.m_apCharacters[Id]->m_Vel.y = lua_tointeger(L, 3);
 			return 1;

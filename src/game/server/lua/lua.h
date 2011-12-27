@@ -51,8 +51,12 @@ public:
     int m_pNetClientID;
 	
 	//OnWeaponFire	
-	int m_ClientID;
-	int m_WeaponID;
+	int m_OnWeaponFireClientID;
+	int m_OnWeaponFireWeaponID;
+	
+	//Jump
+	int m_OnJumpJumpID;
+	int m_OnJumpClientID;
 };
 
 class CLuaFile
@@ -121,9 +125,14 @@ public:
     static inline int KillGetWeapon(lua_State *L);
 
 	
-	//Kill
+	//WeaponFire
     static inline int WeaponFireGetClientID(lua_State *L);
     static inline int WeaponFireGetWeaponID(lua_State *L);
+	
+	//Jump
+    static inline int JumpGetClientID(lua_State *L);
+    static inline int JumpGetJumpID(lua_State *L);
+	
     //
     //Include
     static inline int Include(lua_State *L);
@@ -144,7 +153,7 @@ public:
     static inline int GetMapWidth(lua_State *L);
     static inline int GetMapHeight(lua_State *L);
 
-   // static inline int CreateParticle(lua_State *L);
+	// static inline int CreateParticle(lua_State *L);
 
     //Console Print
     static inline int Print(lua_State *L);

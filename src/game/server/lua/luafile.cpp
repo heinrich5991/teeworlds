@@ -136,7 +136,11 @@ void CLuaFile::Init(const char *pFile)
 		
 		//WeaponFire
 		lua_register(m_pLua, "WeaponFireGetClientID", this->WeaponFireGetClientID);
-		lua_register(m_pLua, "WeaponFireGetWeaponID", this->WeaponFireGetWeaponID);		
+		lua_register(m_pLua, "WeaponFireGetWeaponID", this->WeaponFireGetWeaponID);	
+		
+		//OnJump
+		lua_register(m_pLua, "JumpGetClientID", this->JumpGetClientID);
+		lua_register(m_pLua, "JumpGetJumpID", this->JumpGetJumpID);		
 
     //player
     lua_register(m_pLua, "GetPlayerName", this->GetPlayerName);

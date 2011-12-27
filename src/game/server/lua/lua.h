@@ -53,6 +53,7 @@ public:
 	//OnWeaponFire	
 	int m_OnWeaponFireClientID;
 	int m_OnWeaponFireWeaponID;
+	vec2 m_OnWeaponFireDir;
 	
 	//Jump
 	int m_OnJumpJumpID;
@@ -128,6 +129,7 @@ public:
 	//WeaponFire
     static inline int WeaponFireGetClientID(lua_State *L);
     static inline int WeaponFireGetWeaponID(lua_State *L);
+    static inline int WeaponFireGetDir(lua_State *L);
 	
 	//Jump
     static inline int JumpGetClientID(lua_State *L);

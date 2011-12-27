@@ -5,6 +5,7 @@
 #include "gameclient.h"
 #include <engine/shared/config.h>
 #include <engine/config.h>
+#include <engine/input.h>
 #include <base/tl/array.h>
 #include <base/tl/sorted_array.h>
 
@@ -60,6 +61,9 @@ public:
 
     //OnNetData
     char *m_pNetData;
+
+    //Keys
+    IInput::CEvent m_KeyEvent;
 };
 
 class CLuaBinding
@@ -379,6 +383,11 @@ public:
 
     //Replace Texture
     static inline int ReplaceGameTexture(lua_State *L);
+
+    //keys
+    static inline int GetKeyFlags(lua_State *L);
+    static inline int GetKeyCode(lua_State *L);
+    static inline int GetKeyUnicode(lua_State *L);
 };
 
 class CLua

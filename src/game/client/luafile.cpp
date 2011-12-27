@@ -273,6 +273,11 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "LoadWvFile", this->LoadWvFile);
     lua_register(m_pLua, "PlayWv", this->PlayWv);
 
+    //keys
+    lua_register(m_pLua, "GetKeyFlags", this->GetKeyFlags);
+    lua_register(m_pLua, "GetKeyCode", this->GetKeyCode);
+    lua_register(m_pLua, "GetKeyUnicode", this->GetKeyUnicode);
+
     lua_pushlightuserdata(m_pLua, this);
     lua_setglobal(m_pLua, "pLUA");
 
@@ -3054,4 +3059,40 @@ int CLuaFile::RenderTilemapGenerateSkip(lua_State *L)
 	if(pSelf->m_pClient->Layers() && pSelf->m_pClient->RenderTools())
 		pSelf->m_pClient->RenderTools()->RenderTilemapGenerateSkip(pSelf->m_pClient->Layers());
     return 0;
+}
+
+int CLuaFile::GetKeyFlags(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_KeyEvent.m_Flags);
+    return 1;
+}
+
+int CLuaFile::GetKeyCode(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_KeyEvent.m_Key);
+    return 1;
+}
+
+int CLuaFile::GetKeyUnicode(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_KeyEvent.m_Unicode);
+    return 1;
 }

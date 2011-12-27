@@ -140,7 +140,7 @@ int CLuaFile::JumpGetClientID(lua_State *L)
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
 
-    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_OnJumpCLientID);
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_OnJumpClientID);
     return 1;
 }
 int CLuaFile::JumpGetJumpID(lua_State *L)

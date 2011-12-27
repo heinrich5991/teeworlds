@@ -69,6 +69,7 @@ void CLuaFile::End()
             g_pData->m_aImages[IMAGE_GAME].m_Id = m_pLuaHandler->m_OriginalGameTexture;
         m_pClient->Graphics()->UnloadTexture(r.front());
     }
+    m_pLuaHandler->m_EventListener.RemoveAllEventListeners(this);
 
     if (m_pLua == 0)
         return;

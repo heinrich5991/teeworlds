@@ -275,11 +275,11 @@ void CCharacter::FireWeapon()
 	}
 
 	vec2 ProjStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
-	
-	GameServer()->m_pLua->m_EventListener.m_ClientID = m_pPlayer->GetCID();
-	GameServer()->m_pLua->m_EventListener.m_WeaponID = m_ActiveWeapon;
+
+	GameServer()->m_pLua->m_EventListener.m_OnWeaponFireClientID = m_pPlayer->GetCID();
+	GameServer()->m_pLua->m_EventListener.m_OnWeaponFireWeaponID = m_ActiveWeapon;
 	GameServer()->m_pLua->m_EventListener.OnEvent("OnWeaponFire");
-	
+
 	switch(m_ActiveWeapon)
 	{
 		case WEAPON_HAMMER:
@@ -555,23 +555,23 @@ void CCharacter::Tick()
 
 	m_Core.m_Input = m_Input;
 	m_Core.Tick(true);
-	
+
 	if(m_Core.m_TriggeredEvents != 0)
 	{
 		if((m_Core.m_TriggeredEvents&COREEVENT_GROUND_JUMP))
 		{
-			GameServer()->m_pLua->m_EventListener.m_ClientID = m_pPlayer->GetCID();
-			GameServer()->m_pLua->m_EventListener.m_Jump = 0;
+			GameServer()->m_pLua->m_EventListener.m_OnJumpClientID = m_pPlayer->GetCID();
+			GameServer()->m_pLua->m_EventListener.m_OnJumpJumpID = 0;
 			GameServer()->m_pLua->m_EventListener.OnEvent("OnJump");
 		}
 		else if((m_Core.m_TriggeredEvents&COREEVENT_AIR_JUMP))
 		{
-			
-			GameServer()->m_pLua->m_EventListener.m_ClientID = m_pPlayer->GetCID();
-			GameServer()->m_pLua->m_EventListener.m_Jump = 1;
+
+			GameServer()->m_pLua->m_EventListener.m_OnJumpClientID = m_pPlayer->GetCID();
+			GameServer()->m_pLua->m_EventListener.m_OnJumpJumpID = 1;
 			GameServer()->m_pLua->m_EventListener.OnEvent("OnJump");
 		}
-	}	
+	}
 	// handle death-tiles and leaving gamelayer
 	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
 		GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||

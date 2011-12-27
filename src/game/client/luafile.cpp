@@ -63,16 +63,17 @@ void CLuaFile::Tick()
 
 void CLuaFile::End()
 {
+    if (m_pLua == 0)
+        return;
+
     for (array<int>::range r = m_lTextures.all(); !r.empty(); r.pop_front())
     {
         if (g_pData->m_aImages[IMAGE_GAME].m_Id == r.front())
             g_pData->m_aImages[IMAGE_GAME].m_Id = m_pLuaHandler->m_OriginalGameTexture;
         m_pClient->Graphics()->UnloadTexture(r.front());
     }
-    m_pLuaHandler->m_EventListener.RemoveAllEventListeners(this);
 
-    if (m_pLua == 0)
-        return;
+    m_pLuaHandler->m_EventListener.RemoveAllEventListeners(this);
 
     //try to call the end function
     //Maybe the lua file need to save data eg. a ConfigFile

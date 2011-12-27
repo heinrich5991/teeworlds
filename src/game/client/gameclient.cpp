@@ -54,8 +54,6 @@
 #include "components/stats.h"
 #include "components/luarender.h"
 
-#include <game/pathfinder.h>
-
 CGameClient g_GameClient;
 
 // instanciate all systems

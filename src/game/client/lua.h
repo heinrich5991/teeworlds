@@ -263,20 +263,20 @@ public:
     static inline int GetMapWidth(lua_State *L);
     static inline int GetMapHeight(lua_State *L);
     static inline int SetTile(lua_State *L);
-	
+
 	//layers
 	static inline int GetNumGroups(lua_State *L);
 	static inline int GetNumLayers(lua_State *L);
 	static inline int GetGroupNumLayers(lua_State *L);
-	static inline int GetLayerType(lua_State *L);	 
-	static inline int GetLayerFlags(lua_State *L);	 
-	static inline int GetLayerTileFlags(lua_State *L);	 
+	static inline int GetLayerType(lua_State *L);
+	static inline int GetLayerFlags(lua_State *L);
+	static inline int GetLayerTileFlags(lua_State *L);
 	static inline int GetLayerTileIndex(lua_State *L);
-	static inline int SetLayerTileFlags(lua_State *L);	 
-	static inline int SetLayerTileIndex(lua_State *L);	 
-	static inline int GetLayerSize(lua_State *L);	 
-	static inline int RenderTilemapGenerateSkip(lua_State *L);	 
-	 
+	static inline int SetLayerTileFlags(lua_State *L);
+	static inline int SetLayerTileIndex(lua_State *L);
+	static inline int GetLayerSize(lua_State *L);
+	static inline int RenderTilemapGenerateSkip(lua_State *L);
+
     static inline int CreateParticle(lua_State *L);
 
     //Flow
@@ -375,6 +375,9 @@ public:
     //LuaNetWork
     static inline int FetchPacket(lua_State *L);
     static inline int SendPacket(lua_State *L);
+
+    //Replace Texture
+    static inline int ReplaceGameTexture(lua_State *L);
 };
 
 class CLua
@@ -399,6 +402,7 @@ public:
 
     int GetFileId(char *pFilename);
 
+    int m_OriginalGameTexture;
 };
 
 

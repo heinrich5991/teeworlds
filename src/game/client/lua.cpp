@@ -16,7 +16,7 @@ void CLua::Tick()
     for (int i = 0; i < MAX_LUA_FILES; i++)
     {
         if (m_aLuaFiles[i].GetScriptName()[0] == 0 && m_pClient->m_pLuaCore->GetFileDir(i)[0])
-            m_aLuaFiles[i].Init(m_pClient->m_pLuaCore->GetFileDir(i));        
+            m_aLuaFiles[i].Init(m_pClient->m_pLuaCore->GetFileDir(i));
         else if (m_aLuaFiles[i].GetScriptName()[0] && m_pClient->m_pLuaCore->GetFileDir(i)[0] == 0)
             m_aLuaFiles[i].Close();
         else if (m_aLuaFiles[i].GetScriptName()[0])
@@ -44,6 +44,8 @@ CLua::CLua(CGameClient *pClient)
         m_aLuaFiles[i].m_pClient = pClient;
         m_aLuaFiles[i].m_pLuaHandler = this;
     }
+
+    m_OriginalGameTexture = g_pData->m_aImages[IMAGE_GAME].m_Id;
 }
 
 CLua::~CLua()

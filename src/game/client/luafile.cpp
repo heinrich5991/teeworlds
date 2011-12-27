@@ -2512,7 +2512,6 @@ int CLuaFile::RenderTexture(lua_State *L)
     if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3))
         return 0;
 
-    dbg_msg("render", "omg");
     int x = lua_tointeger(L, 2);
     int y = lua_tointeger(L, 3);
     int ImgWidth = pSelf->m_pClient->Graphics()->GetTextureWidth(lua_tointeger(L, 1));

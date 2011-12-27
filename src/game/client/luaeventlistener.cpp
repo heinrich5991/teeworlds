@@ -44,3 +44,14 @@ void CLuaEventListener::RemoveEventListener(class CLuaFile *pLuaFile, char *pEve
         }
     }
 }
+
+void CLuaEventListener::RemoveAllEventListeners(class CLuaFile *pLuaFile)
+{
+	for(array<CLuaListenerData>::range r = m_aListeners.all(); !r.empty(); r.pop_front())
+    {
+        if (r.front().m_pLuaFile == pLuaFile)
+        {
+            m_aListeners.remove(r.front());
+        }
+    }
+}

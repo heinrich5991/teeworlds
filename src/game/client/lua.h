@@ -29,6 +29,7 @@ class CLuaEventListener
 public:
     void AddEventListener(class CLuaFile *pLuaFile, char *pEvent, char *pLuaFunction);
     void RemoveEventListener(class CLuaFile *pLuaFile, char *pEvent);
+    void RemoveAllEventListeners(class CLuaFile *pLuaFile);
 
     void OnEvent(char *pEvent);
 

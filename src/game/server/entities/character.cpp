@@ -278,6 +278,7 @@ void CCharacter::FireWeapon()
 
 	GameServer()->m_pLua->m_EventListener.m_OnWeaponFireClientID = m_pPlayer->GetCID();
 	GameServer()->m_pLua->m_EventListener.m_OnWeaponFireWeaponID = m_ActiveWeapon;
+	GameServer()->m_pLua->m_EventListener.m_OnWeaponFireDir = Direction;
 	GameServer()->m_pLua->m_EventListener.OnEvent("OnWeaponFire");
 
 	switch(m_ActiveWeapon)

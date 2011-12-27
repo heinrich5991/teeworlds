@@ -2556,6 +2556,9 @@ int CLuaFile::RenderTexture(lua_State *L)
     if (lua_tointeger(L, 5))
         Height = lua_tointeger(L, 5);
 
+    if (pSelf->m_pClient->Graphics()->OnScreen(x, y, Width, Height) == false)
+        return 0;
+
     pSelf->m_pClient->Graphics()->TextureSet(lua_tointeger(L, 1));
     pSelf->m_pClient->Graphics()->QuadsBegin();
     if (lua_isnumber(L, 10) && lua_isnumber(L, 11) && lua_isnumber(L, 12) && lua_isnumber(L, 13))

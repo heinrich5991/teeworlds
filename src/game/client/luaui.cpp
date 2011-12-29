@@ -89,6 +89,19 @@ void CLuaUi::Tick()
             m_pLuaFile->FunctionExec();
         }
     }
+    else if(m_Type == LUAUIIMAGEEX)
+    {
+        CUIRect *pRect = &m_Rect;
+        int state = DoImageEx(&m_Id, m_TextureID, pRect, m_ClipX1,  m_ClipY1,  m_ClipX2,  m_ClipY2);
+        if (state != 0)
+        {
+            if (!m_pLuaFile->FunctionExist(m_pCallback))
+                return;
+            m_pLuaFile->FunctionPrepare(m_pCallback);
+            m_pLuaFile->PushInteger(state);
+            m_pLuaFile->FunctionExec();
+        }
+    }
     else if(m_Type == LUAUILINE)
     {
         m_pClient->Graphics()->TextureSet(-1);
@@ -308,6 +321,40 @@ int CLuaUi::DoImage(int *pID, int TextureID, int SpriteID, const CUIRect *pRect)
 
 
 
+	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
+	m_pClient->Graphics()->QuadsDrawTL(&QuadItem, 1);
+	m_pClient->Graphics()->QuadsEnd();
+
+	return ret;
+}
+
+int CLuaUi::DoImageEx(int *pID, int TextureID, const CUIRect *pRect, float ClipX1, float ClipY1, float ClipX2, float ClipY2)
+{
+	m_pClient->Graphics()->TextureSet(TextureID);
+	m_pClient->Graphics()->QuadsBegin();
+
+    int Inside = m_pClient->UI()->MouseInside(pRect);
+    int ret = 0;
+    if(m_pClient->UI()->ActiveItem() == pID)
+    {
+        if(!m_pClient->UI()->MouseButton(0))
+        {
+            m_pClient->UI()->SetActiveItem(0);
+            if (Inside)
+                ret = 1;
+        }
+    }
+    else if(m_pClient->UI()->HotItem() == pID)
+    {
+        if(m_pClient->UI()->MouseButton(0))
+            m_pClient->UI()->SetActiveItem(pID);
+    }
+
+    if(Inside)
+        m_pClient->UI()->SetHotItem(pID);
+
+
+    m_pClient->Graphics()->QuadsSetSubset(ClipX1, ClipY1, ClipX2, ClipY2);
 	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
 	m_pClient->Graphics()->QuadsDrawTL(&QuadItem, 1);
 	m_pClient->Graphics()->QuadsEnd();

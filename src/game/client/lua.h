@@ -158,6 +158,7 @@ public:
     int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners, vec4 Color);
     int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden, int Corners, vec4 Color);
     int DoImage(int *pID, int TextureID, int SpriteID, const CUIRect *pRect);
+    int DoImageEx(int *pID, int TextureID, const CUIRect *pRect, float ClipX1, float ClipY1, float ClipX2, float ClipY2);
 	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current, vec4 Color);
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current, vec4 Color);
 

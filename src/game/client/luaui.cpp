@@ -57,7 +57,7 @@ void CLuaUi::Tick()
     }
     else if(m_Type == LUAUIEDITBOX)
     {
-        bool state = DoEditBox(&m_Id, &m_Rect, m_pText, sizeof(m_pText), m_FontSize, &m_Offset, m_Hidden, m_Corners, m_Color);
+        DoEditBox(&m_Id, &m_Rect, m_pText, sizeof(m_pText), m_FontSize, &m_Offset, m_Hidden, m_Corners, m_Color);
     }
     else if(m_Type == LUAUILABEL)
     {

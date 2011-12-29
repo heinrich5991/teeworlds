@@ -703,8 +703,6 @@ void CMenus::RenderLoading()
 	RenderBackground();
     //Graphics()->Clear(1,1,1);
 
-	float tw;
-
 	float w = 1400/2;
 	float h = 800/2;
 	float x = Screen.w/2-w/2;

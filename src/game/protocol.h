@@ -15,15 +15,15 @@ public:
 
     char *m_buffer;
 
-    void SetBuffer(char *buf, unsigned int size);
+    void SetBuffer(const char *buf, unsigned int size);
     int GetSize();
-    void ReadFromStream (char *buf);
+    void ReadFromStream (const char *buf);
     void WriteToStream (char *buf);
 
-    void PrepareLevel0(char *pBuf, int BufSize, int Type0, int TotalSize0);
-    void PrepareLevel1(char *pBuf, int BufSize, int Type0, int TotalSize0, int Type1, int TotalSize1);
-    void PrepareLevel2(char *pBuf, int BufSize, int Type0, int TotalSize0, int Type1, int TotalSize1, int Type2, int TotalSize2);
-    void PrepareLevel3(char *pBuf, int BufSize, int Type0, int TotalSize0, int Type1, int TotalSize1, int Type2, int TotalSize2, int Type3, int TotalSize3);
+    void PrepareLevel0(const char *pBuf, int BufSize, int Type0, int TotalSize0);
+    void PrepareLevel1(const char *pBuf, int BufSize, int Type0, int TotalSize0, int Type1, int TotalSize1);
+    void PrepareLevel2(const char *pBuf, int BufSize, int Type0, int TotalSize0, int Type1, int TotalSize1, int Type2, int TotalSize2);
+    void PrepareLevel3(const char *pBuf, int BufSize, int Type0, int TotalSize0, int Type1, int TotalSize1, int Type2, int TotalSize2, int Type3, int TotalSize3);
     bool SendData(CNetTCP *pSocket);
 
 

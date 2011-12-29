@@ -852,8 +852,6 @@ void CMenus::LuaPopulate()
 void CMenus::RenderSettingsLua(CUIRect MainView)
 {
 	CUIRect Button;
-	static int s_ClLua = g_Config.m_ClLua;
-    static int s_AddButton = 0;
     static int s_AddScriptMode = 0;
 
     if (m_ActivLuaFile == -1)
@@ -955,8 +953,7 @@ void CMenus::RenderSettingsLua(CUIRect MainView)
                 }
             }
 
-            const int NewSelected = UiDoListboxEnd(&s_ScrollValue, 0);
-
+	    UiDoListboxEnd(&sScrollValue, 0);
         }
         else
         {

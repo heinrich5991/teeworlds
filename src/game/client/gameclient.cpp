@@ -314,10 +314,11 @@ void CGameClient::DispatchInput()
 	{
 		IInput::CEvent e = Input()->GetEvent(i);
 
+        m_pLua->m_EventListener.m_KeyEvent = e;
+        m_pLua->m_EventListener.OnEvent("OnKeyEvent");
+
 		for(int h = 0; h < m_Input.m_Num; h++)
 		{
-            m_pLua->m_EventListener.m_KeyEvent = e;
-            m_pLua->m_EventListener.OnEvent("OnKeyEvent");
 			if(m_Input.m_paComponents[h]->OnInput(e))
 			{
 				//dbg_msg("", "%d char=%d key=%d flags=%d", h, e.ch, e.key, e.flags);

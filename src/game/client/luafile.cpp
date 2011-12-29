@@ -2335,10 +2335,7 @@ int CLuaFile::UiDoImageEx(lua_State *L)
         return 0;
     if (!lua_isnumber(L, 2))
         return 0;
-    if (!lua_isnumber(L, 3))
-        return 0;
-    if (!lua_isnumber(L, 4))
-        return 0;
+    // 3 to 4 optional
     if (!lua_isnumber(L, 5))
         return 0;
     if (!lua_isnumber(L, 6))
@@ -2363,8 +2360,14 @@ int CLuaFile::UiDoImageEx(lua_State *L)
     pSelf->m_aUiElements[i].m_Used = true;
     pSelf->m_aUiElements[i].m_Rect.x = lua_tonumber(L, 1);
     pSelf->m_aUiElements[i].m_Rect.y = lua_tonumber(L, 2);
-    pSelf->m_aUiElements[i].m_Rect.w = lua_tonumber(L, 3);
-    pSelf->m_aUiElements[i].m_Rect.h = lua_tonumber(L, 4);
+    if (lua_isnumber(L, 3))
+        pSelf->m_aUiElements[i].m_Rect.w = lua_tonumber(L, 3);
+    else
+        pSelf->m_aUiElements[i].m_Rect.w = pSelf->m_pClient->Graphics()->GetTextureWidth(lua_tointeger(L, 6));
+    if (lua_isnumber(L, 4))
+        pSelf->m_aUiElements[i].m_Rect.h = lua_tonumber(L, 4);
+    else
+        pSelf->m_aUiElements[i].m_Rect.h = pSelf->m_pClient->Graphics()->GetTextureHeight(lua_tointeger(L, 6));
     pSelf->m_aUiElements[i].m_RegPoint = lua_tonumber(L, 5);
 
     pSelf->m_aUiElements[i].m_TextureID = lua_tonumber(L, 6);

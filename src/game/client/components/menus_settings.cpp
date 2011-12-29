@@ -952,6 +952,8 @@ void CMenus::RenderSettingsLua(CUIRect MainView)
                     UI()->DoLabelScaled(&LabelInfo, m_pClient->m_pLua->m_aLuaFiles[i].m_aInfo, 14.0f, -1);
                 }
             }
+
+	    UiDoListboxEnd(&sScrollValue, 0);
         }
         else
         {

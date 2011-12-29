@@ -11,6 +11,34 @@
 #include <game/client/components/menus.h>
 #include <game/client/components/chat.h>
 
+int StrIsInteger(const char *pStr)
+{
+	while(*pStr)
+	{
+		if(!(*pStr >= '0' && *pStr <= '9'))
+			return 0;
+		pStr++;
+	}
+	return 1;
+}
+
+int StrIsFloat(const char *pStr)
+{
+	bool Dot = false;
+	while(*pStr)
+	{
+		if(*pStr < '0' || *pStr > '9')
+		{
+			if(!Dot && *pStr == '.')
+				Dot = true;
+			else
+				return 0;
+		}
+		pStr++;
+	}
+	return 1;
+}
+
 void CLua::Tick()
 {
     for (int i = 0; i < MAX_LUA_FILES; i++)

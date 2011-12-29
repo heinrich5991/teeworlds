@@ -460,7 +460,6 @@ void CLuaFile::FunctionExec(const char *pFunctionName)
 int CLuaFile::Include(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -996,7 +995,6 @@ int CLuaFile::MusicPrev(lua_State *L)
 int CLuaFile::MusicSetVol(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1008,7 +1006,6 @@ int CLuaFile::MusicSetVol(lua_State *L)
 int CLuaFile::MusicGetVol(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1089,7 +1086,6 @@ int CLuaFile::Emote(lua_State *L)
 int CLuaFile::GetConfigValue(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1142,7 +1138,6 @@ int CLuaFile::GetConfigValue(lua_State *L)
 int CLuaFile::SetConfigValue(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1551,7 +1546,6 @@ int CLuaFile::CreateParticle(lua_State *L)
 int CLuaFile::Print(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2526,7 +2520,6 @@ int CLuaFile::UiDoSlider(lua_State *L)
 int CLuaFile::UiGetGameTextureID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2538,7 +2531,6 @@ int CLuaFile::UiGetGameTextureID(lua_State *L)
 int CLuaFile::UiGetParticleTextureID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2598,7 +2590,6 @@ int CLuaFile::TextureUnload(lua_State *L)
 int CLuaFile::ReplaceGameTexture(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);

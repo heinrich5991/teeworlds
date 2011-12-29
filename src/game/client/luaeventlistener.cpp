@@ -20,7 +20,7 @@ void CLuaEventListener::AddEventListener(class CLuaFile *pLuaFile, char *pEvent,
     m_aListeners.add(Listener);
 }
 
-void CLuaEventListener::OnEvent(char *pEvent)
+void CLuaEventListener::OnEvent(const char *pEvent)
 {
 	for(array<CLuaListenerData>::range r = m_aListeners.all(); !r.empty(); r.pop_front())
     {

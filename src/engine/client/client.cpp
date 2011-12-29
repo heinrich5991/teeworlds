@@ -1525,7 +1525,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			int FileFlags = Unpacker.GetInt();
 			int FileCrc = Unpacker.GetInt();
 			int FileSize = Unpacker.GetInt();
-			bool bLaunch = (FileFlags&CModFile::FILEFLAG_LAUNCH);
+			//bool bLaunch = (FileFlags&CModFile::FILEFLAG_LAUNCH);
 
             CModFile tmp;
             str_copy(tmp.m_aName, pFileName, sizeof(tmp.m_aName));

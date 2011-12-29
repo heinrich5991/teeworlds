@@ -34,7 +34,7 @@ CCPacket::~CCPacket()
     }
 }
 
-void CCPacket::ReadFromStream(char *buf)
+void CCPacket::ReadFromStream(const char *buf)
 {
     mem_copy(&m_type, buf, sizeof(m_type));
     mem_copy(&m_size, buf + 2, sizeof(m_size));
@@ -60,7 +60,7 @@ void CCPacket::ReadFromStream(char *buf)
     mem_copy(m_buffer, buf + 8, m_size);
 }
 
-void CCPacket::SetBuffer(char *buf, unsigned int size)
+void CCPacket::SetBuffer(const char *buf, unsigned int size)
 {
     if (size <= 0)
         size = str_length(buf) + 1;
@@ -95,7 +95,7 @@ void CCPacket::WriteToStream(char *buf)
     #endif
 }
 
-void CCPacket::PrepareLevel0(char *pBuf, int BufSize, int Type0, int TotalSize0)
+void CCPacket::PrepareLevel0(const char *pBuf, int BufSize, int Type0, int TotalSize0)
 {
     SetBuffer(pBuf, BufSize);
     if (TotalSize0 > m_size)
@@ -104,7 +104,7 @@ void CCPacket::PrepareLevel0(char *pBuf, int BufSize, int Type0, int TotalSize0)
         m_type = Type0;
 }
 
-void CCPacket::PrepareLevel1(char *pBuf, int BufSize, int Type0, int TotalSize0, int Type1, int TotalSize1)
+void CCPacket::PrepareLevel1(const char *pBuf, int BufSize, int Type0, int TotalSize0, int Type1, int TotalSize1)
 {
     CCPacket TmpPacket;
     TmpPacket.PrepareLevel0(pBuf, BufSize, Type1, TotalSize1);
@@ -121,7 +121,7 @@ void CCPacket::PrepareLevel1(char *pBuf, int BufSize, int Type0, int TotalSize0,
     delete []TmpStream;
 }
 
-void CCPacket::PrepareLevel2(char *pBuf, int BufSize, int Type0, int TotalSize0, int Type1, int TotalSize1, int Type2, int TotalSize2)
+void CCPacket::PrepareLevel2(const char *pBuf, int BufSize, int Type0, int TotalSize0, int Type1, int TotalSize1, int Type2, int TotalSize2)
 {
     CCPacket TmpPacket;
     TmpPacket.PrepareLevel1(pBuf, BufSize, Type2, TotalSize2, Type1, TotalSize1);
@@ -137,7 +137,7 @@ void CCPacket::PrepareLevel2(char *pBuf, int BufSize, int Type0, int TotalSize0,
     delete []TmpStream;
 }
 
-void CCPacket::PrepareLevel3(char *pBuf, int BufSize, int Type0, int TotalSize0, int Type1, int TotalSize1, int Type2, int TotalSize2, int Type3, int TotalSize3)
+void CCPacket::PrepareLevel3(const char *pBuf, int BufSize, int Type0, int TotalSize0, int Type1, int TotalSize1, int Type2, int TotalSize2, int Type3, int TotalSize3)
 {
     CCPacket TmpPacket;
     TmpPacket.PrepareLevel2(pBuf, BufSize, Type3, TotalSize3, Type2, TotalSize2, Type1, TotalSize1);

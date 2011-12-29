@@ -32,7 +32,7 @@ public:
     void RemoveEventListener(class CLuaFile *pLuaFile, char *pEvent);
     void RemoveAllEventListeners(class CLuaFile *pLuaFile);
 
-    void OnEvent(char *pEvent);
+    void OnEvent(const char *pEvent);
 
     CLuaEventListener();
     ~CLuaEventListener();
@@ -426,25 +426,7 @@ public:
 
 
 //helper functions
-static int StrIsInteger(const char *pStr)
-{
-	while(*pStr)
-	{
-		if(!(*pStr >= '0' && *pStr <= '9'))
-			return 0;
-		pStr++;
-	}
-	return 1;
-}
-static int StrIsFloat(const char *pStr)
-{
-	while(*pStr)
-	{
-		if(!(*pStr >= '0' && *pStr <= '9' || *pStr == '.'))
-			return 0;
-		pStr++;
-	}
-	return 1;
-}
+int StrIsInteger(const char *pStr);
+int StrIsFloat(const char *pStr);
 
 #endif

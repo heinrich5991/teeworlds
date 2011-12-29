@@ -49,12 +49,12 @@ public:
     //OnNetData
     char *m_pNetData;
     int m_pNetClientID;
-	
-	//OnWeaponFire	
+
+	//OnWeaponFire
 	int m_OnWeaponFireClientID;
 	int m_OnWeaponFireWeaponID;
 	vec2 m_OnWeaponFireDir;
-	
+
 	//Jump
 	int m_OnJumpJumpID;
 	int m_OnJumpClientID;
@@ -125,16 +125,16 @@ public:
     static inline int KillGetVictimID(lua_State *L);
     static inline int KillGetWeapon(lua_State *L);
 
-	
+
 	//WeaponFire
     static inline int WeaponFireGetClientID(lua_State *L);
     static inline int WeaponFireGetWeaponID(lua_State *L);
     static inline int WeaponFireGetDir(lua_State *L);
-	
+
 	//Jump
     static inline int JumpGetClientID(lua_State *L);
     static inline int JumpGetJumpID(lua_State *L);
-	
+
     //
     //Include
     static inline int Include(lua_State *L);
@@ -187,6 +187,7 @@ public:
 
     //LuaNetWork
     static inline int FetchPacket(lua_State *L);
+    static inline int GetPacketClientID(lua_State *L);
     static inline int SendPacket(lua_State *L);
     static inline int AddModFile(lua_State *L);
     static inline int DeleteModFile(lua_State *L);

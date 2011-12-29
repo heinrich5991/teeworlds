@@ -139,7 +139,8 @@ void CLuaFile::Init(const char *pFile)
 
     //mouse and keyboard
     lua_register(m_pLua, "GetMousePosMenu", this->GetMousePosMenu);
-    lua_register(m_pLua, "SetMouseModeRelativ", this->SetMouseModeRelativ);
+    lua_register(m_pLua, "SetMouseModeRelative", this->SetMouseModeRelative);
+    lua_register(m_pLua, "SetMouseModeRelativ", this->SetMouseModeRelative); //pwnd by language
     lua_register(m_pLua, "SetMouseModeAbsolute", this->SetMouseModeAbsolute);
 
     //scoreboard
@@ -1804,12 +1805,13 @@ int CLuaFile::GetMousePosMenu(lua_State *L)
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
 
-    lua_pushnumber(L, pSelf->m_pClient->m_pMenus->GetMousePos().x);
-    lua_pushnumber(L, pSelf->m_pClient->m_pMenus->GetMousePos().y);
-    return 1;
+    //convert the pos to a ui mouse pos
+    lua_pushnumber(L, pSelf->m_pClient->m_pMenus->GetMousePos().x * pSelf->m_pClient->UI()->Screen()->w / pSelf->m_pClient->Graphics()->ScreenWidth());
+    lua_pushnumber(L, pSelf->m_pClient->m_pMenus->GetMousePos().y * pSelf->m_pClient->UI()->Screen()->h / pSelf->m_pClient->Graphics()->ScreenHeight());
+    return 2;
 }
 
-int CLuaFile::SetMouseModeRelativ(lua_State *L)
+int CLuaFile::SetMouseModeRelative(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);

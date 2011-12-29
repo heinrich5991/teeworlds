@@ -984,7 +984,6 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 void CGameContext::OnLuaPacket(CUnpacker *pUnpacker, int ClientID)
 {
 	//TODO Check if this row is working without pSelf
-    int Size = pUnpacker->GetInt();
     m_pLua->m_EventListener.m_pNetData = (char *)pUnpacker->GetString(); //Fetch Data
     m_pLua->m_EventListener.m_pNetClientID = ClientID; //Fetch Data
 	m_pLua->m_EventListener.OnEvent("OnNetData"); //Call lua

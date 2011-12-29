@@ -592,8 +592,7 @@ void CGameClient::OnRelease()
 
 void CGameClient::OnLuaPacket(CUnpacker *pUnpacker)
 {
-    int Size = pUnpacker->GetInt();
-    g_GameClient.m_pLua->m_EventListener.m_pNetData = (char *)pUnpacker->GetRaw(Size); //Fetch Data
+    g_GameClient.m_pLua->m_EventListener.m_pNetData = (char *)pUnpacker->GetString(); //Fetch Data
     g_GameClient.m_pLua->m_EventListener.OnEvent("OnNetData"); //Call lua
     g_GameClient.m_pLua->m_EventListener.m_pNetData = 0; //Null-Pointer
 }

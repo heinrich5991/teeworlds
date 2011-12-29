@@ -238,7 +238,7 @@ public:
 
     //Mouse and Keyboard
     static inline int GetMousePosMenu(lua_State *L);
-    static inline int SetMouseModeRelativ(lua_State *L);
+    static inline int SetMouseModeRelative(lua_State *L);
     static inline int SetMouseModeAbsolute(lua_State *L);
 
     //Scoreboard

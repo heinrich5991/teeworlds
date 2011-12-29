@@ -151,6 +151,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	struct // TODO: handle input better
 	{
 		int m_aData[MAX_INPUT_SIZE]; // the input data
+		int m_aPredictionData[MAX_INPUT_SIZE]; // the input data used for prediction
 		int m_Tick; // the tick that the input is for
 		int64 m_PredictedTime; // prediction latency when we sent this input
 		int64 m_Time;

@@ -332,9 +332,9 @@ void CGameClient::DispatchInput()
 }
 
 
-int CGameClient::OnSnapInput(int *pData)
+int CGameClient::OnSnapInput(int *pData, int *pPredictionData)
 {
-	return m_pControls->SnapInput(pData);
+	return m_pControls->SnapInput(pData, pPredictionData);
 }
 
 static void RenderTilemapGenerateSkipThread(void *pUser)

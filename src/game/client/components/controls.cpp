@@ -189,7 +189,7 @@ int CControls::SnapInput(int *pData, int *pPredictionData)
 
             if (m_pClient->m_pLuaBinding->m_ControlDirectionIsSet)
             {
-                m_InputData.m_Direction = m_pClient->m_pLuaBinding->m_ControlDirection;
+                m_PredictionData.m_Direction = m_pClient->m_pLuaBinding->m_ControlDirection;
             }
             if (m_pClient->m_pLuaBinding->m_ControlFireIsSet)
             {

@@ -825,7 +825,7 @@ int CMenus::LuaFetchCallback(const char *pName, int IsDir, int StorageType, void
             return 0;
 
 
-	CLuaItem Item;	
+	CLuaItem Item;
 	char aBuf[1024];
 	str_format(aBuf, sizeof(aBuf),"lua/%s", pName);
 	str_copy(Item.m_aFilename, aBuf, sizeof(Item.m_aFilename));
@@ -953,7 +953,7 @@ void CMenus::RenderSettingsLua(CUIRect MainView)
                 }
             }
 
-	    UiDoListboxEnd(&sScrollValue, 0);
+            UiDoListboxEnd(&s_ScrollValue, 0);
         }
         else
         {

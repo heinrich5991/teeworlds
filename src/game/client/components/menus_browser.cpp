@@ -434,10 +434,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
                 TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f*UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
                 Cursor.m_LineWidth = Button.w;
 
-                m_pClient->m_pLua->m_EventListener.m_BrowserActivGameTypeColor = vec4(1, 1, 1, 1);
-                m_pClient->m_pLua->m_EventListener.m_pBrowserActivGameTypeName = (char *)pItem->m_aGameType;
+                m_pClient->m_pLua->m_EventListener.m_BrowserActiveGameTypeColor = vec4(1, 1, 1, 1);
+                m_pClient->m_pLua->m_EventListener.m_pBrowserActiveGameTypeName = (char *)pItem->m_aGameType;
                 m_pClient->m_pLua->m_EventListener.OnEvent("OnServerBrowserGameTypeRender");
-                TextRender()->TextColor(m_pClient->m_pLua->m_EventListener.m_BrowserActivGameTypeColor.r, m_pClient->m_pLua->m_EventListener.m_BrowserActivGameTypeColor.g, m_pClient->m_pLua->m_EventListener.m_BrowserActivGameTypeColor.b, m_pClient->m_pLua->m_EventListener.m_BrowserActivGameTypeColor.a);
+                TextRender()->TextColor(m_pClient->m_pLua->m_EventListener.m_BrowserActiveGameTypeColor.r, m_pClient->m_pLua->m_EventListener.m_BrowserActiveGameTypeColor.g, m_pClient->m_pLua->m_EventListener.m_BrowserActiveGameTypeColor.b, m_pClient->m_pLua->m_EventListener.m_BrowserActiveGameTypeColor.a);
 
                 TextRender()->TextEx(&Cursor, pItem->m_aGameType, -1);
                 TextRender()->TextColor(1,1,1,1);

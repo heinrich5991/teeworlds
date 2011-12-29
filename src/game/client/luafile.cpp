@@ -117,15 +117,25 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "SetMenuBrowserGameTypeColor", this->SetMenuBrowserGameTypeColor);
     lua_register(m_pLua, "GetMenuBrowserGameTypeName", this->GetMenuBrowserGameTypeName);
 
+    //menu these functions are used in some scripts even if the names are wrong. delete this?
+    lua_register(m_pLua, "MenuActiv", this->MenuActive);
+    lua_register(m_pLua, "MenuGameActiv", this->MenuGameActive);
+    lua_register(m_pLua, "MenuPlayersActiv", this->MenuPlayersActive);
+    lua_register(m_pLua, "MenuServerInfoActiv", this->MenuServerInfoActive);
+    lua_register(m_pLua, "MenuCallVoteActiv", this->MenuCallVoteActive);
+    lua_register(m_pLua, "MenuServersActiv", this->MenuServersActive);
+    lua_register(m_pLua, "MenuMusicActiv", this->MenuMusicActive);
+    lua_register(m_pLua, "MenuDemosActiv", this->MenuDemosActive);
+
     //menu
-    lua_register(m_pLua, "MenuActiv", this->MenuActiv);
-    lua_register(m_pLua, "MenuGameActiv", this->MenuGameActiv);
-    lua_register(m_pLua, "MenuPlayersActiv", this->MenuPlayersActiv);
-    lua_register(m_pLua, "MenuServerInfoActiv", this->MenuServerInfoActiv);
-    lua_register(m_pLua, "MenuCallVoteActiv", this->MenuCallVoteActiv);
-    lua_register(m_pLua, "MenuServersActiv", this->MenuServersActiv);
-    lua_register(m_pLua, "MenuMusicActiv", this->MenuMusicActiv);
-    lua_register(m_pLua, "MenuDemosActiv", this->MenuDemosActiv);
+    lua_register(m_pLua, "MenuActive", this->MenuActive);
+    lua_register(m_pLua, "MenuGameActive", this->MenuGameActive);
+    lua_register(m_pLua, "MenuPlayersActive", this->MenuPlayersActive);
+    lua_register(m_pLua, "MenuServerInfoActive", this->MenuServerInfoActive);
+    lua_register(m_pLua, "MenuCallVoteActive", this->MenuCallVoteActive);
+    lua_register(m_pLua, "MenuServersActive", this->MenuServersActive);
+    lua_register(m_pLua, "MenuMusicActive", this->MenuMusicActive);
+    lua_register(m_pLua, "MenuDemosActive", this->MenuDemosActive);
 
     //mouse and keyboard
     lua_register(m_pLua, "GetMousePosMenu", this->GetMousePosMenu);
@@ -242,6 +252,7 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "UiDoLabel", this->UiDoLabel);
     lua_register(m_pLua, "UiDoRect", this->UiDoRect);
     lua_register(m_pLua, "UiDoImage", this->UiDoImage);
+    lua_register(m_pLua, "UiDoImageEx", this->UiDoImageEx);
     lua_register(m_pLua, "UiDoLine", this->UiDoLine);
     lua_register(m_pLua, "UiDoSlider", this->UiDoSlider);
     lua_register(m_pLua, "UiRemoveElement", this->UiRemoveElement);
@@ -544,7 +555,7 @@ int CLuaFile::SetMenuBrowserGameTypeColor(lua_State *L)
     lua_getinfo(L, "nlSf", &Frame);
 
     if (lua_isnumber(L, 1) && lua_isnumber(L, 2) && lua_isnumber(L, 3) && lua_isnumber(L, 4))
-        pSelf->m_pLuaHandler->m_EventListener.m_BrowserActivGameTypeColor = vec4(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
+        pSelf->m_pLuaHandler->m_EventListener.m_BrowserActiveGameTypeColor = vec4(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
     return 0;
 }
 
@@ -556,7 +567,7 @@ int CLuaFile::GetMenuBrowserGameTypeName(lua_State *L)
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
 
-    lua_pushstring(L, pSelf->m_pLuaHandler->m_EventListener.m_pBrowserActivGameTypeName);
+    lua_pushstring(L, pSelf->m_pLuaHandler->m_EventListener.m_pBrowserActiveGameTypeName);
     return 1;
 }
 
@@ -1689,7 +1700,7 @@ int CLuaFile::StateDemoplayback(lua_State *L)
     return 1;
 }
 
-int CLuaFile::MenuActiv(lua_State *L)
+int CLuaFile::MenuActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
@@ -1701,7 +1712,7 @@ int CLuaFile::MenuActiv(lua_State *L)
     return 1;
 }
 
-int CLuaFile::MenuGameActiv(lua_State *L)
+int CLuaFile::MenuGameActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
@@ -1713,7 +1724,7 @@ int CLuaFile::MenuGameActiv(lua_State *L)
     return 1;
 }
 
-int CLuaFile::MenuPlayersActiv(lua_State *L)
+int CLuaFile::MenuPlayersActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
@@ -1725,7 +1736,7 @@ int CLuaFile::MenuPlayersActiv(lua_State *L)
     return 1;
 }
 
-int CLuaFile::MenuServerInfoActiv(lua_State *L)
+int CLuaFile::MenuServerInfoActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
@@ -1737,7 +1748,7 @@ int CLuaFile::MenuServerInfoActiv(lua_State *L)
     return 1;
 }
 
-int CLuaFile::MenuCallVoteActiv(lua_State *L)
+int CLuaFile::MenuCallVoteActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
@@ -1749,7 +1760,7 @@ int CLuaFile::MenuCallVoteActiv(lua_State *L)
     return 1;
 }
 
-int CLuaFile::MenuServersActiv(lua_State *L)
+int CLuaFile::MenuServersActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
@@ -1761,7 +1772,7 @@ int CLuaFile::MenuServersActiv(lua_State *L)
     return 1;
 }
 
-int CLuaFile::MenuMusicActiv(lua_State *L)
+int CLuaFile::MenuMusicActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
@@ -1773,7 +1784,7 @@ int CLuaFile::MenuMusicActiv(lua_State *L)
     return 1;
 }
 
-int CLuaFile::MenuDemosActiv(lua_State *L)
+int CLuaFile::MenuDemosActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
@@ -2306,6 +2317,82 @@ int CLuaFile::UiDoImage(lua_State *L)
     pSelf->m_aUiElements[i].m_pClient = pSelf->m_pClient;
     pSelf->m_aUiElements[i].m_pLuaFile = pSelf;
     pSelf->m_aUiElements[i].m_Type = CLuaUi::LUAUIIMAGE;
+
+    lua_pushinteger(L, i);
+
+    return 1;
+}
+
+int CLuaFile::UiDoImageEx(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (!lua_isnumber(L, 1))
+        return 0;
+    if (!lua_isnumber(L, 2))
+        return 0;
+    if (!lua_isnumber(L, 3))
+        return 0;
+    if (!lua_isnumber(L, 4))
+        return 0;
+    if (!lua_isnumber(L, 5))
+        return 0;
+    if (!lua_isnumber(L, 6))
+        return 0;
+    // 7 to 10 optional (clipping)
+    if (!lua_isstring(L, 11))
+        return 0;
+
+
+
+    int i = 0;
+    for (i = 0; i < LUAMAXUIELEMENTS; i++)
+    {
+        if (pSelf->m_aUiElements[i].m_Used == 0)
+        {
+            break;
+        }
+    }
+    if (i >= LUAMAXUIELEMENTS)
+        return 0;
+
+    pSelf->m_aUiElements[i].m_Used = true;
+    pSelf->m_aUiElements[i].m_Rect.x = lua_tonumber(L, 1);
+    pSelf->m_aUiElements[i].m_Rect.y = lua_tonumber(L, 2);
+    pSelf->m_aUiElements[i].m_Rect.w = lua_tonumber(L, 3);
+    pSelf->m_aUiElements[i].m_Rect.h = lua_tonumber(L, 4);
+    pSelf->m_aUiElements[i].m_RegPoint = lua_tonumber(L, 5);
+
+    pSelf->m_aUiElements[i].m_TextureID = lua_tonumber(L, 6);
+
+    int ImgWidth = pSelf->m_pClient->Graphics()->GetTextureWidth(lua_tointeger(L, 6));
+    int ImgHeight = pSelf->m_pClient->Graphics()->GetTextureHeight(lua_tointeger(L, 6));
+    float ClipX1 = 0.0f;
+    float ClipY1 = 0.0f;
+    float ClipX2 = 1.0f;
+    float ClipY2 = 1.0f;
+    if (lua_isnumber(L, 7))
+        ClipX1 = clamp((float)lua_tointeger(L, 7) / (float)ImgWidth, 0.0f, 1.0f);
+    if (lua_isnumber(L, 8))
+        ClipY1 = clamp((float)lua_tointeger(L, 8) / (float)ImgHeight, 0.0f, 1.0f);
+    if (lua_isnumber(L, 9))
+        ClipX2 = clamp((float)lua_tointeger(L, 9) / (float)ImgWidth, 0.0f, 1.0f);
+    if (lua_isnumber(L, 10))
+        ClipY2 = clamp((float)lua_tointeger(L, 10) / (float)ImgHeight, 0.0f, 1.0f);
+
+    pSelf->m_aUiElements[i].m_ClipX1 = ClipX1;
+    pSelf->m_aUiElements[i].m_ClipY1 = ClipY1;
+    pSelf->m_aUiElements[i].m_ClipX2 = ClipX2;
+    pSelf->m_aUiElements[i].m_ClipY2 = ClipY2;
+    str_copy(pSelf->m_aUiElements[i].m_pCallback, lua_tostring(L, 11), sizeof(pSelf->m_aUiElements[i].m_pCallback));
+
+    pSelf->m_aUiElements[i].m_pClient = pSelf->m_pClient;
+    pSelf->m_aUiElements[i].m_pLuaFile = pSelf;
+    pSelf->m_aUiElements[i].m_Type = CLuaUi::LUAUIIMAGEEX;
 
     lua_pushinteger(L, i);
 

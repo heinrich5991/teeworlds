@@ -39,8 +39,8 @@ public:
 
     //values
     //Menu Browser GameType OnRender Color
-    char *m_pBrowserActivGameTypeName;
-    vec4 m_BrowserActivGameTypeColor;
+    char *m_pBrowserActiveGameTypeName;
+    vec4 m_BrowserActiveGameTypeColor;
 
     //Scoreboard On Render
     bool m_ScoreboardSkipRender;
@@ -115,6 +115,12 @@ public:
     float m_Value;
     int m_Direction;
 
+    //images
+    float m_ClipX1;
+    float m_ClipY1;
+    float m_ClipX2;
+    float m_ClipY2;
+
     int m_Corners;
     int m_Rounding;
     vec4 m_Color;
@@ -133,6 +139,7 @@ public:
         LUAUIIMAGE,
         LUAUILINE,
         LUAUISLIDER,
+        LUAUIIMAGEEX,
     };
     int m_Id;
     float m_Offset; //for edit boxes
@@ -219,14 +226,14 @@ public:
     static inline int GetMenuBrowserGameTypeName(lua_State *L);
 
     //Menu
-    static inline int MenuActiv(lua_State *L);
-    static inline int MenuGameActiv(lua_State *L);
-    static inline int MenuPlayersActiv(lua_State *L);
-    static inline int MenuServerInfoActiv(lua_State *L);
-    static inline int MenuCallVoteActiv(lua_State *L);
-    static inline int MenuServersActiv(lua_State *L);
-    static inline int MenuMusicActiv(lua_State *L);
-    static inline int MenuDemosActiv(lua_State *L);
+    static inline int MenuActive(lua_State *L);
+    static inline int MenuGameActive(lua_State *L);
+    static inline int MenuPlayersActive(lua_State *L);
+    static inline int MenuServerInfoActive(lua_State *L);
+    static inline int MenuCallVoteActive(lua_State *L);
+    static inline int MenuServersActive(lua_State *L);
+    static inline int MenuMusicActive(lua_State *L);
+    static inline int MenuDemosActive(lua_State *L);
 
     //Mouse and Keyboard
     static inline int GetMousePosMenu(lua_State *L);
@@ -333,6 +340,7 @@ public:
     static inline int UiDoLabel(lua_State *L);
     static inline int UiDoRect(lua_State *L);
     static inline int UiDoImage(lua_State *L);
+    static inline int UiDoImageEx(lua_State *L);
     static inline int UiDoLine(lua_State *L);
     static inline int UiDoSlider(lua_State *L);
     static inline int UiGetText(lua_State *L);

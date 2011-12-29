@@ -214,7 +214,7 @@ public:
 	virtual void OnNewSnapshot();
 	virtual void OnPredict();
 	virtual void OnActivateEditor();
-	virtual int OnSnapInput(int *pData);
+	virtual int OnSnapInput(int *pData, int *pPredictionData);
 	virtual void OnShutdown();
 	virtual void OnEnterGame();
 	virtual void OnRconLine(const char *pLine);

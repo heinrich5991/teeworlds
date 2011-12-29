@@ -416,7 +416,7 @@ void CClient::SendInput()
 		return;
 
 	// fetch input
-	int Size = GameClient()->OnSnapInput(m_aInputs[m_CurrentInput].m_aData);
+	int Size = GameClient()->OnSnapInput(m_aInputs[m_CurrentInput].m_aData, m_aInputs[m_CurrentInput].m_aPredictionData);
 
 	if(!Size)
 		return;
@@ -462,7 +462,7 @@ int *CClient::GetInput(int Tick)
 	}
 
 	if(Best != -1)
-		return (int *)m_aInputs[Best].m_aData;
+		return (int *)m_aInputs[Best].m_aPredictionData;
 	return 0;
 }
 

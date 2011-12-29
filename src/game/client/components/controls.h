@@ -12,6 +12,7 @@ public:
 	vec2 m_TargetPos;
 
 	CNetObj_PlayerInput m_InputData;
+	CNetObj_PlayerInput m_PredictionData;
 	CNetObj_PlayerInput m_LastData;
 	int m_InputDirectionLeft;
 	int m_InputDirectionRight;
@@ -26,7 +27,7 @@ public:
 	virtual void OnConsoleInit();
 	virtual void OnPlayerDeath();
 	
-	int SnapInput(int *pData);
+	int SnapInput(int *pData, int *pPredictionData);
 	void ClampMousePos();
 };
 #endif

@@ -28,6 +28,7 @@ void CControls::OnReset()
 	m_LastData.m_Fire &= INPUT_STATE_MASK;
 	m_LastData.m_Jump = 0;
 	m_InputData = m_LastData;
+	m_PredictionData = m_InputData;
 
 	m_InputDirectionLeft = 0;
 	m_InputDirectionRight = 0;
@@ -106,7 +107,7 @@ void CControls::OnMessage(int Msg, void *pRawMsg)
     }
 }
 
-int CControls::SnapInput(int *pData)
+int CControls::SnapInput(int *pData, int *pPredictionData)
 {
 	static int64 LastSendTime = 0;
 	bool Send = false;
@@ -171,6 +172,8 @@ int CControls::SnapInput(int *pData)
 			m_InputData.m_TargetY = (int)(cosf(t*3)*100.0f);
 		}
 
+	m_PredictionData = m_InputData;
+
         if (m_pClient->m_pLuaBinding) //make sure that we have this class
         {
             //Lua
@@ -190,19 +193,19 @@ int CControls::SnapInput(int *pData)
             }
             if (m_pClient->m_pLuaBinding->m_ControlFireIsSet)
             {
-                m_InputData.m_Fire = m_pClient->m_pLuaBinding->m_ControlFire;
+                m_PredictionData.m_Fire = m_pClient->m_pLuaBinding->m_ControlFire;
             }
             if (m_pClient->m_pLuaBinding->m_ControlHookIsSet)
             {
-                m_InputData.m_Hook = m_pClient->m_pLuaBinding->m_ControlHook;
+                m_PredictionData.m_Hook = m_pClient->m_pLuaBinding->m_ControlHook;
             }
             if (m_pClient->m_pLuaBinding->m_ControlJumpIsSet)
             {
-                m_InputData.m_Jump = m_pClient->m_pLuaBinding->m_ControlJump;
+                m_PredictionData.m_Jump = m_pClient->m_pLuaBinding->m_ControlJump;
             }
             if (m_pClient->m_pLuaBinding->m_ControlWeaponIsSet)
             {
-                m_InputData.m_WantedWeapon = m_pClient->m_pLuaBinding->m_ControlWeapon;
+                m_PredictionData.m_WantedWeapon = m_pClient->m_pLuaBinding->m_ControlWeapon;
             }
             if (m_pClient->m_pLuaBinding->m_ControlTargetXIsSet)
             {
@@ -235,6 +238,7 @@ int CControls::SnapInput(int *pData)
 
 	LastSendTime = time_get();
 	mem_copy(pData, &m_InputData, sizeof(m_InputData));
+	mem_copy(pPredictionData, &m_PredictionData, sizeof(m_PredictionData));
 	return sizeof(m_InputData);
 }
 

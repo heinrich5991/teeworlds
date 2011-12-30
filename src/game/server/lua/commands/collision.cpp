@@ -11,8 +11,11 @@ int CLuaFile::IntersectLine(lua_State *L)
 
     vec2 Pos1 = vec2(lua_tonumber(L, 1), lua_tonumber(L, 2));
     vec2 Pos2 = vec2(lua_tonumber(L, 3), lua_tonumber(L, 4));
-    lua_pushnumber(L, pSelf->m_pServer->Collision()->IntersectLine(Pos1, Pos2, 0, 0));
-    return 1;
+    vec2 Out = vec2(0, 0);
+    lua_pushnumber(L, pSelf->m_pServer->Collision()->IntersectLine(Pos1, Pos2, &Out, 0));
+    lua_pushnumber(L, Out.x);
+    lua_pushnumber(L, Out.y);
+    return 3;
 }
 
 int CLuaFile::GetTile(lua_State *L)

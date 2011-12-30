@@ -11,6 +11,7 @@
 #include <engine/sound.h>
 #include <engine/graphics.h>
 #include <engine/storage.h>
+#include <engine/shared/throttle.h>
 
 #include <game/client/lineinput.h>
 #include <game/client/components/menus.h>
@@ -1067,17 +1068,21 @@ int CLuaFile::Console(lua_State *L)
 
 int CLuaFile::Emote(lua_State *L)
 {
+    static CThrottle s_Throttle;
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
 
-    if (lua_isnumber(L, 1))
+    if(s_Throttle.Throttled(30))
     {
-        CNetMsg_Cl_Emoticon Msg;
-        Msg.m_Emoticon = lua_tonumber(L, 1);
-        pSelf->m_pClient->Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+        if (lua_isnumber(L, 1))
+        {
+            CNetMsg_Cl_Emoticon Msg;
+            Msg.m_Emoticon = lua_tonumber(L, 1);
+            pSelf->m_pClient->Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+        }
     }
     return 0;
 }
@@ -1137,6 +1142,7 @@ int CLuaFile::GetConfigValue(lua_State *L)
 
 int CLuaFile::SetConfigValue(lua_State *L)
 {
+    static CThrottle s_Throttle;
     lua_getglobal(L, "pLUA");
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
@@ -1162,11 +1168,13 @@ int CLuaFile::SetConfigValue(lua_State *L)
     }
     if (str_comp_nocase(lua_tostring(L, 1), "PlayerColorBody") == 0 && lua_isnumber(L, 2))
     {
-        g_Config.m_PlayerColorBody = lua_tointeger(L, 2);
+        if(s_Throttle.Throttled(300))
+            g_Config.m_PlayerColorBody = lua_tointeger(L, 2);
     }
     if (str_comp_nocase(lua_tostring(L, 1), "PlayerColorFeet") == 0 && lua_isnumber(L, 2))
     {
-        g_Config.m_PlayerColorFeet = lua_tointeger(L, 2);
+        if(s_Throttle.Throttled(300))
+            g_Config.m_PlayerColorFeet = lua_tointeger(L, 2);
     }
     if (str_comp_nocase(lua_tostring(L, 1), "Nameplates") == 0 && lua_isnumber(L, 2))
     {
@@ -1598,16 +1606,20 @@ int CLuaFile::GetNetError(lua_State *L)
 
 int CLuaFile::Connect(lua_State *L)
 {
+    static CThrottle s_Throttle;
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
 
-    if (lua_isstring(L, 1))
-        pSelf->m_pClient->Client()->Connect(lua_tostring(L, 1));
-    else
-        pSelf->m_pClient->Client()->Connect(g_Config.m_UiServerAddress);
+    if(s_Throttle.Throttled(60))
+    {
+        if (lua_isstring(L, 1))
+            pSelf->m_pClient->Client()->Connect(lua_tostring(L, 1));
+        else
+            pSelf->m_pClient->Client()->Connect(g_Config.m_UiServerAddress);
+    }
     return 0;
 }
 

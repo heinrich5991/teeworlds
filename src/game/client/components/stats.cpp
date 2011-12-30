@@ -182,15 +182,25 @@ void CStats::ServerLeave()
     fs_storage_path("Teeworlds", aFilePath, sizeof(aFilePath));
     str_append(aFilePath, "/stats/index.stat", sizeof(aFilePath));
     IOHANDLE IndexFile = io_open(aFilePath, IOFLAG_APPEND);
-    io_write(IndexFile, &m_IndexRow, sizeof(m_IndexRow));
-    io_close(IndexFile);
+    if(IndexFile)
+    {
+        io_write(IndexFile, &m_IndexRow, sizeof(m_IndexRow));
+        io_close(IndexFile);
+    }
+    else
+        dbg_msg("stats", "failed to open index file (%s)", aFilePath);
 
     //write data
     fs_storage_path("Teeworlds", aFilePath, sizeof(aFilePath));
     str_format(aFilePath, sizeof(aFilePath), "%s/stats/%i.stat", aFilePath, m_IndexRow.m_Uid);
     IOHANDLE test = io_open(aFilePath, IOFLAG_WRITE);
-    io_write(test, pData, m_Records.GetSize());
-    io_close(test);
+    if(test)
+    {
+        io_write(test, pData, m_Records.GetSize());
+        io_close(test);
+    }
+    else
+        dbg_msg("stats", "failed to open stats file (%s)", aFilePath);
     //save index
     //save data
 }

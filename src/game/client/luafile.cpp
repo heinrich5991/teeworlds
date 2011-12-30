@@ -200,7 +200,8 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "SetConfigValue", this->SetConfigValue);
 
     lua_register(m_pLua, "GetControlValue", this->GetControlValue);
-    lua_register(m_pLua, "SetControlValue", this->SetControlValue);
+    lua_register(m_pLua, "SetControlValue", this->SetControlValuePredicted); //for heinrich :*
+    lua_register(m_pLua, "SetControlValuePredicted", this->SetControlValuePredicted);
     lua_register(m_pLua, "UnSetControlValue", this->UnSetControlValue);
 
     //Console Print
@@ -1075,7 +1076,7 @@ int CLuaFile::Emote(lua_State *L)
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
 
-    if(s_Throttle.Throttled(30))
+    if(s_Throttle.Throttled(5))
     {
         if (lua_isnumber(L, 1))
         {
@@ -1168,12 +1169,12 @@ int CLuaFile::SetConfigValue(lua_State *L)
     }
     if (str_comp_nocase(lua_tostring(L, 1), "PlayerColorBody") == 0 && lua_isnumber(L, 2))
     {
-        if(s_Throttle.Throttled(300))
+        if(s_Throttle.Throttled(30))
             g_Config.m_PlayerColorBody = lua_tointeger(L, 2);
     }
     if (str_comp_nocase(lua_tostring(L, 1), "PlayerColorFeet") == 0 && lua_isnumber(L, 2))
     {
-        if(s_Throttle.Throttled(300))
+        if(s_Throttle.Throttled(30))
             g_Config.m_PlayerColorFeet = lua_tointeger(L, 2);
     }
     if (str_comp_nocase(lua_tostring(L, 1), "Nameplates") == 0 && lua_isnumber(L, 2))
@@ -1228,7 +1229,7 @@ int CLuaFile::GetControlValue(lua_State *L)
     return 1;
 }
 
-int CLuaFile::SetControlValue(lua_State *L)
+/*int CLuaFile::SetControlValue(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
@@ -1274,6 +1275,54 @@ int CLuaFile::SetControlValue(lua_State *L)
         pSelf->m_pClient->m_pLuaBinding->m_ControlTargetYIsSet = true;
     }
     return 0;
+}*/
+
+int CLuaFile::SetControlValuePredicted(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (!lua_isstring(L, 1) && !lua_isnumber(L, 2))
+        return 0;
+    if (str_comp_nocase(lua_tostring(L, 1), "Direction") == 0)
+    {
+        pSelf->m_pClient->m_pLuaBinding->m_ControlDirectionPredicted = lua_tointeger(L, 2);
+        pSelf->m_pClient->m_pLuaBinding->m_ControlDirectionPredictedIsSet = true;
+    }
+    if (str_comp_nocase(lua_tostring(L, 1), "Fire") == 0)
+    {
+        pSelf->m_pClient->m_pLuaBinding->m_ControlFirePredicted = lua_tointeger(L, 2);
+        pSelf->m_pClient->m_pLuaBinding->m_ControlFirePredictedIsSet = true;
+    }
+    if (str_comp_nocase(lua_tostring(L, 1), "Hook") == 0)
+    {
+        pSelf->m_pClient->m_pLuaBinding->m_ControlHookPredicted = lua_tointeger(L, 2);
+        pSelf->m_pClient->m_pLuaBinding->m_ControlHookPredictedIsSet = true;
+    }
+    if (str_comp_nocase(lua_tostring(L, 1), "Jump") == 0)
+    {
+        pSelf->m_pClient->m_pLuaBinding->m_ControlJumpPredicted = lua_tointeger(L, 2);
+        pSelf->m_pClient->m_pLuaBinding->m_ControlJumpPredictedIsSet = true;
+    }
+    if (str_comp_nocase(lua_tostring(L, 1), "Weapon") == 0)
+    {
+        pSelf->m_pClient->m_pLuaBinding->m_ControlWeaponPredicted = lua_tointeger(L, 2);
+        pSelf->m_pClient->m_pLuaBinding->m_ControlWeaponPredictedIsSet = true;
+    }
+    if (str_comp_nocase(lua_tostring(L, 1), "TargetX") == 0)
+    {
+        pSelf->m_pClient->m_pLuaBinding->m_ControlTargetXPredicted = lua_tointeger(L, 2);
+        pSelf->m_pClient->m_pLuaBinding->m_ControlTargetXPredictedIsSet = true;
+    }
+    if (str_comp_nocase(lua_tostring(L, 1), "TargetY") == 0)
+    {
+        pSelf->m_pClient->m_pLuaBinding->m_ControlTargetYPredicted = lua_tointeger(L, 2);
+        pSelf->m_pClient->m_pLuaBinding->m_ControlTargetYPredictedIsSet = true;
+    }
+    return 0;
 }
 
 int CLuaFile::UnSetControlValue(lua_State *L)
@@ -1289,37 +1338,51 @@ int CLuaFile::UnSetControlValue(lua_State *L)
     if (str_comp_nocase(lua_tostring(L, 1), "Direction") == 0)
     {
         pSelf->m_pClient->m_pLuaBinding->m_ControlDirection = 0;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlDirectionPredicted = 0;
         pSelf->m_pClient->m_pLuaBinding->m_ControlDirectionIsSet = false;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlDirectionPredictedIsSet = false;
     }
     if (str_comp_nocase(lua_tostring(L, 1), "Fire") == 0)
     {
         pSelf->m_pClient->m_pLuaBinding->m_ControlFire = 0;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlFirePredicted = 0;
         pSelf->m_pClient->m_pLuaBinding->m_ControlFireIsSet = false;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlFirePredictedIsSet = false;
     }
     if (str_comp_nocase(lua_tostring(L, 1), "Hook") == 0)
     {
         pSelf->m_pClient->m_pLuaBinding->m_ControlHook = 0;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlHookPredicted = 0;
         pSelf->m_pClient->m_pLuaBinding->m_ControlHookIsSet = false;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlHookPredictedIsSet = false;
     }
     if (str_comp_nocase(lua_tostring(L, 1), "Jump") == 0)
     {
         pSelf->m_pClient->m_pLuaBinding->m_ControlJump = 0;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlJumpPredicted = 0;
         pSelf->m_pClient->m_pLuaBinding->m_ControlJumpIsSet = false;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlJumpPredictedIsSet = false;
     }
     if (str_comp_nocase(lua_tostring(L, 1), "Weapon") == 0)
     {
         pSelf->m_pClient->m_pLuaBinding->m_ControlWeapon = 0;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlWeaponPredicted = 0;
         pSelf->m_pClient->m_pLuaBinding->m_ControlWeaponIsSet = false;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlWeaponPredictedIsSet = false;
     }
     if (str_comp_nocase(lua_tostring(L, 1), "TargetX") == 0)
     {
         pSelf->m_pClient->m_pLuaBinding->m_ControlTargetX = 0;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlTargetXPredicted = 0;
         pSelf->m_pClient->m_pLuaBinding->m_ControlTargetXIsSet = false;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlTargetXPredictedIsSet = false;
     }
     if (str_comp_nocase(lua_tostring(L, 1), "TargetY") == 0)
     {
         pSelf->m_pClient->m_pLuaBinding->m_ControlTargetY = 0;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlTargetYPredicted = 0;
         pSelf->m_pClient->m_pLuaBinding->m_ControlTargetYIsSet = false;
+        pSelf->m_pClient->m_pLuaBinding->m_ControlTargetYPredictedIsSet = false;
     }
     return 0;
 }
@@ -1616,7 +1679,7 @@ int CLuaFile::Connect(lua_State *L)
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
 
-    if(s_Throttle.Throttled(60))
+    if(s_Throttle.Throttled(5))
     {
         if (lua_isstring(L, 1))
             pSelf->m_pClient->Client()->Connect(lua_tostring(L, 1));

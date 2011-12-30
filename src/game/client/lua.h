@@ -94,6 +94,22 @@ public:
     int m_ControlTargetYPre;
     int m_ControlTargetY;
     bool m_ControlTargetYIsSet;
+
+
+    int m_ControlDirectionPredicted;
+    bool m_ControlDirectionPredictedIsSet;
+    int m_ControlJumpPredicted;
+    bool m_ControlJumpPredictedIsSet;
+    int m_ControlHookPredicted;
+    bool m_ControlHookPredictedIsSet;
+    int m_ControlFirePredicted;
+    bool m_ControlFirePredictedIsSet;
+    int m_ControlWeaponPredicted;
+    bool m_ControlWeaponPredictedIsSet;
+    int m_ControlTargetXPredicted;
+    bool m_ControlTargetXPredictedIsSet;
+    int m_ControlTargetYPredicted;
+    bool m_ControlTargetYPredictedIsSet;
 };
 
 class CLuaUi
@@ -380,6 +396,7 @@ public:
     //Control
     static inline int GetControlValue(lua_State *L);
     static inline int SetControlValue(lua_State *L);
+    static inline int SetControlValuePredicted(lua_State *L);
     static inline int UnSetControlValue(lua_State *L);
 
     //Sound

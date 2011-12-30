@@ -187,25 +187,25 @@ int CControls::SnapInput(int *pData, int *pPredictionData)
 
             m_pClient->m_pLua->m_EventListener.OnEvent("OnControlChange");
 
-            if (m_pClient->m_pLuaBinding->m_ControlDirectionIsSet)
+            /*if (m_pClient->m_pLuaBinding->m_ControlDirectionIsSet)
             {
-                m_PredictionData.m_Direction = m_pClient->m_pLuaBinding->m_ControlDirection;
+                m_InputData.m_Direction = m_pClient->m_pLuaBinding->m_ControlDirection;
             }
             if (m_pClient->m_pLuaBinding->m_ControlFireIsSet)
             {
-                m_PredictionData.m_Fire = m_pClient->m_pLuaBinding->m_ControlFire;
+                m_InputData.m_Fire = m_pClient->m_pLuaBinding->m_ControlFire;
             }
             if (m_pClient->m_pLuaBinding->m_ControlHookIsSet)
             {
-                m_PredictionData.m_Hook = m_pClient->m_pLuaBinding->m_ControlHook;
+                m_InputData.m_Hook = m_pClient->m_pLuaBinding->m_ControlHook;
             }
             if (m_pClient->m_pLuaBinding->m_ControlJumpIsSet)
             {
-                m_PredictionData.m_Jump = m_pClient->m_pLuaBinding->m_ControlJump;
+                m_InputData.m_Jump = m_pClient->m_pLuaBinding->m_ControlJump;
             }
             if (m_pClient->m_pLuaBinding->m_ControlWeaponIsSet)
             {
-                m_PredictionData.m_WantedWeapon = m_pClient->m_pLuaBinding->m_ControlWeapon;
+                m_InputData.m_WantedWeapon = m_pClient->m_pLuaBinding->m_ControlWeapon;
             }
             if (m_pClient->m_pLuaBinding->m_ControlTargetXIsSet)
             {
@@ -214,6 +214,35 @@ int CControls::SnapInput(int *pData, int *pPredictionData)
             if (m_pClient->m_pLuaBinding->m_ControlTargetYIsSet)
             {
                 m_InputData.m_TargetY = m_pClient->m_pLuaBinding->m_ControlTargetY;
+            }*/
+
+            if (m_pClient->m_pLuaBinding->m_ControlDirectionPredictedIsSet)
+            {
+                m_PredictionData.m_Direction = m_pClient->m_pLuaBinding->m_ControlDirectionPredicted;
+            }
+            if (m_pClient->m_pLuaBinding->m_ControlFirePredictedIsSet)
+            {
+                m_PredictionData.m_Fire = m_pClient->m_pLuaBinding->m_ControlFirePredicted;
+            }
+            if (m_pClient->m_pLuaBinding->m_ControlHookPredictedIsSet)
+            {
+                m_PredictionData.m_Hook = m_pClient->m_pLuaBinding->m_ControlHookPredicted;
+            }
+            if (m_pClient->m_pLuaBinding->m_ControlJumpPredictedIsSet)
+            {
+                m_PredictionData.m_Jump = m_pClient->m_pLuaBinding->m_ControlJumpPredicted;
+            }
+            if (m_pClient->m_pLuaBinding->m_ControlWeaponPredictedIsSet)
+            {
+                m_PredictionData.m_WantedWeapon = m_pClient->m_pLuaBinding->m_ControlWeaponPredicted;
+            }
+            if (m_pClient->m_pLuaBinding->m_ControlTargetXPredictedIsSet)
+            {
+                m_PredictionData.m_TargetX = m_pClient->m_pLuaBinding->m_ControlTargetXPredicted;
+            }
+            if (m_pClient->m_pLuaBinding->m_ControlTargetYPredictedIsSet)
+            {
+                m_PredictionData.m_TargetY = m_pClient->m_pLuaBinding->m_ControlTargetYPredicted;
             }
         }
 		// check if we need to send input

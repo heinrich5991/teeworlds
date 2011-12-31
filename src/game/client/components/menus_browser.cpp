@@ -893,7 +893,7 @@ void CMenus::RenderServerbrowserFriends(CUIRect View)
             {
                 if (UI()->DoButtonLogic(&s_GoToFriendButton, 0, 0, &RectButton))
                 {
-                    net_addr_str(&m_pClient->Friends()->GetFriend(m_FriendlistSelectedIndex)->m_ServerAddr, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress));
+                    net_addr_str(&m_pClient->Friends()->GetFriend(m_FriendlistSelectedIndex)->m_ServerAddr, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), true);
                     Client()->Connect(g_Config.m_UiServerAddress);
                 }
             }

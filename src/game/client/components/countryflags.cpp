@@ -6,6 +6,7 @@
 #include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/storage.h>
+#include <engine/shared/config.h>
 #include <engine/shared/linereader.h>
 
 #include "countryflags.h"

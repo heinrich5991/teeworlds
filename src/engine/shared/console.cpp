@@ -374,6 +374,14 @@ void CConsole::ExecuteLine(const char *pStr)
 	CConsole::ExecuteLineStroked(0, pStr); // then release it
 }
 
+void CConsole::ExecuteLineFlag(const char *pStr, int FlagMask)
+{
+	int Temp = m_FlagMask;
+	m_FlagMask = FlagMask;
+	ExecuteLine(pStr);
+	m_FlagMask = Temp;
+}
+
 
 void CConsole::ExecuteFile(const char *pFilename)
 {
@@ -633,7 +641,7 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 
 void CConsole::AddCommandSorted(CCommand *pCommand)
 {
-	if(!m_pFirstCommand || str_comp(pCommand->m_pName, m_pFirstCommand->m_pName) < 0)
+	if(!m_pFirstCommand || str_comp(pCommand->m_pName, m_pFirstCommand->m_pName) <= 0)
 	{
 		if(m_pFirstCommand && m_pFirstCommand->m_pNext)
 			pCommand->m_pNext = m_pFirstCommand;
@@ -645,7 +653,7 @@ void CConsole::AddCommandSorted(CCommand *pCommand)
 	{
 		for(CCommand *p = m_pFirstCommand; p; p = p->m_pNext)
 		{
-			if(!p->m_pNext || str_comp(pCommand->m_pName, p->m_pNext->m_pName) < 0)
+			if(!p->m_pNext || str_comp(pCommand->m_pName, p->m_pNext->m_pName) <= 0)
 			{
 				pCommand->m_pNext = p->m_pNext;
 				p->m_pNext = pCommand;
@@ -658,7 +666,13 @@ void CConsole::AddCommandSorted(CCommand *pCommand)
 void CConsole::Register(const char *pName, const char *pParams,
 	int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp)
 {
-	CCommand *pCommand = new(mem_alloc(sizeof(CCommand), sizeof(void*))) CCommand;
+	CCommand *pCommand = FindCommand(pName, Flags);
+	bool DoAdd = false;
+	if(pCommand == 0)
+	{
+		pCommand = new(mem_alloc(sizeof(CCommand), sizeof(void*))) CCommand;
+		DoAdd = true;
+	}
 	pCommand->m_pfnCallback = pfnFunc;
 	pCommand->m_pUserData = pUser;
 
@@ -669,7 +683,8 @@ void CConsole::Register(const char *pName, const char *pParams,
 	pCommand->m_Flags = Flags;
 	pCommand->m_Temp = false;
 
-	AddCommandSorted(pCommand);
+	if(DoAdd)
+		AddCommandSorted(pCommand);
 }
 
 void CConsole::RegisterTemp(const char *pName, const char *pParams,	int Flags, const char *pHelp)

@@ -245,8 +245,12 @@ void IGameController::CycleMap()
 		return;
 
 	if(m_RoundCount < g_Config.m_SvRoundsPerMap-1)
+	{
+		if(g_Config.m_SvRoundSwap)
+			GameServer()->SwapTeams();
 		return;
-		
+	}
+
 	// handle maprotation
 	const char *pMapRotation = g_Config.m_SvMaprotation;
 	const char *pCurrentMap = g_Config.m_SvMap;

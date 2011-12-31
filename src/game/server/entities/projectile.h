@@ -11,11 +11,12 @@ public:
 
 	vec2 GetPos(float Time);
 	void FillInfo(CNetObj_Projectile *pProj);
+	int GetWeapon() { return m_Weapon; }
 
 	virtual void Reset();
 	virtual void Tick();
 	virtual void Snap(int SnappingClient);
-	
+
 private:
 	vec2 m_Direction;
 	int m_LifeSpan;

@@ -504,10 +504,11 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	}
 
 	CUIRect MovementSettings, WeaponSettings, VotingSettings, ChatSettings, MiscSettings, ResetButton;
-	MainView.VSplitLeft(MainView.w/2-5.0f, &MovementSettings, &VotingSettings);
+	MainView.VSplitMid(&MovementSettings, &VotingSettings);
 
 	// movement settings
 	{
+		MovementSettings.VMargin(5.0f, &MovementSettings);
 		MovementSettings.HSplitTop(MainView.h/3+60.0f, &MovementSettings, &WeaponSettings);
 		RenderTools()->DrawUIRect(&MovementSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		MovementSettings.Margin(10.0f, &MovementSettings);

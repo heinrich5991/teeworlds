@@ -28,6 +28,7 @@
 #include "commands/events.cpp"
 #include "commands/message.cpp"
 #include "commands/player.cpp"
+#include "commands/entities.cpp"
 
 CLuaFile::CLuaFile()
 {
@@ -193,6 +194,14 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "SendChat", this->SendChat);
     lua_register(m_pLua, "SendChatTarget", this->SendChatTarget);
 
+    //Entities
+    lua_register(m_pLua, "EntityFind", this->EntityFind);
+    lua_register(m_pLua, "EntityGetPos", this->EntityGetPos);
+    lua_register(m_pLua, "EntitySetPos", this->EntitySetPos);
+    lua_register(m_pLua, "EntityDestroy", this->EntityDestroy);
+    lua_register(m_pLua, "ProjectileGetWeapon", this->ProjectileGetWeapon);
+
+
     lua_pushlightuserdata(m_pLua, this);
     lua_setglobal(m_pLua, "pLUA");
 
@@ -207,6 +216,7 @@ void CLuaFile::Init(const char *pFile)
     }
     else
     {
+        ErrorFunc(m_pLua);
         dbg_msg("lua", "fail to load file: %s", pFile);
         Close();
         return;

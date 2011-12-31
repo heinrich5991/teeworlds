@@ -3,6 +3,7 @@
 #define GAME_LUA_SERVER_H
 
 #include <game/server/gamecontext.h>
+#include <game/server/entities/projectile.h>
 #include <engine/shared/config.h>
 #include <engine/config.h>
 #include <base/tl/sorted_array.h>
@@ -192,6 +193,13 @@ public:
     static inline int AddModFile(lua_State *L);
     static inline int DeleteModFile(lua_State *L);
     static inline int SendFile(lua_State *L);
+
+    //Entities
+    static inline int EntityFind(lua_State *L);
+    static inline int EntityGetPos(lua_State *L);
+    static inline int EntitySetPos(lua_State *L);
+    static inline int EntityDestroy(lua_State *L);
+    static inline int ProjectileGetWeapon(lua_State *L);
 };
 
 class CLua

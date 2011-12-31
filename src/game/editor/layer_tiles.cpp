@@ -288,7 +288,6 @@ void CLayerTiles::Resize(int NewW, int NewH)
 
 	// replace old
 	delete [] m_pTiles;
-	dbg_msg("", "fuck");
 	m_pTiles = pNewData;
 	m_Width = NewW;
 	m_Height = NewH;
@@ -474,7 +473,19 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		m_Color.a = NewVal&0xff;
 	}
 	if(Prop == PROP_COLOR_ENV)
-		m_ColorEnv = clamp(NewVal-1, -1, m_pEditor->m_Map.m_lEnvelopes.size()-1);
+	{
+		int Index = clamp(NewVal-1, -1, m_pEditor->m_Map.m_lEnvelopes.size()-1);
+		int Step = (Index-m_ColorEnv)%2;
+		if(Step != 0)
+		{
+			for(; Index >= -1 && Index < m_pEditor->m_Map.m_lEnvelopes.size(); Index += Step)
+				if(Index == -1 || m_pEditor->m_Map.m_lEnvelopes[Index]->m_Channels == 4)
+				{
+					m_ColorEnv = Index;
+					break;
+				}
+		}
+	}
 	if(Prop == PROP_COLOR_ENV_OFFSET)
 		m_ColorEnvOffset = NewVal;
 

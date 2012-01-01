@@ -613,7 +613,6 @@ void CGameClient::OnLuaPacket(CUnpacker *pUnpacker)
 	}
 
     g_GameClient.m_pLua->m_EventListener.m_pNetData = aData; //Fetch Data
-    dbg_msg("", "%i %s", RawSize, aData);
     g_GameClient.m_pLua->m_EventListener.OnEvent("OnNetData"); //Call lua
     g_GameClient.m_pLua->m_EventListener.m_pNetData = 0; //Null-Pointer
 }

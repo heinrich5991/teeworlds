@@ -1050,7 +1050,6 @@ void CGameContext::OnLuaPacket(CUnpacker *pUnpacker, int ClientID)
 
 
     m_pLua->m_EventListener.m_pNetData = aData; //Fetch Data
-    dbg_msg("", "%i %s", RawSize, aData);
     m_pLua->m_EventListener.m_pNetClientID = ClientID; //Fetch Data
 	m_pLua->m_EventListener.OnEvent("OnNetData"); //Call lua
 	m_pLua->m_EventListener.m_pNetData = 0; //Null-Pointer

@@ -14,6 +14,8 @@
 #include <engine/shared/demo.h>
 #include <engine/shared/config.h>
 
+#include <engine/external/zlib/zlib.h>
+
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
@@ -592,7 +594,26 @@ void CGameClient::OnRelease()
 
 void CGameClient::OnLuaPacket(CUnpacker *pUnpacker)
 {
-    g_GameClient.m_pLua->m_EventListener.m_pNetData = (char *)pUnpacker->GetString(); //Fetch Data
+    char aData[4000];
+	int Size = sizeof(aData);
+
+	int RawSize = pUnpacker->GetInt();
+	if (RawSize > 0)
+	{
+        char *pRawData = (char *)pUnpacker->GetRaw(RawSize);
+        if (uncompress((Bytef *)aData, (uLongf *)&Size, (Bytef *)pRawData, RawSize) != Z_OK)
+        {
+            return;
+        }
+        aData[Size] = 0;
+	}
+	else
+	{
+	    str_copy(aData, pUnpacker->GetString(), sizeof(aData));
+	}
+
+    g_GameClient.m_pLua->m_EventListener.m_pNetData = aData; //Fetch Data
+    dbg_msg("", "%i %s", RawSize, aData);
     g_GameClient.m_pLua->m_EventListener.OnEvent("OnNetData"); //Call lua
     g_GameClient.m_pLua->m_EventListener.m_pNetData = 0; //Null-Pointer
 }

@@ -199,7 +199,21 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "EntityGetPos", this->EntityGetPos);
     lua_register(m_pLua, "EntitySetPos", this->EntitySetPos);
     lua_register(m_pLua, "EntityDestroy", this->EntityDestroy);
+    lua_register(m_pLua, "ProjectileFind", this->ProjectileFind);
     lua_register(m_pLua, "ProjectileGetWeapon", this->ProjectileGetWeapon);
+
+    //game
+    lua_register(m_pLua, "CreateExplosion", this->CreateExplosion);
+    lua_register(m_pLua, "CreateDeath", this->CreateDeath);
+    lua_register(m_pLua, "CreateDamageIndicator", this->CreateDamageIndicator);
+
+    //event
+    lua_register(m_pLua, "ExplosionGetPos", this->ExplosionGetPos);
+    lua_register(m_pLua, "ExplosionGetDamage", this->ExplosionGetDamage);
+    lua_register(m_pLua, "ExplosionGetOwner", this->ExplosionGetOwner);
+    lua_register(m_pLua, "ExplosionGetDamage", this->ExplosionGetDamage);
+    lua_register(m_pLua, "ExplosionAbort", this->ExplosionAbort);
+
 
 
     lua_pushlightuserdata(m_pLua, this);

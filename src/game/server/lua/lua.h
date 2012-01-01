@@ -5,6 +5,7 @@
 #include <game/server/gamecontext.h>
 #include <game/server/entities/projectile.h>
 #include <engine/shared/config.h>
+#include <engine/external/zlib/zlib.h>
 #include <engine/config.h>
 #include <base/tl/sorted_array.h>
 //#include <engine/lua.h>
@@ -59,6 +60,13 @@ public:
 	//Jump
 	int m_OnJumpJumpID;
 	int m_OnJumpClientID;
+
+	//OnExplosion
+	int m_ExplosionDamage;
+	int m_ExplosionOwner;
+	int m_ExplosionWeapon;
+	vec2 m_ExplosionPos;
+	bool m_ExplosionAbort;
 };
 
 class CLuaFile
@@ -136,6 +144,12 @@ public:
     static inline int JumpGetClientID(lua_State *L);
     static inline int JumpGetJumpID(lua_State *L);
 
+    static inline int ExplosionGetDamage(lua_State *L);
+    static inline int ExplosionGetOwner(lua_State *L);
+    static inline int ExplosionGetWeapon(lua_State *L);
+    static inline int ExplosionGetPos(lua_State *L);
+    static inline int ExplosionAbort(lua_State *L);
+
     //
     //Include
     static inline int Include(lua_State *L);
@@ -155,8 +169,6 @@ public:
     static inline int SetTile(lua_State *L);
     static inline int GetMapWidth(lua_State *L);
     static inline int GetMapHeight(lua_State *L);
-
-	// static inline int CreateParticle(lua_State *L);
 
     //Console Print
     static inline int Print(lua_State *L);
@@ -199,7 +211,14 @@ public:
     static inline int EntityGetPos(lua_State *L);
     static inline int EntitySetPos(lua_State *L);
     static inline int EntityDestroy(lua_State *L);
+
+    static inline int ProjectileFind(lua_State *L);
     static inline int ProjectileGetWeapon(lua_State *L);
+
+    //Game
+    static inline int CreateExplosion(lua_State *L);
+    static inline int CreateDeath(lua_State *L);
+    static inline int CreateDamageIndicator(lua_State *L);
 };
 
 class CLua

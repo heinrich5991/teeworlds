@@ -14,6 +14,7 @@
 #include "gamemodes/ctf.h"
 #include "gamemodes/mod.h"
 
+#include <engine/external/zlib/zlib.h>
 #include <engine/lua.h>
 enum
 {
@@ -117,9 +118,28 @@ void CGameContext::CreateHammerHit(vec2 Pos)
 }
 
 
-void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage)
+void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, int Damage)
 {
 	// create the event
+	m_pLua->m_EventListener.m_ExplosionDamage = Damage;
+	m_pLua->m_EventListener.m_ExplosionOwner = Owner;
+	m_pLua->m_EventListener.m_ExplosionWeapon = Weapon;
+	m_pLua->m_EventListener.m_ExplosionPos = Pos;
+	m_pLua->m_EventListener.m_ExplosionAbort = false;
+	m_pLua->m_EventListener.OnEvent("OnExplosion");
+	Damage = m_pLua->m_EventListener.m_ExplosionDamage;
+	Owner = m_pLua->m_EventListener.m_ExplosionOwner;
+	Weapon = m_pLua->m_EventListener.m_ExplosionWeapon;
+	Pos = m_pLua->m_EventListener.m_ExplosionPos;
+
+	m_pLua->m_EventListener.m_ExplosionDamage = 0;
+	m_pLua->m_EventListener.m_ExplosionOwner = 0;
+	m_pLua->m_EventListener.m_ExplosionWeapon = 0;
+	m_pLua->m_EventListener.m_ExplosionPos = vec2(0, 0);
+
+	if (m_pLua->m_EventListener.m_ExplosionAbort)
+        return;
+
 	CNetEvent_Explosion *pEvent = (CNetEvent_Explosion *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(CNetEvent_Explosion));
 	if(pEvent)
 	{
@@ -142,7 +162,7 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 			if(l)
 				ForceDir = normalize(Diff);
 			l = 1-clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
-			float Dmg = 6 * l;
+			float Dmg = Damage * l;
 			if((int)Dmg)
 				apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
 		}
@@ -393,7 +413,7 @@ void CGameContext::SwapTeams()
 {
 	if(!m_pController->IsTeamplay())
 		return;
-	
+
 	SendChat(-1, CGameContext::CHAT_ALL, "Teams were swapped");
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
@@ -1010,7 +1030,27 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 void CGameContext::OnLuaPacket(CUnpacker *pUnpacker, int ClientID)
 {
 	//TODO Check if this row is working without pSelf
-    m_pLua->m_EventListener.m_pNetData = (char *)pUnpacker->GetString(); //Fetch Data
+    char aData[4000];
+	int Size = sizeof(aData);
+
+	int RawSize = pUnpacker->GetInt();
+	if (RawSize > 0)
+	{
+        char *pRawData = (char *)pUnpacker->GetRaw(RawSize);
+        if (uncompress((Bytef *)aData, (uLongf *)&Size, (Bytef *)pRawData, RawSize) != Z_OK)
+        {
+            return;
+        }
+        aData[Size] = 0;
+	}
+	else
+	{
+	    str_copy(aData, pUnpacker->GetString(), sizeof(aData));
+	}
+
+
+    m_pLua->m_EventListener.m_pNetData = aData; //Fetch Data
+    dbg_msg("", "%i %s", RawSize, aData);
     m_pLua->m_EventListener.m_pNetClientID = ClientID; //Fetch Data
 	m_pLua->m_EventListener.OnEvent("OnNetData"); //Call lua
 	m_pLua->m_EventListener.m_pNetData = 0; //Null-Pointer
@@ -1135,7 +1175,7 @@ void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
 		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
 			++PlayerTeam;
 	PlayerTeam = (PlayerTeam+1)/2;
-	
+
 	pSelf->SendChat(-1, CGameContext::CHAT_ALL, "Teams were shuffled");
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
@@ -1147,7 +1187,7 @@ void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
 			else if(CounterBlue == PlayerTeam)
 				pSelf->m_apPlayers[i]->SetTeam(TEAM_RED, false);
 			else
-			{	
+			{
 				if(rand() % 2)
 				{
 					pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE, false);

@@ -166,3 +166,64 @@ int CLuaFile::JumpGetJumpID(lua_State *L)
     lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_OnJumpJumpID);
     return 1;
 }
+
+int CLuaFile::ExplosionGetDamage(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_ExplosionDamage);
+    return 1;
+}
+
+int CLuaFile::ExplosionGetOwner(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_ExplosionOwner);
+    return 1;
+}
+
+int CLuaFile::ExplosionGetWeapon(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_ExplosionWeapon);
+    return 1;
+}
+
+int CLuaFile::ExplosionGetPos(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_ExplosionPos.x);
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_ExplosionPos.y);
+    return 2;
+}
+
+int CLuaFile::ExplosionAbort(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    pSelf->m_pLuaHandler->m_EventListener.m_ExplosionAbort = true;
+    return 0;
+}

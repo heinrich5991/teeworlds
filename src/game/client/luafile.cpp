@@ -271,8 +271,9 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "UiGetGameTextureID", this->UiGetGameTextureID);
     lua_register(m_pLua, "UiGetParticleTextureID", this->UiGetParticleTextureID);
     lua_register(m_pLua, "UiGetFlagTextureID", this->UiGetFlagTextureID);
-    lua_register(m_pLua, "NetSend", this->SendPacket);
-    lua_register(m_pLua, "NetFetch", this->FetchPacket);
+    lua_register(m_pLua, "UiDirectRect", this->UiDirectRect);
+
+    //
 
     //Texture
     lua_register(m_pLua, "TextureLoad", this->TextureLoad);
@@ -2597,6 +2598,41 @@ int CLuaFile::UiDoSlider(lua_State *L)
     lua_pushinteger(L, i);
 
     return 1;
+}
+
+int CLuaFile::UiDirectRect(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3) || !lua_isnumber(L, 4))
+        return 0;
+
+    CUIRect Rect;
+    vec4 Color = vec4(0, 0, 0, 0.5f);
+    int Corners = CUI::CORNER_ALL;
+    int Rounding = 5.0f;
+
+    Rect.x = lua_tonumber(L, 1);
+    Rect.y = lua_tonumber(L, 2);
+    Rect.w = lua_tonumber(L, 3);
+    Rect.h = lua_tonumber(L, 4);
+
+    if (lua_isnumber(L, 5) && lua_isnumber(L, 6) && lua_isnumber(L, 7) && lua_isnumber(L, 8))
+        Color = vec4(lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8));
+
+    if (lua_isnumber(L, 9))
+        Corners = lua_tointeger(L, 9);
+
+    if (lua_isnumber(L, 10))
+        Rounding = lua_tonumber(L, 10);
+
+    pSelf->m_pClient->RenderTools()->DrawUIRect(&Rect, Color, Corners, Rounding);
+
+    return 0;
 }
 
 int CLuaFile::UiGetGameTextureID(lua_State *L)

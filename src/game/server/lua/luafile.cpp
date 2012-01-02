@@ -56,6 +56,8 @@ void CLuaFile::Tick()
     PushInteger((int)(time_get() * 10 / time_freq()));
     FunctionExec();
 
+    lua_gc(m_pLua, LUA_GCCOLLECT, 1000);
+
     ErrorFunc(m_pLua);
 }
 void CLuaFile::TickDefered()
@@ -100,7 +102,6 @@ int CLuaFile::Panic(lua_State *L)
     dbg_break();
     return 0;
 }
-
 void CLuaFile::Init(const char *pFile)
 {
     //close first
@@ -201,6 +202,8 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "EntityDestroy", this->EntityDestroy);
     lua_register(m_pLua, "ProjectileFind", this->ProjectileFind);
     lua_register(m_pLua, "ProjectileGetWeapon", this->ProjectileGetWeapon);
+    lua_register(m_pLua, "ProjectileGetOwner", this->ProjectileGetOwner);
+    lua_register(m_pLua, "ProjectileGetPos", this->ProjectileGetPos);
 
     //game
     lua_register(m_pLua, "CreateExplosion", this->CreateExplosion);
@@ -213,6 +216,10 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "ExplosionGetOwner", this->ExplosionGetOwner);
     lua_register(m_pLua, "ExplosionGetDamage", this->ExplosionGetDamage);
     lua_register(m_pLua, "ExplosionAbort", this->ExplosionAbort);
+
+    lua_register(m_pLua, "GetClientConnectClientID", this->GetClientConnectClientID);
+
+    lua_register(m_pLua, "GetClientEnterClientID", this->GetClientEnterClientID);
 
 
 

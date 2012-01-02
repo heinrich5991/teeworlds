@@ -67,6 +67,12 @@ public:
 	int m_ExplosionWeapon;
 	vec2 m_ExplosionPos;
 	bool m_ExplosionAbort;
+
+	//OnConnect
+	int m_OnClientConnectClientID;
+
+	//OnEnter
+	int m_OnClientEnterClientID;
 };
 
 class CLuaFile
@@ -214,11 +220,19 @@ public:
 
     static inline int ProjectileFind(lua_State *L);
     static inline int ProjectileGetWeapon(lua_State *L);
+    static inline int ProjectileGetOwner(lua_State *L);
+    static inline int ProjectileGetPos(lua_State *L);
 
     //Game
     static inline int CreateExplosion(lua_State *L);
     static inline int CreateDeath(lua_State *L);
     static inline int CreateDamageIndicator(lua_State *L);
+
+    //Client join
+    static inline int GetClientConnectClientID(lua_State *L);
+    static inline int GetClientEnterClientID(lua_State *L);
+
+
 };
 
 class CLua

@@ -13,6 +13,7 @@ public:
 	int GetStartTick() { return m_StartTick; }
 	void FillInfo(CNetObj_Projectile *pProj);
 	int GetWeapon() { return m_Weapon; }
+	int GetOwner() { return m_Owner; }
 
 	virtual void Reset();
 	virtual void Tick();

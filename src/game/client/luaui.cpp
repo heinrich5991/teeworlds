@@ -74,7 +74,7 @@ void CLuaUi::Tick()
     else if(m_Type == LUAUIRECT)
     {
         CUIRect *pRect = &m_Rect;
-        m_pClient->RenderTools()->DrawUIRect(pRect, m_Color, CUI::CORNER_ALL, m_Rounding);
+        m_pClient->RenderTools()->DrawUIRect(pRect, m_Color, m_Corners, m_Rounding);
     }
     else if(m_Type == LUAUIIMAGE)
     {

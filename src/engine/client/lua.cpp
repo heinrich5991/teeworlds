@@ -29,9 +29,9 @@ void CLua::AddLuaFile(char *pFileDir, bool NoSave)
 		if(Free == -2)
 			break;
     }
-	
+
     if (Free > -1 && Free < MAX_LUA_FILES)
-	{		
+	{
 		m_aLuaFilesSave[Free] = NoSave? false : true;
 		str_copy(m_aLuaFiles[Free], pFileDir, sizeof(m_aLuaFiles[Free]));
 	}
@@ -40,7 +40,10 @@ void CLua::AddLuaFile(char *pFileDir, bool NoSave)
 void CLua::DeleteLuaFile(int i)
 {
     if (i >= 0 && i < MAX_LUA_FILES)
+    {
         str_copy(m_aLuaFiles[i], "", sizeof(m_aLuaFiles[i]));
+        m_aLuaFilesSave[i] = false;
+    }
 }
 
 void CLua::ConfigSaveCallback(IConfig *pConfig, void *pUserData)

@@ -13,7 +13,7 @@ public:
 	CLua();
 
 	char m_aLuaFiles[MAX_LUA_FILES][1024];
-	char m_aLuaFilesSave[MAX_LUA_FILES];
+	bool m_aLuaFilesSave[MAX_LUA_FILES];
 	char *GetFileDir(int i);
     void DeleteLuaFile(int i);
     void AddLuaFile(char *pFilename, bool NoSave = false);

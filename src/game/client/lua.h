@@ -373,6 +373,8 @@ public:
     static inline int UiGetParticleTextureID(lua_State *L);
     static inline int UiGetFlagTextureID(lua_State *L);
 
+    static inline int UiDirectRect(lua_State *L);
+
     //Texture
     static inline int TextureLoad(lua_State *L);
     static inline int TextureUnload(lua_State *L);

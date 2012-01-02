@@ -379,6 +379,14 @@ void CGameClient::OnReset()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		m_aClients[i].Reset();
 
+    for (int i = 0; i < MAX_LUA_FILES; i++)
+    {
+        if (m_pLuaCore->GetLuaSaveOption(i))
+        {
+            m_pLuaCore->DeleteLuaFile(i);
+        }
+    }
+
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
 

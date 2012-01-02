@@ -231,6 +231,8 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "CharacterSpawn", this->CharacterSpawn);
     lua_register(m_pLua, "CharacterIsAlive", this->CharacterIsAlive);
 
+    lua_register(m_pLua, "Win", this->Win);
+
 
 
     lua_pushlightuserdata(m_pLua, this);

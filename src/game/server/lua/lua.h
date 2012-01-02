@@ -245,6 +245,8 @@ public:
     static inline int CharacterSpawn(lua_State *L);
     static inline int CharacterIsAlive(lua_State *L);
 
+    static inline int Win(lua_State *L);
+
 
 };
 

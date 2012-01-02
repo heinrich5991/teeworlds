@@ -3,6 +3,7 @@
 #define GAME_LUA_SERVER_H
 
 #include <game/server/gamecontext.h>
+#include <game/server/gameworld.h>
 #include <game/server/entities/projectile.h>
 #include <engine/shared/config.h>
 #include <engine/external/zlib/zlib.h>
@@ -73,6 +74,9 @@ public:
 
 	//OnEnter
 	int m_OnClientEnterClientID;
+
+	//OnCanSpawn
+	bool m_AbortSpawn;
 };
 
 class CLuaFile
@@ -231,6 +235,15 @@ public:
     //Client join
     static inline int GetClientConnectClientID(lua_State *L);
     static inline int GetClientEnterClientID(lua_State *L);
+
+    //OnCanSpawn
+    static inline int AbortSpawn(lua_State *L);
+
+    static inline int CharacterTakeDamage(lua_State *L);
+    static inline int CharacterGetHealth(lua_State *L);
+    static inline int CharacterGetArmor(lua_State *L);
+    static inline int CharacterSpawn(lua_State *L);
+    static inline int CharacterIsAlive(lua_State *L);
 
 
 };

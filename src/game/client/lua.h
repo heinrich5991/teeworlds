@@ -416,6 +416,9 @@ public:
     static inline int GetKeyFlags(lua_State *L);
     static inline int GetKeyCode(lua_State *L);
     static inline int GetKeyUnicode(lua_State *L);
+
+
+    static inline int SetLocalCharacterPos(lua_State *L);
 };
 
 class CLua

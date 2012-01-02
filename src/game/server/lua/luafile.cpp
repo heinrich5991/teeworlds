@@ -222,6 +222,16 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "GetClientEnterClientID", this->GetClientEnterClientID);
 
 
+    lua_register(m_pLua, "CharacterTakeDamage", this->CharacterTakeDamage);
+    lua_register(m_pLua, "CharacterGetHealth", this->CharacterGetHealth);
+    lua_register(m_pLua, "CharacterGetArmor", this->CharacterGetArmor);
+
+    lua_register(m_pLua, "AbortSpawn", this->AbortSpawn);
+
+    lua_register(m_pLua, "CharacterSpawn", this->CharacterSpawn);
+    lua_register(m_pLua, "CharacterIsAlive", this->CharacterIsAlive);
+
+
 
     lua_pushlightuserdata(m_pLua, this);
     lua_setglobal(m_pLua, "pLUA");

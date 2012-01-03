@@ -204,6 +204,7 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "ProjectileGetWeapon", this->ProjectileGetWeapon);
     lua_register(m_pLua, "ProjectileGetOwner", this->ProjectileGetOwner);
     lua_register(m_pLua, "ProjectileGetPos", this->ProjectileGetPos);
+    lua_register(m_pLua, "ProjectileCreate", this->ProjectileCreate);
 
     //game
     lua_register(m_pLua, "CreateExplosion", this->CreateExplosion);

@@ -226,6 +226,7 @@ public:
     static inline int ProjectileGetWeapon(lua_State *L);
     static inline int ProjectileGetOwner(lua_State *L);
     static inline int ProjectileGetPos(lua_State *L);
+    static inline int ProjectileCreate(lua_State *L);
 
     //Game
     static inline int CreateExplosion(lua_State *L);

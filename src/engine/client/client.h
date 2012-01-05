@@ -89,9 +89,12 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int64 m_LocalStartTime;
 
 	int m_DebugFont;
-	float m_FrameTimeLow;
-	float m_FrameTimeHigh;
-	int m_Frames;
+	
+	int64 m_LastRenderTime;
+	float m_RenderFrameTimeLow;
+	float m_RenderFrameTimeHigh;
+	int m_RenderFrames;
+
 	NETADDR m_ServerAddress;
 	NETADDR m_BindAddr;
 	int m_WindowMustRefocus;
@@ -195,6 +198,12 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	};
 	CVersionInfo m_VersionInfo;
 	CVersionInfo m_VersionLuaInfo;
+	
+	semaphore m_GfxRenderSemaphore;
+	semaphore m_GfxStateSemaphore;
+	volatile int m_GfxState;
+	static void GraphicsThreadProxy(void *pThis) { ((CClient*)pThis)->GraphicsThread(); }
+	void GraphicsThread();
 
 public:
 	IEngine *Engine() { return m_pEngine; }

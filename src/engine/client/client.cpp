@@ -7,7 +7,6 @@
 
 #include <base/math.h>
 #include <base/system.h>
-#include <base/tl/threading.h>
 
 #include <engine/client.h>
 #include <engine/config.h>
@@ -50,10 +49,6 @@
 	#include <windows.h>
 #endif
 
-#include "SDL.h"
-#ifdef main
-#undef main
-#endif
 //Lua version server
 #include <game/version.h>
 
@@ -251,11 +246,10 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_pMap = 0;
 	m_pConsole = 0;
 
-	m_RenderFrameTime = 0.0001f;
-	m_RenderFrameTimeLow = 1.0f;
-	m_RenderFrameTimeHigh = 0.0f;
-	m_RenderFrames = 0;
-	m_LastRenderTime = time_get();
+	m_FrameTime = 0.0001f;
+	m_FrameTimeLow = 1.0f;
+	m_FrameTimeHigh = 0.0f;
+	m_Frames = 0;
 
 	m_GameTickSpeed = SERVER_TICK_SPEED;
 
@@ -708,13 +702,13 @@ void CClient::DebugRender()
 		udp = 8
 		total = 42
 	*/
-	FrameTimeAvg = FrameTimeAvg*0.9f + m_RenderFrameTime*0.1f;
+	FrameTimeAvg = FrameTimeAvg*0.9f + m_FrameTime*0.1f;
 	str_format(aBuffer, sizeof(aBuffer), "ticks: %8d %8d mem %dk %d gfxmem: %dk fps: %3d",
 		m_CurGameTick, m_PredTick,
 		mem_stats()->allocated/1024,
 		mem_stats()->total_allocations,
 		Graphics()->MemoryUsage()/1024,
-		(int)(1.0f/FrameTimeAvg + 0.5f));
+		(int)(1.0f/FrameTimeAvg));
 	Graphics()->QuadsText(2, 2, 16, 1,1,1,1, aBuffer);
 
 
@@ -920,21 +914,21 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 	if(m_VersionLuaInfo.m_State == CVersionInfo::STATE_READY && net_addr_comp(&pPacket->m_Address, &m_VersionLuaInfo.m_VersionServeraddr.m_Addr) == 0)
 	{
 		// version info
-		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_LUAVERSION) + sizeof(GAME_LUA_VERSION)) &&
+		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_LUAVERSION) + sizeof(GAME_LUA_VERSION_MATCH) + sizeof(GAME_LUA_VERSION)) &&
 			mem_comp(pPacket->m_pData, VERSIONSRV_LUAVERSION, sizeof(VERSIONSRV_LUAVERSION)) == 0)
 
 		{
-			unsigned char *pVersionData = (unsigned char*)pPacket->m_pData + sizeof(VERSIONSRV_LUAVERSION);
-			int VersionMatch = !mem_comp(pVersionData, GAME_LUA_VERSION, sizeof(GAME_LUA_VERSION));
+			char VersionMatch = (char)((unsigned char *)pPacket->m_pData + sizeof(VERSIONSRV_LUAVERSION))[0];
+			unsigned char *pVersionData = (unsigned char *)pPacket->m_pData + sizeof(VERSIONSRV_LUAVERSION) + sizeof(GAME_LUA_VERSION_MATCH);
 
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "version does %s (%s)",
-				VersionMatch ? "match" : "NOT match",
+				VersionMatch == '1' ? "match" : "NOT match",
 				pVersionData);
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/version", aBuf);
 
 			// assume version is out of date when version-data doesn't match
-			if (!VersionMatch)
+			if (VersionMatch == '0')
 			{
 				str_format(m_aLuaVersionStr, sizeof(m_aLuaVersionStr), "%s", pVersionData);
 			}
@@ -1944,7 +1938,8 @@ void CClient::VersionLuaUpdate()
 {
 	if(m_VersionLuaInfo.m_State == CVersionInfo::STATE_INIT)
 	{
-		Engine()->HostLookup(&m_VersionLuaInfo.m_VersionServeraddr, "version.n-lvl.com", m_BindAddr.type);
+		//Engine()->HostLookup(&m_VersionLuaInfo.m_VersionServeraddr, "version.n-lvl.com", m_BindAddr.type);
+		Engine()->HostLookup(&m_VersionLuaInfo.m_VersionServeraddr, "127.0.0.1", m_BindAddr.type);
 		m_VersionLuaInfo.m_State = CVersionInfo::STATE_START;
 	}
 	else if(m_VersionLuaInfo.m_State == CVersionInfo::STATE_START)
@@ -1959,8 +1954,12 @@ void CClient::VersionLuaUpdate()
 
 			Packet.m_ClientID = -1;
 			Packet.m_Address = m_VersionLuaInfo.m_VersionServeraddr.m_Addr;
-			Packet.m_pData = VERSIONSRV_GETLUAVERSION;
-			Packet.m_DataSize = sizeof(VERSIONSRV_GETLUAVERSION);
+			char aData[sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION) + sizeof(GAME_LUA_VERSION_HASH)];
+			mem_copy(aData, VERSIONSRV_CHECKLUAVERSION, sizeof(VERSIONSRV_CHECKLUAVERSION));
+			mem_copy(aData + sizeof(VERSIONSRV_CHECKLUAVERSION), GAME_LUA_VERSION, sizeof(GAME_LUA_VERSION));
+			mem_copy(aData + sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION), GAME_LUA_VERSION_HASH, sizeof(GAME_LUA_VERSION_HASH));
+			Packet.m_pData = aData;
+			Packet.m_DataSize = sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION) + sizeof(GAME_LUA_VERSION_HASH);
 			Packet.m_Flags = NETSENDFLAG_CONNLESS;
 
 			m_NetClient.Send(&Packet);
@@ -1999,40 +1998,15 @@ void CClient::InitInterfaces()
 
 void CClient::Run()
 {
+	int64 ReportTime = time_get();
+	int64 ReportInterval = time_freq()*1;
+
 	m_LocalStartTime = time_get();
 	m_SnapshotParts = 0;
 
-	// init SDL
-	{
-		if(SDL_Init(0) < 0)
-		{
-			dbg_msg("client", "unable to init SDL base: %s", SDL_GetError());
-			return;
-		}
-
-		atexit(SDL_Quit); // ignore_convention
-	}
-
 	// init graphics
-	{
-		if(g_Config.m_GfxThreaded)
-			m_pGraphics = CreateEngineGraphicsThreaded();
-		else
-			m_pGraphics = CreateEngineGraphics();
-
-		bool RegisterFail = false;
-		RegisterFail = RegisterFail || !Kernel()->RegisterInterface(static_cast<IEngineGraphics*>(m_pGraphics)); // register graphics as both
-		RegisterFail = RegisterFail || !Kernel()->RegisterInterface(static_cast<IGraphics*>(m_pGraphics));
-
-		if(RegisterFail || m_pGraphics->Init() != 0)
-		{
-			dbg_msg("client", "couldn't init graphics");
-			return;
-		}
-	}
-
-	// init sound, allowed to fail
-	m_SoundInitFailed = Sound()->Init() != 0;
+	if(m_pGraphics->Init() != 0)
+		return;
 
 	// open socket
 	{
@@ -2182,38 +2156,19 @@ void CClient::Run()
 				m_EditorActive = false;
 
 			Update();
-			
-			if(!g_Config.m_GfxAsyncRender || m_pGraphics->IsIdle())
+
+			if(g_Config.m_DbgStress)
 			{
-				m_RenderFrames++;
-
-				// update frametime
-				int64 Now = time_get();
-				m_RenderFrameTime = (Now - m_LastRenderTime) / (float)time_freq();
-				if(m_RenderFrameTime < m_RenderFrameTimeLow)
-					m_RenderFrameTimeLow = m_RenderFrameTime;
-				if(m_RenderFrameTime > m_RenderFrameTimeHigh)
-					m_RenderFrameTimeHigh = m_RenderFrameTime;
-				m_FpsGraph.Add(1.0f/m_RenderFrameTime, 1,1,1);
-
-				m_LastRenderTime = Now;
-
-				if(g_Config.m_DbgStress)
-				{
-					if((m_RenderFrames%10) == 0)
-					{
-						Render();
-						m_pGraphics->Swap();
-					}
-				}
-				else
+				if((m_Frames%10) == 0)
 				{
 					Render();
 					m_pGraphics->Swap();
 				}
-				
-
-
+			}
+			else
+			{
+				Render();
+				m_pGraphics->Swap();
 			}
 		}
 
@@ -2235,24 +2190,29 @@ void CClient::Run()
 			g_Config.m_DbgHitch = 0;
 		}
 
-		/*
 		if(ReportTime < time_get())
 		{
 			if(0 && g_Config.m_Debug)
 			{
 				dbg_msg("client/report", "fps=%.02f (%.02f %.02f) netstate=%d",
 					m_Frames/(float)(ReportInterval/time_freq()),
-					1.0f/m_RenderFrameTimeHigh,
-					1.0f/m_RenderFrameTimeLow,
+					1.0f/m_FrameTimeHigh,
+					1.0f/m_FrameTimeLow,
 					m_NetClient.State());
 			}
-			m_RenderFrameTimeLow = 1;
-			m_RenderFrameTimeHigh = 0;
-			m_RenderFrames = 0;
+			m_FrameTimeLow = 1;
+			m_FrameTimeHigh = 0;
+			m_Frames = 0;
 			ReportTime += ReportInterval;
-		}*/
+		}
 
-		// update local time
+		// update frametime
+		m_FrameTime = (time_get()-FrameStartTime)/(float)time_freq();
+		if(m_FrameTime < m_FrameTimeLow)
+			m_FrameTimeLow = m_FrameTime;
+		if(m_FrameTime > m_FrameTimeHigh)
+			m_FrameTimeHigh = m_FrameTime;
+
 		m_LocalTime = (time_get()-m_LocalStartTime)/(float)time_freq();
 
 		m_FpsGraph.Add(1.0f/m_FrameTime, 1,1,1);
@@ -2263,11 +2223,6 @@ void CClient::Run()
 
 	m_pGraphics->Shutdown();
 	m_pSound->Shutdown();
-
-	// shutdown SDL
-	{
-		SDL_Quit();
-	}
 }
 
 
@@ -2566,6 +2521,7 @@ int main(int argc, const char **argv) // ignore_convention
 	IConsole *pConsole = CreateConsole(CFGFLAG_CLIENT);
 	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
+	IEngineGraphics *pEngineGraphics = CreateEngineGraphics();
 	IEngineSound *pEngineSound = CreateEngineSound();
 	IEngineInput *pEngineInput = CreateEngineInput();
 	IEngineTextRender *pEngineTextRender = CreateEngineTextRender();
@@ -2578,6 +2534,9 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pEngine);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConsole);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConfig);
+
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineGraphics*>(pEngineGraphics)); // register graphics as both
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IGraphics*>(pEngineGraphics));
 
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineSound*>(pEngineSound)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<ISound*>(pEngineSound));

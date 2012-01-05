@@ -42,4 +42,6 @@ static const unsigned char VERSIONSRV_MAPLIST[] = {255, 255, 255, 255, 'v', 'm',
 static const unsigned char VERSIONSRV_GETLUAVERSION[] = {255, 255, 255, 255, 'v', 'n', 'l', 'g'};
 static const unsigned char VERSIONSRV_LUAVERSION[] = {255, 255, 255, 255, 'v', 'n', 'l', 's'};
 
+static const unsigned char VERSIONSRV_CHECKLUAVERSION[] = {255, 255, 255, 255, 'v', 'n', 'l', 'f'};
+
 #endif

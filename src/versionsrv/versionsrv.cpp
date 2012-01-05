@@ -11,7 +11,7 @@ static int m_NumPackets = 0;
 
 static CNetClient g_NetOp; // main
 
-void SendVer(NETADDR *pAddr)
+void SendVerOld(NETADDR *pAddr)
 {
 	CNetChunk p;
 	unsigned char aData[sizeof(VERSIONSRV_LUAVERSION) + sizeof(GAME_LUA_VERSION)];
@@ -21,6 +21,38 @@ void SendVer(NETADDR *pAddr)
 
 	p.m_ClientID = -1;
 	p.m_Address = *pAddr;
+	p.m_Flags = NETSENDFLAG_CONNLESS;
+	p.m_pData = aData;
+	p.m_DataSize = sizeof(aData);
+
+	g_NetOp.Send(&p);
+}
+
+void SendVer(CNetChunk *pPacket)
+{
+	CNetChunk p;
+	unsigned char aData[sizeof(VERSIONSRV_LUAVERSION) + sizeof(GAME_LUA_VERSION_MATCH) + sizeof(GAME_LUA_VERSION)];
+
+    char aVersion[sizeof(GAME_LUA_VERSION)];
+    char aVersionHash[sizeof(GAME_LUA_VERSION_HASH)];
+    mem_copy(aVersion, (unsigned char *)pPacket->m_pData + sizeof(VERSIONSRV_CHECKLUAVERSION), sizeof(aVersion));
+    mem_copy(aVersionHash, (unsigned char *)pPacket->m_pData + sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION), sizeof(aVersionHash));
+
+	mem_copy(aData, VERSIONSRV_LUAVERSION, sizeof(VERSIONSRV_LUAVERSION));
+	bool Match = false;
+	if (mem_comp((unsigned char *)pPacket->m_pData + sizeof(VERSIONSRV_CHECKLUAVERSION), GAME_LUA_VERSION, sizeof(GAME_LUA_VERSION)) == 0)
+	{
+        mem_copy(aData + sizeof(VERSIONSRV_LUAVERSION), GAME_LUA_VERSION_MATCH, sizeof(GAME_LUA_VERSION_MATCH));
+	    Match = true;
+	}
+    else
+        mem_copy(aData + sizeof(VERSIONSRV_LUAVERSION), GAME_LUA_VERSION_NOTMATCH, sizeof(GAME_LUA_VERSION_NOTMATCH));
+    mem_copy(aData + sizeof(VERSIONSRV_LUAVERSION) + sizeof(GAME_LUA_VERSION_MATCH), GAME_LUA_VERSION, sizeof(GAME_LUA_VERSION));
+
+    dbg_msg("Ver", "%d.%d.%d.%d %s %s %s", pPacket->m_Address.ip[0], pPacket->m_Address.ip[1], pPacket->m_Address.ip[2], pPacket->m_Address.ip[3], aVersion, aVersionHash, Match ? "Match" : "Mismatch");
+
+	p.m_ClientID = -1;
+	p.m_Address = pPacket->m_Address;
 	p.m_Flags = NETSENDFLAG_CONNLESS;
 	p.m_pData = aData;
 	p.m_DataSize = sizeof(aData);
@@ -58,7 +90,12 @@ int main(int argc, char **argv) // ignore_convention
 			if(Packet.m_DataSize == sizeof(VERSIONSRV_GETLUAVERSION) &&
 				mem_comp(Packet.m_pData, VERSIONSRV_GETLUAVERSION, sizeof(VERSIONSRV_GETLUAVERSION)) == 0)
 			{
-				SendVer(&Packet.m_Address);
+				SendVerOld(&Packet.m_Address);
+			}
+			if(Packet.m_DataSize == sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION) + sizeof(GAME_LUA_VERSION_HASH) &&
+				mem_comp(Packet.m_pData, VERSIONSRV_CHECKLUAVERSION, sizeof(VERSIONSRV_CHECKLUAVERSION)) == 0)
+			{
+				SendVer(&Packet);
 			}
 		}
 

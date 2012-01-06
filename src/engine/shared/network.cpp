@@ -6,7 +6,6 @@
 #include "config.h"
 #include "network.h"
 #include "huffman.h"
-#include "game/protocol.h"
 
 void CNetRecvUnpacker::Clear()
 {

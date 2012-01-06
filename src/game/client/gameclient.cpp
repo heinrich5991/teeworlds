@@ -503,10 +503,6 @@ void CGameClient::OnRender()
     {
         m_Msgs = new CNMsg(this);
     }
-    if (!m_NChat)
-    {
-        m_NChat = new CNChat(this);
-    }
     if (!m_pLua)
     {
         m_pLua = new CLua(this);
@@ -528,7 +524,6 @@ void CGameClient::OnRender()
     }
 
     int64 overalltime = time_get(); //Debug timing
-    //m_NChat->Tick();
     m_Music->Tick();
     m_Msgs->Tick();
     m_pLua->Tick();

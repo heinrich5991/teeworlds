@@ -11,7 +11,6 @@
 #include <game/gamecore.h>
 #include "render.h"
 
-#include "nchat.h"
 #include "nmusic.h"
 #include "nmsgs.h"
 #include "lua.h"

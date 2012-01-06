@@ -5,7 +5,6 @@
 
 #include "ringbuffer.h"
 #include "huffman.h"
-#include <game/swap.h>
 #include <engine/shared/protocol.h>
 
 /*

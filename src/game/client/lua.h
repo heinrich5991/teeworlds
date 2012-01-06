@@ -404,6 +404,7 @@ public:
     //Sound
     static inline int LoadWvFile(lua_State *L);
     static inline int PlayWv(lua_State *L);
+    static inline int PlaySound(lua_State *L);
 
     //LuaNetWork
     static inline int FetchPacket(lua_State *L);

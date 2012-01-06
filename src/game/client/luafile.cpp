@@ -2,7 +2,6 @@
 #include "lua.h"
 #include "components/flow.h"
 #include "components/particles.h"
-#include "components/menus.h"
 
 #include <game/generated/client_data.h>
 
@@ -19,6 +18,7 @@
 #include <game/client/components/chat.h>
 #include <game/client/components/countryflags.h>
 #include <game/client/components/skins.h>
+#include <game/client/components/sounds.h>
 
 CLuaFile::CLuaFile()
 {
@@ -288,6 +288,7 @@ void CLuaFile::Init(const char *pFile)
     //Sound
     lua_register(m_pLua, "LoadWvFile", this->LoadWvFile);
     lua_register(m_pLua, "PlayWv", this->PlayWv);
+    lua_register(m_pLua, "PlaySound", this->PlaySound);
 
     //keys
     lua_register(m_pLua, "GetKeyFlags", this->GetKeyFlags);
@@ -2809,7 +2810,7 @@ int CLuaFile::PlayWv(lua_State *L)
         return 0;
 
     int Flags = ISound::FLAG_POS;
-    if (lua_isnumber(L, 2) && lua_tonumber(L, 2) == 1)
+    if (lua_isnumber(L, 2) && lua_tointeger(L, 2) == 1)
         Flags = 0;
 
     float x = 0;
@@ -2818,12 +2819,37 @@ int CLuaFile::PlayWv(lua_State *L)
     if (lua_isnumber(L, 3) && lua_isnumber(L, 4))
     {
         x = lua_tonumber(L, 3);
+        y = lua_tonumber(L, 4);
+    }
+
+    pSelf->m_pClient->Sound()->PlayAt(CSounds::CHN_WORLD, lua_tointeger(L, 1), Flags, x, y);
+    return 0;
+}
+
+int CLuaFile::PlaySound(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if(!lua_isnumber(L, 1))
+        return 0;
+
+
+    float x = 0;
+    float y = 0;
+
+    if (lua_isnumber(L, 2) && lua_isnumber(L, 3))
+    {
+        x = lua_tonumber(L, 2);
         y = lua_tonumber(L, 3);
     }
 
-    dbg_msg("", "play sound");
+    dbg_msg("", "play sound: %i", lua_tointeger(L, 1));
 
-    pSelf->m_pClient->Sound()->PlayAt(2, lua_tointeger(L, 1), Flags, x, y);
+    pSelf->m_pClient->m_pSounds->Play(CSounds::CHN_WORLD, lua_tointeger(L, 1), 1.0f, vec2(x, y));
     return 0;
 }
 

@@ -914,23 +914,24 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 	if(m_VersionLuaInfo.m_State == CVersionInfo::STATE_READY && net_addr_comp(&pPacket->m_Address, &m_VersionLuaInfo.m_VersionServeraddr.m_Addr) == 0)
 	{
 		// version info
-		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_LUAVERSION) + sizeof(GAME_LUA_VERSION_MATCH) + sizeof(GAME_LUA_VERSION)) &&
+		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_LUAVERSION) + sizeof("1") + sizeof(GAME_LUA_VERSION)) &&
 			mem_comp(pPacket->m_pData, VERSIONSRV_LUAVERSION, sizeof(VERSIONSRV_LUAVERSION)) == 0)
 
 		{
-			char VersionMatch = (char)((unsigned char *)pPacket->m_pData + sizeof(VERSIONSRV_LUAVERSION))[0];
-			unsigned char *pVersionData = (unsigned char *)pPacket->m_pData + sizeof(VERSIONSRV_LUAVERSION) + sizeof(GAME_LUA_VERSION_MATCH);
+			char VersionMatch = ((unsigned char*)pPacket->m_pData + sizeof(VERSIONSRV_LUAVERSION))[0];
+			char aVersionData[sizeof(GAME_LUA_VERSION)];
+			mem_copy(aVersionData, (unsigned char*)pPacket->m_pData + sizeof(VERSIONSRV_LUAVERSION) + sizeof("1"), sizeof(GAME_LUA_VERSION));
 
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "version does %s (%s)",
 				VersionMatch == '1' ? "match" : "NOT match",
-				pVersionData);
+				aVersionData);
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/version", aBuf);
 
 			// assume version is out of date when version-data doesn't match
 			if (VersionMatch == '0')
 			{
-				str_format(m_aLuaVersionStr, sizeof(m_aLuaVersionStr), "%s", pVersionData);
+				str_format(m_aLuaVersionStr, sizeof(m_aLuaVersionStr), "%s", aVersionData);
 			}
 		}
 	}
@@ -1938,8 +1939,7 @@ void CClient::VersionLuaUpdate()
 {
 	if(m_VersionLuaInfo.m_State == CVersionInfo::STATE_INIT)
 	{
-		//Engine()->HostLookup(&m_VersionLuaInfo.m_VersionServeraddr, "version.n-lvl.com", m_BindAddr.type);
-		Engine()->HostLookup(&m_VersionLuaInfo.m_VersionServeraddr, "127.0.0.1", m_BindAddr.type);
+		Engine()->HostLookup(&m_VersionLuaInfo.m_VersionServeraddr, "version.n-lvl.com", m_BindAddr.type);
 		m_VersionLuaInfo.m_State = CVersionInfo::STATE_START;
 	}
 	else if(m_VersionLuaInfo.m_State == CVersionInfo::STATE_START)
@@ -1954,15 +1954,15 @@ void CClient::VersionLuaUpdate()
 
 			Packet.m_ClientID = -1;
 			Packet.m_Address = m_VersionLuaInfo.m_VersionServeraddr.m_Addr;
-			char aData[sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION) + sizeof(GAME_LUA_VERSION_HASH)];
-			mem_copy(aData, VERSIONSRV_CHECKLUAVERSION, sizeof(VERSIONSRV_CHECKLUAVERSION));
-			mem_copy(aData + sizeof(VERSIONSRV_CHECKLUAVERSION), GAME_LUA_VERSION, sizeof(GAME_LUA_VERSION));
-			mem_copy(aData + sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION), GAME_LUA_VERSION_HASH, sizeof(GAME_LUA_VERSION_HASH));
-			Packet.m_pData = aData;
-			Packet.m_DataSize = sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION) + sizeof(GAME_LUA_VERSION_HASH);
+			char aBuf[sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION) +  sizeof(GAME_LUA_VERSION_HASH)];
+			mem_copy(aBuf, VERSIONSRV_CHECKLUAVERSION, sizeof(VERSIONSRV_CHECKLUAVERSION));
+			mem_copy(aBuf + sizeof(VERSIONSRV_CHECKLUAVERSION), GAME_LUA_VERSION, sizeof(GAME_LUA_VERSION));
+			mem_copy(aBuf + sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION), GAME_LUA_VERSION_HASH, sizeof(GAME_LUA_VERSION_HASH));
+			Packet.m_pData = aBuf;
+			Packet.m_DataSize = sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION) +  sizeof(GAME_LUA_VERSION_HASH);
 			Packet.m_Flags = NETSENDFLAG_CONNLESS;
 
-			m_NetClient.Send(&Packet);
+            m_NetClient.Send(&Packet);
 			m_VersionLuaInfo.m_State = CVersionInfo::STATE_READY;
 		}
 	}

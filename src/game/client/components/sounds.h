@@ -3,6 +3,7 @@
 #ifndef GAME_CLIENT_COMPONENTS_SOUNDS_H
 #define GAME_CLIENT_COMPONENTS_SOUNDS_H
 #include <game/client/component.h>
+#include <engine/shared/jobs.h>
 
 class CSounds : public CComponent
 {

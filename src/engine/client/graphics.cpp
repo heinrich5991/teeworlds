@@ -282,18 +282,6 @@ int CGraphics_OpenGL::UnloadTexture(int Index)
 	return 0;
 }
 
-int CGraphics_OpenGL::LoadTextureRawSub(int TextureID, int x, int y, int Width, int Height, int Format, const void *pData)
-{
-	int Oglformat = GL_RGBA;
-	if(Format == CImageInfo::FORMAT_RGB)
-		Oglformat = GL_RGB;
-	else if(Format == CImageInfo::FORMAT_ALPHA)
-		Oglformat = GL_ALPHA;
-
-	glBindTexture(GL_TEXTURE_2D, m_aTextures[TextureID].m_Tex);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, Width, Height, Oglformat, GL_UNSIGNED_BYTE, pData);
-	return 0;
-}
 
 int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
 {
@@ -364,19 +352,9 @@ int CGraphics_OpenGL::LoadTextureRaw(int Width, int Height, int Format, const vo
 
 	glGenTextures(1, &m_aTextures[Tex].m_Tex);
 	glBindTexture(GL_TEXTURE_2D, m_aTextures[Tex].m_Tex);
-
-	if(Flags&TEXLOAD_NOMIPMAPS)
-	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, StoreOglformat, Width, Height, 0, Oglformat, GL_UNSIGNED_BYTE, pData);
-	}
-	else
-	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, Width, Height, Oglformat, GL_UNSIGNED_BYTE, pTexData);
-	}
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, Width, Height, Oglformat, GL_UNSIGNED_BYTE, pTexData);
 
 	// calculate memory usage
 	{
@@ -875,7 +853,7 @@ void CGraphics_OpenGL::QuadsText(float x, float y, float Size, float r, float g,
 	QuadsEnd();
 }
 
-int CGraphics_OpenGL::Init()
+bool CGraphics_OpenGL::Init()
 {
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
@@ -911,7 +889,7 @@ int CGraphics_OpenGL::Init()
 
 	m_InvalidTexture = LoadTextureRaw(4,4,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE);
 
-	return 0;
+	return true;
 }
 
 int CGraphics_SDL::TryInit()
@@ -1009,7 +987,7 @@ CGraphics_SDL::CGraphics_SDL()
 	m_pScreenSurface = 0;
 }
 
-int CGraphics_SDL::Init()
+bool CGraphics_SDL::Init()
 {
 	{
 		int Systems = SDL_INIT_VIDEO;
@@ -1023,7 +1001,7 @@ int CGraphics_SDL::Init()
 		if(SDL_Init(Systems) < 0)
 		{
 			dbg_msg("gfx", "unable to init SDL: %s", SDL_GetError());
-			return -1;
+			return true;
 		}
 	}
 
@@ -1035,14 +1013,14 @@ int CGraphics_SDL::Init()
 	#endif
 
 	if(InitWindow() != 0)
-		return -1;
+		return true;
 
 	SDL_ShowCursor(0);
 
 	CGraphics_OpenGL::Init();
 
 	MapScreen(0,0,g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
-	return 0;
+	return false;
 }
 
 void CGraphics_SDL::Shutdown()
@@ -1163,21 +1141,6 @@ int CGraphics_SDL::GetVideoModes(CVideoMode *pModes, int MaxModes)
 	}
 
 	return NumModes;
-}
-
-// syncronization
-void CGraphics_SDL::InsertSignal(semaphore *pSemaphore)
-{
-	pSemaphore->signal();
-}
-
-bool CGraphics_SDL::IsIdle()
-{
-	return true;
-}
-
-void CGraphics_SDL::WaitForIdle()
-{
 }
 
 extern IEngineGraphics *CreateEngineGraphics() { return new CGraphics_SDL(); }

@@ -2,14 +2,12 @@
 #include "lua.h"
 #include "components/flow.h"
 #include "components/particles.h"
-#include "components/menus.h"
 
 #include <game/generated/client_data.h>
 
 #include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/sound.h>
-#include <game/client/components/sounds.h>
 #include <engine/graphics.h>
 #include <engine/storage.h>
 #include <engine/shared/throttle.h>
@@ -20,6 +18,7 @@
 #include <game/client/components/chat.h>
 #include <game/client/components/countryflags.h>
 #include <game/client/components/skins.h>
+#include <game/client/components/sounds.h>
 
 CLuaFile::CLuaFile()
 {
@@ -2823,7 +2822,7 @@ int CLuaFile::PlayWv(lua_State *L)
         y = lua_tonumber(L, 4);
     }
 
-    pSelf->m_pClient->m_pSounds->Play(CSounds::CHN_WORLD, lua_tointeger(L, 1), Flags, x, y);
+    pSelf->m_pClient->Sound()->PlayAt(CSounds::CHN_WORLD, lua_tointeger(L, 1), Flags, x, y);
     return 0;
 }
 
@@ -2850,7 +2849,7 @@ int CLuaFile::PlaySound(lua_State *L)
 
     dbg_msg("", "play sound: %i", lua_tointeger(L, 1));
 
-    pSelf->m_pClient->m_pSounds->Play(CSounds::CHN_WORLD, lua_tointeger(L, 1), Vol, x, y);
+    pSelf->m_pClient->m_pSounds->Play(CSounds::CHN_WORLD, lua_tointeger(L, 1), 1.0f, vec2(x, y));
     return 0;
 }
 

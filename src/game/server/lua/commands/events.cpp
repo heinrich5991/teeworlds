@@ -227,3 +227,41 @@ int CLuaFile::ExplosionAbort(lua_State *L)
     pSelf->m_pLuaHandler->m_EventListener.m_ExplosionAbort = true;
     return 0;
 }
+
+int CLuaFile::GetClientConnectClientID(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_OnClientConnectClientID);
+    return 1;
+}
+
+int CLuaFile::GetClientEnterClientID(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_OnClientEnterClientID);
+    return 1;
+}
+
+int CLuaFile::AbortSpawn(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    pSelf->m_pLuaHandler->m_EventListener.m_AbortSpawn = true;
+    return 0;
+}
+
+

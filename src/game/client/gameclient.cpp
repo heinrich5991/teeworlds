@@ -379,6 +379,14 @@ void CGameClient::OnReset()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		m_aClients[i].Reset();
 
+    for (int i = 0; i < MAX_LUA_FILES; i++)
+    {
+        if (m_pLuaCore->GetLuaSaveOption(i))
+        {
+            m_pLuaCore->DeleteLuaFile(i);
+        }
+    }
+
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
 
@@ -613,7 +621,6 @@ void CGameClient::OnLuaPacket(CUnpacker *pUnpacker)
 	}
 
     g_GameClient.m_pLua->m_EventListener.m_pNetData = aData; //Fetch Data
-    dbg_msg("", "%i %s", RawSize, aData);
     g_GameClient.m_pLua->m_EventListener.OnEvent("OnNetData"); //Call lua
     g_GameClient.m_pLua->m_EventListener.m_pNetData = 0; //Null-Pointer
 }

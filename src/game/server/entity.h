@@ -76,6 +76,7 @@ public:
 	class IServer *Server() { return GameWorld()->Server(); }
 
 	int GetID() { return m_ID; }
+	int GetType() { return m_ObjType; }
 
 	CEntity *TypeNext() { return m_pNextTypeEntity; }
 	CEntity *TypePrev() { return m_pPrevTypeEntity; }

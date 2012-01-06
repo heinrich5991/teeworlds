@@ -245,6 +245,7 @@ public:
     static inline int CharacterGetArmor(lua_State *L);
     static inline int CharacterSpawn(lua_State *L);
     static inline int CharacterIsAlive(lua_State *L);
+    static inline int IsGrounded(lua_State *L);
 
     static inline int Win(lua_State *L);
 

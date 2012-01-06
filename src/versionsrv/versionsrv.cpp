@@ -31,7 +31,7 @@ void SendVerOld(NETADDR *pAddr)
 void SendVer(CNetChunk *pPacket)
 {
 	CNetChunk p;
-	unsigned char aData[sizeof(VERSIONSRV_LUAVERSION) + sizeof(GAME_LUA_VERSION_MATCH) + sizeof(GAME_LUA_VERSION)];
+	unsigned char aData[sizeof(VERSIONSRV_LUAVERSION) + sizeof("1") + sizeof(GAME_LUA_VERSION)];
 
     char aVersion[sizeof(GAME_LUA_VERSION)];
     char aVersionHash[sizeof(GAME_LUA_VERSION_HASH)];
@@ -42,12 +42,12 @@ void SendVer(CNetChunk *pPacket)
 	bool Match = false;
 	if (mem_comp((unsigned char *)pPacket->m_pData + sizeof(VERSIONSRV_CHECKLUAVERSION), GAME_LUA_VERSION, sizeof(GAME_LUA_VERSION)) == 0)
 	{
-        mem_copy(aData + sizeof(VERSIONSRV_LUAVERSION), GAME_LUA_VERSION_MATCH, sizeof(GAME_LUA_VERSION_MATCH));
+        mem_copy(aData + sizeof(VERSIONSRV_LUAVERSION), "1", sizeof("1"));
 	    Match = true;
 	}
     else
-        mem_copy(aData + sizeof(VERSIONSRV_LUAVERSION), GAME_LUA_VERSION_NOTMATCH, sizeof(GAME_LUA_VERSION_NOTMATCH));
-    mem_copy(aData + sizeof(VERSIONSRV_LUAVERSION) + sizeof(GAME_LUA_VERSION_MATCH), GAME_LUA_VERSION, sizeof(GAME_LUA_VERSION));
+        mem_copy(aData + sizeof(VERSIONSRV_LUAVERSION), "0", sizeof("0"));
+    mem_copy(aData + sizeof(VERSIONSRV_LUAVERSION) + sizeof("1"), GAME_LUA_VERSION, sizeof(GAME_LUA_VERSION));
 
     dbg_msg("Ver", "%d.%d.%d.%d %s %s %s", pPacket->m_Address.ip[0], pPacket->m_Address.ip[1], pPacket->m_Address.ip[2], pPacket->m_Address.ip[3], aVersion, aVersionHash, Match ? "Match" : "Mismatch");
 
@@ -86,16 +86,19 @@ int main(int argc, char **argv) // ignore_convention
 		CNetChunk Packet;
 		while(g_NetOp.Recv(&Packet))
 		{
-		    dbg_msg("From", "%d.%d.%d.%d", Packet.m_Address.ip[0], Packet.m_Address.ip[1], Packet.m_Address.ip[2], Packet.m_Address.ip[3]);
-			if(Packet.m_DataSize == sizeof(VERSIONSRV_GETLUAVERSION) &&
-				mem_comp(Packet.m_pData, VERSIONSRV_GETLUAVERSION, sizeof(VERSIONSRV_GETLUAVERSION)) == 0)
+
+			if(Packet.m_DataSize == sizeof(VERSIONSRV_GETLUAVERSION) && mem_comp(Packet.m_pData, VERSIONSRV_GETLUAVERSION, sizeof(VERSIONSRV_GETLUAVERSION)) == 0)
 			{
+			    dbg_msg("From", "%d.%d.%d.%d", Packet.m_Address.ip[0], Packet.m_Address.ip[1], Packet.m_Address.ip[2], Packet.m_Address.ip[3]);
 				SendVerOld(&Packet.m_Address);
 			}
-			if(Packet.m_DataSize == sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION) + sizeof(GAME_LUA_VERSION_HASH) &&
-				mem_comp(Packet.m_pData, VERSIONSRV_CHECKLUAVERSION, sizeof(VERSIONSRV_CHECKLUAVERSION)) == 0)
+			else if(Packet.m_DataSize == sizeof(VERSIONSRV_CHECKLUAVERSION) + sizeof(GAME_LUA_VERSION) + sizeof(GAME_LUA_VERSION_HASH) && mem_comp(Packet.m_pData, VERSIONSRV_CHECKLUAVERSION, sizeof(VERSIONSRV_CHECKLUAVERSION)) == 0)
 			{
 				SendVer(&Packet);
+			}
+			else
+			{
+			    dbg_msg("Malformed", "%d.%d.%d.%d", Packet.m_Address.ip[0], Packet.m_Address.ip[1], Packet.m_Address.ip[2], Packet.m_Address.ip[3]);
 			}
 		}
 

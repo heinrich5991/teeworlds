@@ -8,7 +8,7 @@
 MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
 
 IServer *CPlayer::Server() const { return m_pGameServer->Server(); }
-	
+
 CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, int Team)
 {
 	m_pGameServer = pGameServer;
@@ -236,7 +236,7 @@ void CPlayer::SetTeam(int Team, bool DoChatMsg)
 	Team = GameServer()->m_pController->ClampTeam(Team);
 	if(m_Team == Team)
 		return;
-		
+
 	char aBuf[512];
 	if(DoChatMsg)
 	{
@@ -252,7 +252,7 @@ void CPlayer::SetTeam(int Team, bool DoChatMsg)
 	m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' m_Team=%d", m_ClientID, Server()->ClientName(m_ClientID), m_Team);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-	
+
 	GameServer()->m_pController->OnPlayerInfoChange(GameServer()->m_apPlayers[m_ClientID]);
 
 	if(Team == TEAM_SPECTATORS)
@@ -269,11 +269,21 @@ void CPlayer::SetTeam(int Team, bool DoChatMsg)
 void CPlayer::TryRespawn()
 {
 	vec2 SpawnPos;
-	
+
 	if(!GameServer()->m_pController->CanSpawn(m_Team, &SpawnPos))
 		return;
 
 	m_Spawning = false;
+	m_pCharacter = new(m_ClientID) CCharacter(&GameServer()->m_World);
+	m_pCharacter->Spawn(this, SpawnPos);
+	GameServer()->CreatePlayerSpawn(SpawnPos);
+}
+
+void CPlayer::Spawn(vec2 SpawnPos)
+{
+    m_Spawning = false;
+    if (m_pCharacter)
+        return;
 	m_pCharacter = new(m_ClientID) CCharacter(&GameServer()->m_World);
 	m_pCharacter->Spawn(this, SpawnPos);
 	GameServer()->CreatePlayerSpawn(SpawnPos);

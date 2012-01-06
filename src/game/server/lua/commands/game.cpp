@@ -101,3 +101,15 @@ int CLuaFile::CreateDamageIndicator(lua_State *L)
 
     return 0;
 }
+
+int CLuaFile::Win(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    pSelf->m_pServer->m_pController->EndRound();
+    return 0;
+}

@@ -570,6 +570,10 @@ void CGameContext::OnClientEnter(int ClientID)
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
 	m_VoteUpdate = true;
+
+    m_pLua->m_EventListener.m_OnClientEnterClientID = ClientID;
+	m_pLua->m_EventListener.OnEvent("OnClientEnter");
+	m_pLua->m_EventListener.m_OnClientEnterClientID = -1;
 }
 
 void CGameContext::OnClientConnected(int ClientID)
@@ -599,6 +603,10 @@ void CGameContext::OnClientConnected(int ClientID)
 	CNetMsg_Sv_Motd Msg;
 	Msg.m_pMessage = g_Config.m_SvMotd;
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
+
+    m_pLua->m_EventListener.m_OnClientConnectClientID = ClientID;
+	m_pLua->m_EventListener.OnEvent("OnClientConnect");
+	m_pLua->m_EventListener.m_OnClientConnectClientID = -1;
 }
 
 void CGameContext::OnClientDrop(int ClientID, const char *pReason)
@@ -1050,7 +1058,6 @@ void CGameContext::OnLuaPacket(CUnpacker *pUnpacker, int ClientID)
 
 
     m_pLua->m_EventListener.m_pNetData = aData; //Fetch Data
-    dbg_msg("", "%i %s", RawSize, aData);
     m_pLua->m_EventListener.m_pNetClientID = ClientID; //Fetch Data
 	m_pLua->m_EventListener.OnEvent("OnNetData"); //Call lua
 	m_pLua->m_EventListener.m_pNetData = 0; //Null-Pointer

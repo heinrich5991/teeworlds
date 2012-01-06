@@ -20,7 +20,7 @@ void CLua::ConAddLuaFile(IConsole::IResult *pResult, void *pUserData)
 void CLua::AddLuaFile(char *pFileDir, bool NoSave)
 {
 	char aBuf[1024];
-	str_format(aBuf, sizeof(aBuf), "lua/%s", pFileDir);	
+	str_format(aBuf, sizeof(aBuf), "lua/%s", pFileDir);
 	int Free = -1;
     for (int i = 0; i < MAX_LUA_FILES; i++)
     {
@@ -31,9 +31,9 @@ void CLua::AddLuaFile(char *pFileDir, bool NoSave)
 		if(Free == -2)
 			break;
     }
-	
+
     if (Free > -1 && Free < MAX_LUA_FILES)
-		str_copy(m_aLuaFiles[Free], aBuf, sizeof(m_aLuaFiles[Free]));	
+		str_copy(m_aLuaFiles[Free], aBuf, sizeof(m_aLuaFiles[Free]));
 }
 void CLua::ConListLuaFiles(IConsole::IResult *pResult, void *pUserData)
 {
@@ -68,7 +68,9 @@ void CLua::ConDeleteAllLuaFiles(IConsole::IResult *pResult, void *pUserData)
 void CLua::DeleteLuaFile(int i)
 {
     if (i >= 0 && i < MAX_LUA_FILES)
+    {
         str_copy(m_aLuaFiles[i], "", sizeof(m_aLuaFiles[i]));
+    }
 }
 void CLua::DeleteLuaFile(char *pFileDir)
 {

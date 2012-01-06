@@ -1181,7 +1181,13 @@ int CMenus::Render()
 					}
 
 					// update download speed
-					float Diff = (Client()->FileDownloadAmount()-m_DownloadLastCheckSize)/1024.0f;
+                    float Diff = Client()->FileDownloadAmount()-m_DownloadLastCheckSize;
+                    float StartDiff = m_DownloadLastCheckSize-0.0f;
+                    if(StartDiff+Diff > 0.0f)
+                        m_DownloadSpeed = (Diff/(StartDiff+Diff))*(Diff/1.0f) + (StartDiff/(Diff+StartDiff))*m_DownloadSpeed;
+                    else
+                        m_DownloadSpeed = 0.0f;
+
 					m_DownloadSpeed = absolute((m_DownloadSpeed*(1.0f-(1.0f/m_DownloadSpeed))) + (Diff*(1.0f/m_DownloadSpeed)));
 					m_DownloadLastCheckTime = Now;
 					m_DownloadLastCheckSize = Client()->FileDownloadAmount();
@@ -1189,7 +1195,7 @@ int CMenus::Render()
 
 				Box.HSplitTop(64.f, 0, &Box);
 				Box.HSplitTop(24.f, &Part, &Box);
-				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->FileDownloadAmount()/1024, Client()->FileDownloadTotalsize()/1024,	m_DownloadSpeed);
+				str_format(aBuf, sizeof(aBuf), "%d/%d KiB (%.1f KiB/s)", Client()->FileDownloadAmount()/1024, Client()->FileDownloadTotalsize()/1024, m_DownloadSpeed / 1024);
 				UI()->DoLabel(&Part, aBuf, 20.f, 0, -1);
 
 				// time left

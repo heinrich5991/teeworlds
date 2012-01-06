@@ -140,7 +140,9 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	IOHANDLE m_FileDownloadHandle;
 	int m_FileDownloadAmount;
 	int m_FileDownloadTotalSize;
-	
+	char *m_pFileDownloadCache;
+	int m_FileDownloadSegments;
+
 	array<CModFile> m_lModFiles;
 
 	// time
@@ -322,7 +324,7 @@ public:
 	void AutoScreenshot_Cleanup();
 
 	void ServerBrowserUpdate();
-	
+
 	bool GetLuaSaveOption(int i){return m_Lua.GetLuaSaveOption(i);};
 };
 #endif

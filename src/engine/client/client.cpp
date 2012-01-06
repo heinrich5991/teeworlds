@@ -581,6 +581,8 @@ void CClient::DisconnectWithReason(const char *pReason)
 
 	m_FileDownloadTotalSize = -1;
 	m_FileDownloadAmount = 0;
+	m_FileDownloadSegments = 0;
+	m_pFileDownloadCache = 0;
 
 	// clear the current server info
 	mem_zero(&m_CurrentServerInfo, sizeof(m_CurrentServerInfo));
@@ -1127,62 +1129,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				}
 			}
 		}
-		else if(Msg == NETMSG_MAP_DATA && 0)
-		{
-			int Last = Unpacker.GetInt();
-			int MapCRC = Unpacker.GetInt();
-			int Chunk = Unpacker.GetInt();
-			int Size = Unpacker.GetInt();
-			const unsigned char *pData = Unpacker.GetRaw(Size);
-
-			// check fior errors
-			if(Unpacker.Error() || Size <= 0 || MapCRC != m_MapdownloadCrc || Chunk != m_MapdownloadChunk || !m_MapdownloadFile)
-				return;
-
-			io_write(m_MapdownloadFile, pData, Size);
-
-			m_MapdownloadAmount += Size;
-
-			if(Last)
-			{
-				const char *pError;
-				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "download complete, loading map");
-
-				if(m_MapdownloadFile)
-					io_close(m_MapdownloadFile);
-				m_MapdownloadFile = 0;
-				m_MapdownloadAmount = 0;
-				m_MapdownloadTotalsize = -1;
-
-				// load map
-				pError = LoadMap(m_aMapdownloadName, m_aMapdownloadFilename, m_MapdownloadCrc);
-				if(!pError)
-				{
-					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
-					if (m_FileDownloadTotalSize == -1)
-                        SendReady();
-				}
-				else
-					DisconnectWithReason(pError);
-			}
-			else
-			{
-				// request new chunk
-				m_MapdownloadChunk++;
-
-				CMsgPacker Msg(NETMSG_REQUEST_MAP_DATA);
-				Msg.AddInt(m_MapdownloadChunk);
-				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
-
-				if(g_Config.m_Debug)
-				{
-					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk);
-					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
-				}
-			}
-		}
-		else if(Msg == NETMSG_MAP_DATA && 1)
+		else if(Msg == NETMSG_MAP_DATA)
 		{
 			int Last = Unpacker.GetInt();
 			int MapCRC = Unpacker.GetInt();
@@ -1579,6 +1526,12 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
                 io_close(m_FileDownloadHandle);
             m_FileDownloadHandle = Storage()->OpenFile(aFileName, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 
+            m_pFileDownloadCache = new char[tmp.m_Size];
+            for (int x = 0; x < ((float)tmp.m_Size - 1) / (1024.0f - 128.0f) + 1; x++)
+            {
+                m_pFileDownloadCache[x] = 0;
+            }
+
 
             CMsgPacker Msg(NETMSG_REQUEST_FILE_DATA);
             m_ModFileCurrentChunk = 0;
@@ -1595,15 +1548,15 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			const unsigned char *pData = Unpacker.GetRaw(Size);
 
 			// check fior errors
-			if(Unpacker.Error() || Size <= 0 || FileCRC != m_lModFiles[m_ModFileCurrentNumber].m_Crc || Chunk != m_ModFileCurrentChunk || !m_FileDownloadHandle)
+			if(Unpacker.Error() || Size <= 0 || FileCRC != m_lModFiles[m_ModFileCurrentNumber].m_Crc || !m_FileDownloadHandle)
 				return;
 
-			io_write(m_FileDownloadHandle, pData, Size);
-
 			m_FileDownloadAmount += Size;
+            mem_copy(&m_pFileDownloadCache[(1024-128) * Chunk], pData, Size);
 
 			if(Last)
 			{
+			    io_write(m_FileDownloadHandle, m_pFileDownloadCache, m_lModFiles[m_ModFileCurrentNumber].m_Size);
 				if(m_FileDownloadHandle)
 					io_close(m_FileDownloadHandle);
 				m_FileDownloadHandle = 0;
@@ -1630,21 +1583,28 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			}
 			else
 			{
-				// request new chunk
-				m_ModFileCurrentChunk++;
+			    while(m_FileDownloadSegments < g_Config.m_ClDownloadSegments)
+			    {
+                    // request new chunk
+                    m_ModFileCurrentChunk++;
+                    m_FileDownloadSegments++;
 
-				CMsgPacker Msg(NETMSG_REQUEST_FILE_DATA);
-				Msg.AddInt(m_ModFileCurrentNumber);
-				Msg.AddInt(m_ModFileCurrentChunk);
-				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+                    //m_pMapdownloadChecks[m_MapdownloadChunk] = 1;
 
-				if(g_Config.m_Debug)
-				{
-					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_ModFileCurrentChunk);
-					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
-				}
+                    CMsgPacker Msg(NETMSG_REQUEST_FILE_DATA);
+                    Msg.AddInt(m_ModFileCurrentNumber);
+                    Msg.AddInt(m_ModFileCurrentChunk);
+                    SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+
+                    if(g_Config.m_Debug)
+                    {
+                        char aBuf[256];
+                        str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk);
+                        m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
+                    }
+			    }
 			}
+			m_FileDownloadSegments--;
         }
         else if(Msg ==NETMSG_LUA_DATA)
         {

@@ -822,8 +822,21 @@ int CMenus::LuaFetchCallback(const char *pName, int IsDir, int StorageType, void
 	if (str_comp(pName+Length-4, ".lua"))
 		return 0;
     for (int i = 0; i < MAX_LUA_FILES; i++)
-        if (!str_comp(pName, pSelf->m_pClient->m_pLuaCore->GetFileDir(i)))
-            return 0;
+    {
+        char aBuf[256];
+        const char *pPart = str_find_rev(pSelf->m_pClient->m_pLuaCore->GetFileDir(i), "/");
+        if (pPart)
+        {
+            if (!str_comp(pName, pPart))
+                return 0;
+        }
+        else
+        {
+            if (!str_comp(pName, pSelf->m_pClient->m_pLuaCore->GetFileDir(i)))
+                return 0;
+        }
+
+    }
 
 
 	CLuaItem Item;
@@ -876,13 +889,12 @@ void CMenus::RenderSettingsLua(CUIRect MainView)
         if (s_AddScriptMode == 0)
         {
             static int s_NumNodes = -1;
+            int NumLuaFiles = 0;
             if (s_NumNodes == -1)
             {
-                s_NumNodes = 0;
                 for (int i = 0; i < MAX_LUA_FILES; i++)
                     if (m_pClient->m_pLua->m_aLuaFiles[i].GetScriptName()[0])
-                        s_NumNodes++;
-
+                        NumLuaFiles++;
             }
 
             // display mode list
@@ -892,7 +904,7 @@ void CMenus::RenderSettingsLua(CUIRect MainView)
             static int pIDButtonSettings[MAX_LUA_FILES];
             int OldSelected = -1;
 
-            UiDoListboxStart(&s_NumNodes , &MainView, 50.0f, Localize("Lua files"), "", s_NumNodes, 1, OldSelected, s_ScrollValue);
+            UiDoListboxStart(&s_NumNodes , &MainView, 50.0f, Localize("Lua files"), "", NumLuaFiles, 1, OldSelected, s_ScrollValue);
 
             for(int i = 0; i < MAX_LUA_FILES; i++)
             {
@@ -920,11 +932,7 @@ void CMenus::RenderSettingsLua(CUIRect MainView)
                     ButtonSettings.HMargin(15.0f, &ButtonSettings);
                     ButtonSettings.VMargin(5.0f, &ButtonSettings);
 
-                    if (m_pClient->m_pLuaCore->GetFileDir(i)[0] == 0)
-                    {
-                        UI()->DoLabelScaled(&ButtonDeactivate, "Deactivated", 14.0f, -1);
-                    }
-                    else if (DoButton_Menu(&pIDButtonDeactivate[i], Localize("Deactivate"), false, &ButtonDeactivate))
+                    if (DoButton_Menu(&pIDButtonDeactivate[i], Localize("Deactivate"), false, &ButtonDeactivate))
                     {
                         m_pClient->m_pLuaCore->DeleteLuaFile(i);
                         m_NeedRestartLua = true;

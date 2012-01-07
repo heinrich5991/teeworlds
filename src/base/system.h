@@ -950,6 +950,23 @@ const char *str_find_nocase(const char *haystack, const char *needle);
 const char *str_find(const char *haystack, const char *needle);
 
 /*
+	Function: str_find_rev
+		Finds a string inside another string case sensitive.
+
+	Parameters:
+		haystack - String to search in
+		needle - String to search for
+
+	Returns:
+		A pointer into haystack where the needle was found.
+		Returns NULL of needle could not be found.
+
+	Remarks:
+		- The strings are treated as zero-termineted strings.
+*/
+const char *str_find_rev(const char *haystack, const char *needle);
+
+/*
 	Function: str_hex
 		Takes a datablock and generates a hexstring of it.
 

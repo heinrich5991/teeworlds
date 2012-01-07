@@ -63,9 +63,10 @@ public:
 			fs_makedir(GetPath(TYPE_SAVE, "downloadedfiles", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "demos", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "demos/auto", aPath, sizeof(aPath)));
+			fs_makedir(GetPath(TYPE_SAVE, "demos/race", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "tmp", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "tmp/pixelstream", aPath, sizeof(aPath))); //maybe used later
-			fs_makedir(GetPath(TYPE_SAVE, "ghosts", aPath, sizeof(aPath))); //race
+			fs_makedir(GetPath(TYPE_SAVE, "ghosts/race", aPath, sizeof(aPath))); //race
 			fs_makedir(GetPath(TYPE_SAVE, "ghosts/ddrace", aPath, sizeof(aPath))); //ddrace: i know you will hate me :/
 			fs_makedir(GetPath(TYPE_SAVE, "stats", aPath, sizeof(aPath)));
 		}

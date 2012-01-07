@@ -16,15 +16,15 @@ public:
 	CLua();
 
 	char m_aLuaFiles[MAX_LUA_FILES][1024];
-	char m_aLuaFilesSave[MAX_LUA_FILES][1024];
+	bool m_aLuaFilesSave[MAX_LUA_FILES];
 	char *GetFileDir(int i);
     void DeleteLuaFile(int i);
     void DeleteLuaFile(char *pFileDir);
     void DeleteAllLuaFiles();
     void AddLuaFile(char *pFileDir, bool NoSave = false);
 
-	bool GetLuaSaveOption(int i){if(i > -1 && i < MAX_LUA_FILES){return m_aLuaFilesSave[i];} return false;};
-	
+	bool GetLuaSaveOption(int i){if(i >= 0 && i < MAX_LUA_FILES) {return m_aLuaFilesSave[i];} return false;};
+
 	static void ConAddLuaFile(IConsole::IResult *pResult, void *pUserData);
 
 	void Init();

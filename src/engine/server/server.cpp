@@ -1332,7 +1332,7 @@ void CServer::AddModFile(const char *pFileDir, const char *pFileName, int Type, 
 {
     CModFile tmp;
     str_copy(tmp.m_aName, pFileName, sizeof(tmp.m_aName));
-    tmp.m_pFileDir = (char *)pFileDir;
+    str_copy(tmp.m_aFileDir, pFileDir, sizeof(tmp.m_aFileDir));
     tmp.m_Type = (CModFile::FILETYPE)Type;
     tmp.m_Flags = Flags;
     IOHANDLE File = Storage()->OpenFile(pFileDir, IOFLAG_READ, IStorage::TYPE_ALL);
@@ -1356,8 +1356,8 @@ void CServer::DeleteModFile(const char *pFileDir)
 {
 	for(int i = 0; i < m_lModFiles.size(); i++)
 	{
-		if(!str_comp(m_lModFiles[i].m_pFileDir, pFileDir))
-		m_lModFiles.remove_index(i);
+		if(!str_comp(m_lModFiles[i].m_aFileDir, pFileDir))
+            m_lModFiles.remove_index(i);
 	}
 }
 

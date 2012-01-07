@@ -297,6 +297,11 @@ void CLuaFile::Init(const char *pFile)
 
     lua_register(m_pLua, "SetLocalCharacterPos", this->SetLocalCharacterPos);
 
+    //demo
+    lua_register(m_pLua, "DemoStart", this->DemoStart);
+    lua_register(m_pLua, "DemoStop", this->DemoStop);
+    lua_register(m_pLua, "DemoDelete", this->DemoDelete);
+
     lua_pushlightuserdata(m_pLua, this);
     lua_setglobal(m_pLua, "pLUA");
 
@@ -3345,4 +3350,51 @@ int CLuaFile::SetLocalCharacterPos(lua_State *L)
 
     pSelf->m_pClient->m_LocalCharacterPos = vec2(lua_tonumber(L, 1), lua_tonumber(L, 2));
     return 1;
+}
+
+
+int CLuaFile::DemoStart(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (!lua_isstring(L, 1))
+        return 0;
+
+    pSelf->m_pClient->Client()->DemoRecorder_Stop();
+    pSelf->m_pClient->Client()->DemoRecorder_Start(lua_tostring(L, 1), false);
+    return 0;
+}
+
+int CLuaFile::DemoStop(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    pSelf->m_pClient->Client()->DemoRecorder_Stop();
+    return 0;
+}
+
+int CLuaFile::DemoDelete(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (!lua_isstring(L, 1))
+        return 0;
+
+    char aBuf[1024];
+    str_format(aBuf, sizeof(aBuf), "demos/%s", lua_tostring(L, 1));
+
+    pSelf->m_pClient->Storage()->RemoveFile(aBuf, IStorage::TYPE_SAVE);
+    return 0;
 }

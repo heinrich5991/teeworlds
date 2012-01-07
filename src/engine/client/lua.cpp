@@ -32,7 +32,7 @@ void CLua::AddLuaFile(char *pFileDir, bool NoSave)
 
     if (Free > -1 && Free < MAX_LUA_FILES)
 	{
-		m_aLuaFilesSave[Free] = NoSave? false : true;
+		m_aLuaFilesSave[Free] = !NoSave;
 		str_copy(m_aLuaFiles[Free], pFileDir, sizeof(m_aLuaFiles[Free]));
 	}
 }

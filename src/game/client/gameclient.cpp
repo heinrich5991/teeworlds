@@ -381,7 +381,7 @@ void CGameClient::OnReset()
 
     for (int i = 0; i < MAX_LUA_FILES; i++)
     {
-        if (m_pLuaCore->GetLuaSaveOption(i))
+        if (!m_pLuaCore->GetLuaSaveOption(i))
         {
             m_pLuaCore->DeleteLuaFile(i);
         }

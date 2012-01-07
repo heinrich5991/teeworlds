@@ -418,6 +418,11 @@ public:
     static inline int GetKeyCode(lua_State *L);
     static inline int GetKeyUnicode(lua_State *L);
 
+    //demo
+    static inline int DemoStart(lua_State *L);
+    static inline int DemoStop(lua_State *L);
+    static inline int DemoDelete(lua_State *L);
+
 
     static inline int SetLocalCharacterPos(lua_State *L);
 };

@@ -1519,8 +1519,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					str_append(aFileName, ".inv", sizeof(aFileName));
 			}
 
-			//str_copy(tmp.m_pFileDir, aFileName, sizeof(aFileName)); //copy final filename into memory (for launch)
-			tmp.m_pFileDir = (char *)aFileName;
+			str_copy(tmp.m_aFileDir, aFileName, sizeof(aFileName)); //copy final filename into memory (for launch)
 			m_lModFiles.add(tmp);
             if(m_FileDownloadHandle)
                 io_close(m_FileDownloadHandle);
@@ -1565,7 +1564,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				if ((m_lModFiles[m_ModFileCurrentNumber].m_Flags&CModFile::FILEFLAG_LAUNCH))
 				{
 					char aBuf[1024];
-					Storage()->GetPath(IStorage::TYPE_SAVE, m_lModFiles[m_ModFileCurrentNumber].m_pFileDir, aBuf, sizeof(aBuf));
+					Storage()->GetPath(IStorage::TYPE_SAVE, m_lModFiles[m_ModFileCurrentNumber].m_aFileDir, aBuf, sizeof(aBuf));
 					GameClient()->AddLuaFile(aBuf);
 				}
 
@@ -2535,7 +2534,11 @@ int main(int argc, const char **argv) // ignore_convention
 	pClient->InitInterfaces();
 
 	// execute config file
-	pConsole->ExecuteFile("settings.cfg");
+	IOHANDLE Settings = pStorage->OpenFile("nsettings.cfg", IOFLAG_READ, IStorage::TYPE_ALL);
+	if (Settings == 0)
+        pConsole->ExecuteFile("settings.cfg");
+    else
+        io_close(Settings);
 	pConsole->ExecuteFile("nsettings.cfg");
 
 	// execute autoexec file

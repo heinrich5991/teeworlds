@@ -6,7 +6,7 @@ class CModFile
 {
     public:
 	    char m_aName[256];
-	    char *m_pFileDir;
+	    char m_aFileDir[1024];
 	    enum FILETYPE
 	    {
 	        FILETYPEINVALID = 0,

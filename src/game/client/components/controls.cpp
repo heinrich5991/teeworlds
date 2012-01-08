@@ -187,7 +187,7 @@ int CControls::SnapInput(int *pData, int *pPredictionData)
 
             m_pClient->m_pLua->m_EventListener.OnEvent("OnControlChange");
 
-            /*if (m_pClient->m_pLuaBinding->m_ControlDirectionIsSet)
+            if (m_pClient->m_pLuaBinding->m_ControlDirectionIsSet)
             {
                 m_InputData.m_Direction = m_pClient->m_pLuaBinding->m_ControlDirection;
             }
@@ -214,7 +214,7 @@ int CControls::SnapInput(int *pData, int *pPredictionData)
             if (m_pClient->m_pLuaBinding->m_ControlTargetYIsSet)
             {
                 m_InputData.m_TargetY = m_pClient->m_pLuaBinding->m_ControlTargetY;
-            }*/
+            }
 
             if (m_pClient->m_pLuaBinding->m_ControlDirectionPredictedIsSet)
             {

@@ -286,6 +286,14 @@ public:
     static inline int GetCharacterPos(lua_State *L);
     static inline int GetCharacterVel(lua_State *L);
 
+    //TODO:
+    static inline int GetCharacterHookPos(lua_State *L);
+    static inline int GetCharacterHookDir(lua_State *L);
+    static inline int GetCharacterHookState(lua_State *L);
+    static inline int GetCharacterActiveWeapon(lua_State *L);
+    static inline int GetCharacterWeaponAmmo(lua_State *L);
+
+
     //collision
     static inline int IntersectLine(lua_State *L);
     static inline int GetTile(lua_State *L);

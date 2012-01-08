@@ -58,6 +58,8 @@ void CLuaFile::Tick()
 
     FunctionPrepare("Tick");
     PushInteger((int)(time_get() * 10 / time_freq()));
+    PushInteger(m_pClient->m_NewTick);
+    PushInteger(m_pClient->m_NewPredictedTick);
     FunctionExec();
 
     ErrorFunc(m_pLua);
@@ -1239,7 +1241,7 @@ int CLuaFile::GetControlValue(lua_State *L)
     return 1;
 }
 
-/*int CLuaFile::SetControlValue(lua_State *L)
+int CLuaFile::SetControlValue(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
     CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
@@ -1285,7 +1287,7 @@ int CLuaFile::GetControlValue(lua_State *L)
         pSelf->m_pClient->m_pLuaBinding->m_ControlTargetYIsSet = true;
     }
     return 0;
-}*/
+}
 
 int CLuaFile::SetControlValuePredicted(lua_State *L)
 {

@@ -1791,6 +1791,8 @@ void CMenus::RenderBackground()
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
+    m_pClient->m_pLua->m_EventListener.OnEvent("OnRenderBackground");
+
 	// restore screen
     {CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);}

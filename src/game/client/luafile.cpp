@@ -2747,8 +2747,8 @@ int CLuaFile::RenderTexture(lua_State *L)
     if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3))
         return 0;
 
-    int x = lua_tointeger(L, 2);
-    int y = lua_tointeger(L, 3);
+    float x = lua_tonumber(L, 2);
+    float y = lua_tonumber(L, 3);
     int ImgWidth = pSelf->m_pClient->Graphics()->GetTextureWidth(lua_tointeger(L, 1));
     int ImgHeight = pSelf->m_pClient->Graphics()->GetTextureHeight(lua_tointeger(L, 1));
     float ClipX1 = 0.0f;
@@ -2756,21 +2756,21 @@ int CLuaFile::RenderTexture(lua_State *L)
     float ClipX2 = 1.0f;
     float ClipY2 = 1.0f;
     if (lua_isnumber(L, 6))
-        ClipX1 = clamp((float)lua_tointeger(L, 6) / (float)ImgWidth, 0.0f, 1.0f);
+        ClipX1 = clamp((float)lua_tonumber(L, 6) / (float)ImgWidth, 0.0f, 1.0f);
     if (lua_isnumber(L, 7))
-        ClipY1 = clamp((float)lua_tointeger(L, 7) / (float)ImgHeight, 0.0f, 1.0f);
+        ClipY1 = clamp((float)lua_tonumber(L, 7) / (float)ImgHeight, 0.0f, 1.0f);
     if (lua_isnumber(L, 8))
-        ClipX2 = clamp((float)lua_tointeger(L, 8) / (float)ImgWidth, 0.0f, 1.0f);
+        ClipX2 = clamp((float)lua_tonumber(L, 8) / (float)ImgWidth, 0.0f, 1.0f);
     if (lua_isnumber(L, 9))
-        ClipY2 = clamp((float)lua_tointeger(L, 9) / (float)ImgHeight, 0.0f, 1.0f);
+        ClipY2 = clamp((float)lua_tonumber(L, 9) / (float)ImgHeight, 0.0f, 1.0f);
 
 
-    int Width = abs(ClipX2 - ClipX1) * ImgWidth;
-    int Height = abs(ClipY2 - ClipY1) * ImgHeight;
-    if (lua_tointeger(L, 4))
-        Width = lua_tointeger(L, 4);
-    if (lua_tointeger(L, 5))
-        Height = lua_tointeger(L, 5);
+    float Width = abs(ClipX2 - ClipX1) * ImgWidth;
+    float Height = abs(ClipY2 - ClipY1) * ImgHeight;
+    if (lua_isnumber(L, 4))
+        Width = lua_tonumber(L, 4);
+    if (lua_isnumber(L, 5))
+        Height = lua_tonumber(L, 5);
 
     if (pSelf->m_pClient->Graphics()->OnScreen(x, y, Width, Height) == false)
         return 0;

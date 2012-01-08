@@ -24,7 +24,7 @@ void CLuaEventListener::OnEvent(const char *pEvent)
 {
 	for(array<CLuaListenerData>::range r = m_aListeners.all(); !r.empty(); r.pop_front())
     {
-        if (str_comp(r.front().m_aEvent, pEvent) == 0)
+        if (r.front().m_aEvent && str_comp(r.front().m_aEvent, pEvent) == 0)
         {
             if (r.front().m_pLuaFile->FunctionExist(r.front().m_aLuaFunction))
             {

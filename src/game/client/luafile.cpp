@@ -230,10 +230,12 @@ void CLuaFile::Init(const char *pFile)
 
     //collision
     lua_register(m_pLua, "IntersectLine", this->IntersectLine);
+    lua_register(m_pLua, "MovePoint", this->MovePoint);
     lua_register(m_pLua, "GetTile", this->GetTile);
     lua_register(m_pLua, "GetMapWidth", this->GetMapWidth);
     lua_register(m_pLua, "GetMapHeight", this->GetMapHeight);
     lua_register(m_pLua, "SetTile", this->SetTile);
+    lua_register(m_pLua, "ClosestPointOnLine", this->ClosestPointOnLine);
 
 	//layer
 	lua_register(m_pLua, "GetNumGroups", this->GetNumGroups);
@@ -1485,6 +1487,41 @@ int CLuaFile::IntersectLine(lua_State *L)
     lua_pushnumber(L, OutBefore.x);
     lua_pushnumber(L, OutBefore.y);
     return 5;
+}
+
+int CLuaFile::MovePoint(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    vec2 Pos = vec2(lua_tonumber(L, 1), lua_tonumber(L, 2));
+    vec2 Dir = vec2(lua_tonumber(L, 3), lua_tonumber(L, 4));
+    pSelf->m_pClient->Collision()->MovePoint(&Pos, &Dir, 1.0f, 0);
+    lua_pushnumber(L, Pos.x);
+    lua_pushnumber(L, Pos.y);
+    lua_pushnumber(L, Dir.x);
+    lua_pushnumber(L, Dir.y);
+    return 4;
+}
+
+int CLuaFile::ClosestPointOnLine(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    vec2 Pos1 = vec2(lua_tonumber(L, 1), lua_tonumber(L, 2));
+    vec2 Pos2 = vec2(lua_tonumber(L, 3), lua_tonumber(L, 4));
+    vec2 Pos3 = vec2(lua_tonumber(L, 3), lua_tonumber(L, 4));
+    vec2 Ret = closest_point_on_line(Pos1, Pos2, Pos3);
+    lua_pushnumber(L, Ret.x);
+    lua_pushnumber(L, Ret.y);
+    return 2;
 }
 
 int CLuaFile::GetTile(lua_State *L)

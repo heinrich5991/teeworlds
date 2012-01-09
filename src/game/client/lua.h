@@ -384,6 +384,8 @@ public:
     static inline int UiGetFlagTextureID(lua_State *L);
 
     static inline int UiDirectRect(lua_State *L);
+    static inline int BlendAdditive(lua_State *L);
+    static inline int BlendNormal(lua_State *L);
 
     //Texture
     static inline int TextureLoad(lua_State *L);

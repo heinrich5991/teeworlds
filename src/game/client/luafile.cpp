@@ -276,6 +276,8 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "UiGetParticleTextureID", this->UiGetParticleTextureID);
     lua_register(m_pLua, "UiGetFlagTextureID", this->UiGetFlagTextureID);
     lua_register(m_pLua, "UiDirectRect", this->UiDirectRect);
+    lua_register(m_pLua, "BlendNormal", this->BlendNormal);
+    lua_register(m_pLua, "BlendAdditive", this->BlendAdditive);
 
     //
 
@@ -2678,6 +2680,32 @@ int CLuaFile::UiDirectRect(lua_State *L)
         Rounding = lua_tonumber(L, 10);
 
     pSelf->m_pClient->RenderTools()->DrawUIRect(&Rect, Color, Corners, Rounding);
+
+    return 0;
+}
+
+int CLuaFile::BlendNormal(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    pSelf->m_pClient->Graphics()->BlendNormal();
+
+    return 0;
+}
+
+int CLuaFile::BlendAdditive(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    pSelf->m_pClient->Graphics()->BlendAdditive();
 
     return 0;
 }

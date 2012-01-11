@@ -19,6 +19,7 @@
 #include <game/client/components/countryflags.h>
 #include <game/client/components/skins.h>
 #include <game/client/components/sounds.h>
+#include <game/client/components/stats.h>
 
 CLuaFile::CLuaFile()
 {
@@ -308,6 +309,11 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "DemoStop", this->DemoStop);
     lua_register(m_pLua, "DemoDelete", this->DemoDelete);
 
+    //stats
+    lua_register(m_pLua, "StatGetNumber", this->StatGetNumber);
+    lua_register(m_pLua, "StatGetInfo", this->StatGetInfo);
+    lua_register(m_pLua, "StatGetRow", this->StatGetRow);
+
     lua_pushlightuserdata(m_pLua, this);
     lua_setglobal(m_pLua, "pLUA");
 
@@ -319,7 +325,6 @@ void CLuaFile::Init(const char *pFile)
     {
         lua_pcall(m_pLua, 0, LUA_MULTRET, 0);
         ErrorFunc(m_pLua);
-		dbg_msg("Lua", "Error loading Lua file");
     }
     lua_getglobal(m_pLua, "errorfunc");
     ErrorFunc(m_pLua);
@@ -3464,4 +3469,104 @@ int CLuaFile::DemoDelete(lua_State *L)
 
     pSelf->m_pClient->Storage()->RemoveFile(aBuf, IStorage::TYPE_SAVE);
     return 0;
+}
+
+int CLuaFile::StatGetNumber(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    IOHANDLE IndexFile = pSelf->m_pClient->Storage()->OpenFile("stats/index.stat", IOFLAG_READ, IStorage::TYPE_ALL);
+    if (IndexFile)
+    {
+        CStats::CStatsIndexRow Row;
+        int Num = 0;
+        while(io_read(IndexFile, &Row, sizeof(Row)))
+        {
+            Num++;
+        }
+        lua_pushinteger(L, Num);
+        io_close(IndexFile);
+    }
+    else
+        lua_pushinteger(L, 0);
+
+    return 1;
+}
+
+int CLuaFile::StatGetInfo(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (!lua_isnumber(L, 1))
+        return 0;
+
+    IOHANDLE IndexFile = pSelf->m_pClient->Storage()->OpenFile("stats/index.stat", IOFLAG_READ, IStorage::TYPE_ALL);
+    if (IndexFile)
+    {
+        CStats::CStatsIndexRow Row;
+        io_seek(IndexFile, lua_tointeger(L, 1) * sizeof(Row), IOSEEK_START);
+        io_read(IndexFile, &Row, sizeof(Row));
+        char aBuf[256];
+        net_addr_str(&Row.m_ServerAddr, aBuf, sizeof(aBuf), 1);
+        lua_pushstring(L, aBuf);
+        lua_pushstring(L, Row.m_aMap);
+        lua_pushstring(L, Row.m_aGameType);
+        lua_pushstring(L, Row.m_aServerName);
+        lua_pushinteger(L, Row.m_TimeStamp);
+        lua_pushinteger(L, Row.m_Uid);
+
+        io_close(IndexFile);
+        return 6;
+    }
+
+    return 0;
+}
+
+int CLuaFile::StatGetRow(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (!lua_isnumber(L, 1) && !lua_isnumber(L, 2))
+        return 0;
+    char aBuf[256];
+    str_format(aBuf, sizeof(aBuf), "stats/%i.stat", lua_tointeger(L, 1));
+    IOHANDLE StatFile = pSelf->m_pClient->Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
+    int Ret = 0;
+    if (StatFile)
+    {
+        CStatsRecords::CRecordRow Row;
+        io_seek(StatFile, lua_tointeger(L, 2) * sizeof(Row), IOSEEK_START);
+        io_read(StatFile, &Row, sizeof(Row));
+        lua_pushinteger(L, Row.m_aData[0]);
+        if (Row.m_aData[0] == CStats::STATROW_SERVER)
+        {
+            lua_pushinteger(L, Row.m_aData[1]);
+            Ret = 2;
+        }
+        if (Row.m_aData[0] == CStats::STATROW_KILL)
+        {
+            CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)&Row.m_aData[1];
+            lua_pushinteger(L, pMsg->m_Killer);
+            lua_pushinteger(L, pMsg->m_ModeSpecial);
+            lua_pushinteger(L, pMsg->m_Victim);
+            lua_pushinteger(L, pMsg->m_Weapon);
+            Ret = 5;
+        }
+
+        io_close(StatFile);
+    }
+
+    return Ret;
 }

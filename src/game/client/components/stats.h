@@ -11,14 +11,13 @@ public:
         RECORDROWDATASIZE = 32,
         RECORDROWSIZE = RECORDROWDATASIZE + 4,
     };
-private:
     struct CRecordRow
     {
         char m_aData[RECORDROWDATASIZE];
         int m_TimeStamp;
         CRecordRow *m_pNext;
     };
-
+private:
     CRecordRow *m_pFirstRecords;
     CRecordRow *m_pLastRecords;
     int m_NumRecords;
@@ -31,7 +30,7 @@ public:
 
 class CStats : public CComponent
 {
-    CStatsRecords m_Records;
+public:
     struct CStatsIndexRow
     {
         NETADDR m_ServerAddr;
@@ -40,10 +39,7 @@ class CStats : public CComponent
         char m_aServerName[256];
         int m_TimeStamp;
         int m_Uid;
-    } m_IndexRow;
-
-    bool m_Activ;
-
+    };
     enum
     {
         STATROW_INVALID = 0,
@@ -59,14 +55,17 @@ class CStats : public CComponent
         STATROW_SERVER_LEAVE,
     };
 
-
-public:
     void ServerJoin();
     void ServerLeave();
     void OnMessage(int MsgType, void *pRawMsg);
     void OnStateChange(int NewState, int OldState);
 	//void OnReset();
 	void OnRender();
+private:
+    CStatsRecords m_Records;
+    CStatsIndexRow m_IndexRow;
+
+    bool m_Activ;
 };
 
 #endif

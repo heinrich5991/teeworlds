@@ -163,6 +163,7 @@ void CStats::ServerJoin()
     char aMsg[CStatsRecords::RECORDROWDATASIZE] = {0};
     aMsg[0] = STATROW_SERVER;
     aMsg[1] = STATROW_SERVER_JOIN;
+    aMsg[2] = m_pClient->m_Snap.m_LocalClientID;
     m_Records.Add(aMsg);
 }
 

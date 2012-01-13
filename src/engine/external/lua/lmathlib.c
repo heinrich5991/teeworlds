@@ -211,6 +211,17 @@ static int math_randomseed (lua_State *L) {
   return 0;
 }
 
+static int math_round (lua_State *L) {
+  int n = lua_gettop(L);  /* number of arguments */
+  lua_Number num = luaL_checknumber(L, 1);
+  int precision = luaL_checkint(L, 2);
+
+  num = ((int)(num<0?num * pow(10, precision)-.5:num * pow(10, precision)+.5)) / pow(10, precision);
+
+  lua_pushnumber(L, num);
+  return 1;
+}
+
 
 static const luaL_Reg mathlib[] = {
   {"abs",   math_abs},
@@ -241,6 +252,7 @@ static const luaL_Reg mathlib[] = {
   {"sqrt",  math_sqrt},
   {"tanh",   math_tanh},
   {"tan",   math_tan},
+  {"round",   math_round},
   {NULL, NULL}
 };
 

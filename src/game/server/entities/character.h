@@ -66,6 +66,15 @@ public:
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 
+	struct WeaponStat
+	{
+		int m_AmmoRegenStart;
+		int m_Ammo;
+		int m_Ammocost;
+		bool m_Got;
+
+	} m_aWeapons[NUM_WEAPONS];
+
 private:
 	// player controlling this character
 	class CPlayer *m_pPlayer;
@@ -75,15 +84,6 @@ private:
 	// weapon info
 	CEntity *m_apHitObjects[10];
 	int m_NumObjectsHit;
-
-	struct WeaponStat
-	{
-		int m_AmmoRegenStart;
-		int m_Ammo;
-		int m_Ammocost;
-		bool m_Got;
-
-	} m_aWeapons[NUM_WEAPONS];
 
 	int m_ActiveWeapon;
 	int m_LastWeapon;

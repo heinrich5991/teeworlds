@@ -231,6 +231,10 @@ void CLuaFile::Init(const char *pFile)
 
     lua_register(m_pLua, "CharacterSpawn", this->CharacterSpawn);
     lua_register(m_pLua, "CharacterIsAlive", this->CharacterIsAlive);
+    lua_register(m_pLua, "IsGrounded", this->IsGrounded);
+    lua_register(m_pLua, "IncreaseHealth", this->IncreaseHealth);
+    lua_register(m_pLua, "IncreaseArmor", this->IncreaseArmor);
+    lua_register(m_pLua, "SetAmmo", this->SetAmmo);
 
     lua_register(m_pLua, "Win", this->Win);
 

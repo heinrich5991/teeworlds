@@ -246,6 +246,10 @@ public:
     static inline int CharacterSpawn(lua_State *L);
     static inline int CharacterIsAlive(lua_State *L);
     static inline int IsGrounded(lua_State *L);
+    static inline int IncreaseHealth(lua_State *L);
+    static inline int IncreaseArmor(lua_State *L);
+    static inline int IncreaseAmmo(lua_State *L);
+    static inline int SetAmmo(lua_State *L);
 
     static inline int Win(lua_State *L);
 

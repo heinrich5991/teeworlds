@@ -57,6 +57,9 @@ public:
 	int m_OnWeaponFireClientID;
 	int m_OnWeaponFireWeaponID;
 	vec2 m_OnWeaponFireDir;
+	int m_OnWeaponFireReloadTimer;
+	bool m_OnWeaponFireDisableSound;
+	bool m_OnWeaponFireAutoFire;
 
 	//Jump
 	int m_OnJumpJumpID;
@@ -149,6 +152,9 @@ public:
     static inline int WeaponFireGetClientID(lua_State *L);
     static inline int WeaponFireGetWeaponID(lua_State *L);
     static inline int WeaponFireGetDir(lua_State *L);
+    static inline int WeaponFireSetReloadTime(lua_State *L);
+    static inline int WeaponFireDisableSound(lua_State *L);
+    static inline int WeaponFireAutoFire(lua_State *L);
 
 	//Jump
     static inline int JumpGetClientID(lua_State *L);
@@ -226,6 +232,10 @@ public:
     static inline int ProjectileGetWeapon(lua_State *L);
     static inline int ProjectileGetOwner(lua_State *L);
     static inline int ProjectileGetPos(lua_State *L);
+    static inline int ProjectileGetDir(lua_State *L);
+    static inline int ProjectileGetLifespan(lua_State *L);
+    static inline int ProjectileGetExplosive(lua_State *L);
+    static inline int ProjectileGetSoundImpact(lua_State *L);
     static inline int ProjectileCreate(lua_State *L);
 
     //Game

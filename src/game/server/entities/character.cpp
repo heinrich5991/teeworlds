@@ -259,6 +259,18 @@ void CCharacter::FireWeapon()
 	if(CountInput(m_LatestPrevInput.m_Fire, m_LatestInput.m_Fire).m_Presses)
 		WillFire = true;
 
+    if (m_aWeapons[m_ActiveWeapon].m_Ammo && (WillFire || (m_LatestInput.m_Fire&1)))
+    {
+        GameServer()->m_pLua->m_EventListener.m_OnWeaponFireClientID = m_pPlayer->GetCID();
+        GameServer()->m_pLua->m_EventListener.m_OnWeaponFireWeaponID = m_ActiveWeapon;
+        GameServer()->m_pLua->m_EventListener.m_OnWeaponFireDir = Direction;
+        GameServer()->m_pLua->m_EventListener.m_OnWeaponFireReloadTimer = -1;
+        GameServer()->m_pLua->m_EventListener.m_OnWeaponFireDisableSound = false;
+        GameServer()->m_pLua->m_EventListener.m_OnWeaponFireAutoFire = FullAuto;
+        GameServer()->m_pLua->m_EventListener.OnEvent("OnWeaponFire");
+        FullAuto = GameServer()->m_pLua->m_EventListener.m_OnWeaponFireAutoFire;
+    }
+
 	if(FullAuto && (m_LatestInput.m_Fire&1) && m_aWeapons[m_ActiveWeapon].m_Ammo)
 		WillFire = true;
 
@@ -276,18 +288,14 @@ void CCharacter::FireWeapon()
 
 	vec2 ProjStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
 
-	GameServer()->m_pLua->m_EventListener.m_OnWeaponFireClientID = m_pPlayer->GetCID();
-	GameServer()->m_pLua->m_EventListener.m_OnWeaponFireWeaponID = m_ActiveWeapon;
-	GameServer()->m_pLua->m_EventListener.m_OnWeaponFireDir = Direction;
-	GameServer()->m_pLua->m_EventListener.OnEvent("OnWeaponFire");
-
 	switch(m_ActiveWeapon)
 	{
 		case WEAPON_HAMMER:
 		{
 			// reset objects Hit
 			m_NumObjectsHit = 0;
-			GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE);
+			if (GameServer()->m_pLua->m_EventListener.m_OnWeaponFireDisableSound == false)
+                GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE);
 
 			CCharacter *apEnts[MAX_CLIENTS];
 			int Hits = 0;
@@ -344,7 +352,8 @@ void CCharacter::FireWeapon()
 
 			Server()->SendMsg(&Msg, 0, m_pPlayer->GetCID());
 
-			GameServer()->CreateSound(m_Pos, SOUND_GUN_FIRE);
+            if (GameServer()->m_pLua->m_EventListener.m_OnWeaponFireDisableSound == false)
+                GameServer()->CreateSound(m_Pos, SOUND_GUN_FIRE);
 		} break;
 
 		case WEAPON_SHOTGUN:
@@ -378,7 +387,8 @@ void CCharacter::FireWeapon()
 
 			Server()->SendMsg(&Msg, 0,m_pPlayer->GetCID());
 
-			GameServer()->CreateSound(m_Pos, SOUND_SHOTGUN_FIRE);
+            if (GameServer()->m_pLua->m_EventListener.m_OnWeaponFireDisableSound == false)
+                GameServer()->CreateSound(m_Pos, SOUND_SHOTGUN_FIRE);
 		} break;
 
 		case WEAPON_GRENADE:
@@ -400,13 +410,16 @@ void CCharacter::FireWeapon()
 				Msg.AddInt(((int *)&p)[i]);
 			Server()->SendMsg(&Msg, 0, m_pPlayer->GetCID());
 
-			GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE);
+            if (GameServer()->m_pLua->m_EventListener.m_OnWeaponFireDisableSound == false)
+                GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE);
 		} break;
 
 		case WEAPON_RIFLE:
 		{
 			new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID());
-			GameServer()->CreateSound(m_Pos, SOUND_RIFLE_FIRE);
+
+			if (GameServer()->m_pLua->m_EventListener.m_OnWeaponFireDisableSound == false)
+                GameServer()->CreateSound(m_Pos, SOUND_RIFLE_FIRE);
 		} break;
 
 		case WEAPON_NINJA:
@@ -418,7 +431,8 @@ void CCharacter::FireWeapon()
 			m_Ninja.m_CurrentMoveTime = g_pData->m_Weapons.m_Ninja.m_Movetime * Server()->TickSpeed() / 1000;
 			m_Ninja.m_OldVelAmount = length(m_Core.m_Vel);
 
-			GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE);
+            if (GameServer()->m_pLua->m_EventListener.m_OnWeaponFireDisableSound == false)
+                GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE);
 		} break;
 
 	}
@@ -430,6 +444,8 @@ void CCharacter::FireWeapon()
 
 	if(!m_ReloadTimer)
 		m_ReloadTimer = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Firedelay * Server()->TickSpeed() / 1000;
+    if (GameServer()->m_pLua->m_EventListener.m_OnWeaponFireReloadTimer != -1)
+        m_ReloadTimer = GameServer()->m_pLua->m_EventListener.m_OnWeaponFireReloadTimer;
 }
 
 void CCharacter::HandleWeapons()

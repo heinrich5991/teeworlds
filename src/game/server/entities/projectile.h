@@ -10,6 +10,10 @@ public:
 		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon);
 
 	vec2 GetPos(float Time);
+	vec2 GetDir() { return m_Direction; }
+	int GetLifespan() { return m_LifeSpan; }
+	bool GetExplosive() { return m_Explosive; }
+	int GetSoundImpact() { return m_SoundImpact; }
 	int GetStartTick() { return m_StartTick; }
 	void FillInfo(CNetObj_Projectile *pProj);
 	int GetWeapon() { return m_Weapon; }

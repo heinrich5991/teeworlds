@@ -120,6 +120,7 @@ int CLuaFile::WeaponFireGetWeaponID(lua_State *L)
     lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_OnWeaponFireWeaponID);
     return 1;
 }
+
 int CLuaFile::WeaponFireGetDir(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
@@ -132,6 +133,7 @@ int CLuaFile::WeaponFireGetDir(lua_State *L)
     lua_pushnumber(L, pSelf->m_pLuaHandler->m_EventListener.m_OnWeaponFireDir.y);
     return 2;
 }
+
 int CLuaFile::WeaponFireGetClientID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
@@ -142,6 +144,44 @@ int CLuaFile::WeaponFireGetClientID(lua_State *L)
 
     lua_pushinteger(L, pSelf->m_pLuaHandler->m_EventListener.m_OnWeaponFireClientID);
     return 1;
+}
+
+int CLuaFile::WeaponFireSetReloadTime(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (lua_isnumber(L, 1))
+        pSelf->m_pLuaHandler->m_EventListener.m_OnWeaponFireReloadTimer = lua_tointeger(L, 1);
+    return 0;
+}
+
+int CLuaFile::WeaponFireDisableSound(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    pSelf->m_pLuaHandler->m_EventListener.m_OnWeaponFireDisableSound = true;
+    return 0;
+}
+
+int CLuaFile::WeaponFireAutoFire(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (lua_isboolean(L, 1))
+        pSelf->m_pLuaHandler->m_EventListener.m_OnWeaponFireAutoFire = lua_toboolean(L, 1);
+    return 0;
 }
 
 int CLuaFile::JumpGetClientID(lua_State *L)
@@ -263,5 +303,4 @@ int CLuaFile::AbortSpawn(lua_State *L)
     pSelf->m_pLuaHandler->m_EventListener.m_AbortSpawn = true;
     return 0;
 }
-
 

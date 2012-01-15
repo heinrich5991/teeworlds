@@ -181,6 +181,88 @@ int CLuaFile::ProjectileGetPos(lua_State *L)
     return 0;
 }
 
+int CLuaFile::ProjectileGetDir(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (!lua_isnumber(L, 1))
+        return 0;
+
+    CProjectile *pPrj = (CProjectile *)pSelf->m_pServer->m_World.GetEntityByID(lua_tointeger(L, 1));
+    if (pPrj)
+    {
+        vec2 Dir = pPrj->GetDir();
+        lua_pushnumber(L, Dir.x);
+        lua_pushnumber(L, Dir.y);
+        return 2;
+    }
+    return 0;
+}
+
+int CLuaFile::ProjectileGetLifespan(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (!lua_isnumber(L, 1))
+        return 0;
+
+    CProjectile *pPrj = (CProjectile *)pSelf->m_pServer->m_World.GetEntityByID(lua_tointeger(L, 1));
+    if (pPrj)
+    {
+        lua_pushinteger(L, pPrj->GetLifespan());
+        return 1;
+    }
+    return 0;
+}
+
+int CLuaFile::ProjectileGetExplosive(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (!lua_isnumber(L, 1))
+        return 0;
+
+    CProjectile *pPrj = (CProjectile *)pSelf->m_pServer->m_World.GetEntityByID(lua_tointeger(L, 1));
+    if (pPrj)
+    {
+        lua_pushboolean(L, pPrj->GetExplosive());
+        return 1;
+    }
+    return 0;
+}
+
+int CLuaFile::ProjectileGetSoundImpact(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (!lua_isnumber(L, 1))
+        return 0;
+
+    CProjectile *pPrj = (CProjectile *)pSelf->m_pServer->m_World.GetEntityByID(lua_tointeger(L, 1));
+    if (pPrj)
+    {
+        lua_pushinteger(L, pPrj->GetSoundImpact());
+        return 1;
+    }
+    return 0;
+}
+
 int CLuaFile::ProjectileCreate(lua_State *L)
 {
     lua_getglobal(L, "pLUA");

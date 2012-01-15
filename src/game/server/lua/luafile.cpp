@@ -140,6 +140,9 @@ void CLuaFile::Init(const char *pFile)
 		lua_register(m_pLua, "WeaponFireGetClientID", this->WeaponFireGetClientID);
 		lua_register(m_pLua, "WeaponFireGetWeaponID", this->WeaponFireGetWeaponID);
 		lua_register(m_pLua, "WeaponFireGetDir", this->WeaponFireGetDir);
+		lua_register(m_pLua, "WeaponFireSetReloadTime", this->WeaponFireSetReloadTime);
+		lua_register(m_pLua, "WeaponFireDisableSound", this->WeaponFireDisableSound);
+		lua_register(m_pLua, "WeaponFireAutoFire", this->WeaponFireAutoFire);
 
 		//OnJump
 		lua_register(m_pLua, "JumpGetClientID", this->JumpGetClientID);
@@ -204,6 +207,10 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "ProjectileGetWeapon", this->ProjectileGetWeapon);
     lua_register(m_pLua, "ProjectileGetOwner", this->ProjectileGetOwner);
     lua_register(m_pLua, "ProjectileGetPos", this->ProjectileGetPos);
+    lua_register(m_pLua, "ProjectileGetDir", this->ProjectileGetDir);
+    lua_register(m_pLua, "ProjectileGetLifespan", this->ProjectileGetLifespan);
+    lua_register(m_pLua, "ProjectileGetExplosive", this->ProjectileGetExplosive);
+    lua_register(m_pLua, "ProjectileGetSoundImpact", this->ProjectileGetSoundImpact);
     lua_register(m_pLua, "ProjectileCreate", this->ProjectileCreate);
 
     //game

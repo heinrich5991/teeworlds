@@ -1187,8 +1187,7 @@ int CMenus::Render()
                         m_DownloadSpeed = (Diff/(StartDiff+Diff))*(Diff/1.0f) + (StartDiff/(Diff+StartDiff))*m_DownloadSpeed;
                     else
                         m_DownloadSpeed = 0.0f;
-
-					m_DownloadSpeed = absolute((m_DownloadSpeed*(1.0f-(1.0f/m_DownloadSpeed))) + (Diff*(1.0f/m_DownloadSpeed)));
+					//m_DownloadSpeed = absolute((m_DownloadSpeed*(1.0f-(1.0f/m_DownloadSpeed))) + (Diff*(1.0f/m_DownloadSpeed)));
 					m_DownloadLastCheckTime = Now;
 					m_DownloadLastCheckSize = Client()->FileDownloadAmount();
 				}
@@ -1200,7 +1199,7 @@ int CMenus::Render()
 
 				// time left
 				const char *pTimeLeftString;
-				int TimeLeft = (Client()->FileDownloadTotalsize()-Client()->FileDownloadAmount())/(m_DownloadSpeed*1024)+1;
+				int TimeLeft = max(1, m_DownloadSpeed > 0.0f ? static_cast<int>((Client()->FileDownloadTotalsize()-Client()->MapDownloadAmount())/m_DownloadSpeed) : 1);
 				if(TimeLeft >= 60)
 				{
 					TimeLeft /= 60;

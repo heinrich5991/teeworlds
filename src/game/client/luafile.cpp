@@ -1524,7 +1524,7 @@ int CLuaFile::ClosestPointOnLine(lua_State *L)
 
     vec2 Pos1 = vec2(lua_tonumber(L, 1), lua_tonumber(L, 2));
     vec2 Pos2 = vec2(lua_tonumber(L, 3), lua_tonumber(L, 4));
-    vec2 Pos3 = vec2(lua_tonumber(L, 3), lua_tonumber(L, 4));
+    vec2 Pos3 = vec2(lua_tonumber(L, 5), lua_tonumber(L, 6));
     vec2 Ret = closest_point_on_line(Pos1, Pos2, Pos3);
     lua_pushnumber(L, Ret.x);
     lua_pushnumber(L, Ret.y);

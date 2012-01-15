@@ -297,6 +297,7 @@ public:
     //collision
     static inline int IntersectLine(lua_State *L);
     static inline int MovePoint(lua_State *L);
+    static inline int MoveBox(lua_State *L);
     static inline int GetTile(lua_State *L);
     static inline int GetMapWidth(lua_State *L);
     static inline int GetMapHeight(lua_State *L);

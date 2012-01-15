@@ -315,6 +315,12 @@ void CLuaFile::Init(const char *pFile)
     lua_register(m_pLua, "StatGetInfo", this->StatGetInfo);
     lua_register(m_pLua, "StatGetRow", this->StatGetRow);
 
+
+    lua_register(m_pLua, "TimeGet", this->TimeGet);
+    lua_register(m_pLua, "FPS", this->FPS);
+
+
+
     lua_pushlightuserdata(m_pLua, this);
     lua_setglobal(m_pLua, "pLUA");
 
@@ -3597,4 +3603,28 @@ int CLuaFile::StatGetRow(lua_State *L)
     }
 
     return Ret;
+}
+
+int CLuaFile::TimeGet(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushnumber(L, (float)time_get() / (float)time_freq());
+    return 1;
+}
+
+int CLuaFile::FPS(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushnumber(L, 1.0f / pSelf->m_pClient->Client()->FrameTime());
+    return 1;
 }

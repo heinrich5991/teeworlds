@@ -9,6 +9,7 @@
 
 #include <base/system.h>
 #include <engine/external/pnglite/pnglite.h>
+#include <engine/external/zlib/zlib.h>
 
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
@@ -579,7 +580,7 @@ void CGraphics_OpenGL::CapturePixelStreamDirect(const char *pPath, int Frame)
         CaptureData->m_h = h;
         CaptureData->m_pPixelData = pPixelData;
         CaptureData->m_pSelf = this;
-        thread_create(CapturePixelStreamThread, CaptureData);
+        thread_detach(thread_create(CapturePixelStreamThread, CaptureData));
     }
     /*// find filename
     {
@@ -612,14 +613,13 @@ void CGraphics_OpenGL::CapturePixelStreamThread(void *pUser)
 	while (1)
 	{
         unsigned int Size = pCaptureData->m_w * pCaptureData->m_h * 3;
-        dbg_msg("", "%i", Size);
 
         char aFilename[1024];
         str_format(aFilename, sizeof(aFilename), "%s/video.stream", pCaptureData->m_aPath, pCaptureData->m_Frame);
         static IOHANDLE File = pCaptureData->m_pSelf->m_pStorage->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
         if(File)
         {
-            int64 t = time_get();
+            int64 t = time_get() * 1000 / time_freq();
             char *pHeader = new char[sizeof(t) + sizeof(Size) + sizeof(pCaptureData->m_w) + sizeof(pCaptureData->m_h)];
             char *pItem = pHeader;
 
@@ -634,6 +634,8 @@ void CGraphics_OpenGL::CapturePixelStreamThread(void *pUser)
 
             mem_copy(pItem, &pCaptureData->m_h, sizeof(pCaptureData->m_h));
             pItem = pItem + sizeof(pCaptureData->m_h);
+
+            thread_sleep(20);
 
             io_write(File, pHeader, sizeof(t) + sizeof(Size) + sizeof(pCaptureData->m_w) + sizeof(pCaptureData->m_h));
             io_write(File, pCaptureData->m_pPixelData, Size);

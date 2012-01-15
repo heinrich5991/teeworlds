@@ -1199,7 +1199,7 @@ int CMenus::Render()
 
 				// time left
 				const char *pTimeLeftString;
-				int TimeLeft = max(1, m_DownloadSpeed > 0.0f ? static_cast<int>((Client()->FileDownloadTotalsize()-Client()->MapDownloadAmount())/m_DownloadSpeed) : 1);
+				int TimeLeft = max(1, m_DownloadSpeed > 0.0f ? static_cast<int>((Client()->FileDownloadTotalsize()-Client()->FileDownloadAmount())/m_DownloadSpeed) : 1);
 				if(TimeLeft >= 60)
 				{
 					TimeLeft /= 60;

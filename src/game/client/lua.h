@@ -443,6 +443,9 @@ public:
 
 
     static inline int SetLocalCharacterPos(lua_State *L);
+
+    static inline int TimeGet(lua_State *L);
+    static inline int FPS(lua_State *L);
 };
 
 class CLua

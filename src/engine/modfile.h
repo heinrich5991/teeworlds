@@ -22,6 +22,8 @@ class CModFile
 	        FILEFLAG_NOCRC = 2,
 	        FILEFLAG_LAUNCH = 4,
 	        FILEFLAG_SAVE = 8,
+			FILEFLAG_CHECK = 16,
+			FILEFLAG_UPDATE = 32,
 	    };
 		int m_Flags;
         int m_Size;

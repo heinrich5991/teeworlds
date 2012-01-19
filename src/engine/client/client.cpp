@@ -1457,13 +1457,13 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
         {
             m_ModFileNumber = Unpacker.GetInt();
             m_FileDownloadTotalSize = Unpacker.GetInt();
-
-            CMsgPacker Msg(NETMSG_REQUEST_FILE_INDEX);
+            
 			m_lModFiles.clear();
 			m_FileDownloadAmount = 0;
             if (m_ModFileNumber)
             {
                 m_ModFileCurrentNumber = 0;
+				CMsgPacker Msg(NETMSG_REQUEST_FILE_INDEX);
                 Msg.AddInt(m_ModFileCurrentNumber); //reguest the first Index
                 SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
             }
@@ -1491,8 +1491,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
 			str_format(aFileCrc, sizeof(aFileCrc), "_%08x", FileCrc);
 			str_format(aFileName, sizeof(aFileName), "downloadedfiles/");
-
-
+			
 			if((tmp.m_Flags&CModFile::FILEFLAG_IGNORETYPE))
 			{
 				if (!(tmp.m_Flags&CModFile::FILEFLAG_NOCRC))
@@ -1518,25 +1517,67 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				else
 					str_append(aFileName, ".inv", sizeof(aFileName));
 			}
-
 			str_copy(tmp.m_aFileDir, aFileName, sizeof(aFileName)); //copy final filename into memory (for launch)
-			m_lModFiles.add(tmp);
-            if(m_FileDownloadHandle)
-                io_close(m_FileDownloadHandle);
-            m_FileDownloadHandle = Storage()->OpenFile(aFileName, IOFLAG_WRITE, IStorage::TYPE_SAVE);
-
-            m_pFileDownloadCache = new char[tmp.m_Size];
-            for (int x = 0; x < ((float)tmp.m_Size - 1) / (1024.0f - 128.0f) + 1; x++)
-            {
-                m_pFileDownloadCache[x] = 0;
+			
+			bool bUpdate = false;
+			if((tmp.m_Flags&CModFile::FILEFLAG_UPDATE))
+				bUpdate = true;
+			else //if((tmp.m_Flags&CModFile::FILEFLAG_CHECK)) //check if File already exists/check if crc is the same as the server one needs to be done every time
+			{
+				IOHANDLE TempFileDownloadHandle = Storage()->OpenFile(aFileName, IOFLAG_READ, IStorage::TYPE_SAVE);
+				if(TempFileDownloadHandle)
+					io_close(TempFileDownloadHandle);
+				else
+					bUpdate = true;
+			}
+			
+			if(g_Config.m_Debug)
+            {  
+				char aBuf[256];
+				if(bUpdate)
+					str_format(aBuf, sizeof(aBuf), "File ('%s') needs Update", aFileName);
+				else
+					str_format(aBuf, sizeof(aBuf), "File ('%s') is valid", aFileName);
+                m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "lua", aBuf);
             }
+			if(bUpdate)
+			{	
+				//File needs update -> has to be downloaded again
+			
+				m_lModFiles.add(tmp);
+				if(m_FileDownloadHandle)
+					io_close(m_FileDownloadHandle);
+				m_FileDownloadHandle = Storage()->OpenFile(aFileName, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 
-
-            CMsgPacker Msg(NETMSG_REQUEST_FILE_DATA);
-            m_ModFileCurrentChunk = 0;
-            Msg.AddInt(m_ModFileCurrentNumber);
-            Msg.AddInt(m_ModFileCurrentChunk); //request the first chunk
-            SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+				m_pFileDownloadCache = new char[tmp.m_Size];
+				for (int x = 0; x < ((float)tmp.m_Size - 1) / (1024.0f - 128.0f) + 1; x++)
+					m_pFileDownloadCache[x] = 0;
+				
+				CMsgPacker Msg(NETMSG_REQUEST_FILE_DATA);
+				m_ModFileCurrentChunk = 0;
+				Msg.AddInt(m_ModFileCurrentNumber);
+				Msg.AddInt(m_ModFileCurrentChunk); //request the first chunk
+				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+				
+				
+				
+			}
+			else
+			{
+				//File is up to date
+				if ((tmp.m_Flags&CModFile::FILEFLAG_LAUNCH))
+				{
+					char aBuf[1024];
+					Storage()->GetPath(IStorage::TYPE_SAVE, tmp.m_aFileDir, aBuf, sizeof(aBuf));
+					GameClient()->AddLuaFile(aBuf);
+					if(g_Config.m_Debug)
+                    {                      
+                        str_format(aBuf, sizeof(aBuf), "Launch %s", aBuf);
+                        m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "lua", aBuf);
+                    }
+				}		
+			
+			}
         }
         else if(Msg == NETMSG_FILE_DATA)
         {

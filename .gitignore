@@ -20,6 +20,7 @@ teeworlds*
 teeworlds_srv*
 tileset_borderfix*
 versionsrv*
+n-client*
 
 /src/game/pathfinder.cpp
 /src/game/pathfinder.h

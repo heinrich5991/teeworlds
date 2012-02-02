@@ -211,6 +211,11 @@ void CLuaFile::Init(const char *pFile)
     //Console Print
     lua_register(m_pLua, "Print", this->Print);
     lua_register(m_pLua, "Console", this->Console);
+    
+    //Remote console
+    lua_register(m_pLua, "RconAuth", this->RconAuth);
+    lua_register(m_pLua, "RconAuthed", this->RconAuthed);
+    lua_register(m_pLua, "RconExecute", this->RconExecute);
 
     //States
     lua_register(m_pLua, "StateOnline", this->StateOnline);
@@ -1719,6 +1724,47 @@ int CLuaFile::Print(lua_State *L)
 
     if (lua_isstring(L, 1) && lua_isstring(L, 2))
         dbg_msg(lua_tostring(L, 1), lua_tostring(L, 2));
+    return 0;
+}
+
+int CLuaFile::RconAuth(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (lua_isstring(L, 1))
+        pSelf->m_pClient->Client()->RconAuth("", lua_tostring(L, 1));
+
+    return 0;
+}
+
+int CLuaFile::RconAuthed(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    lua_pushboolean(L, pSelf->m_pClient->Client()->RconAuthed());
+
+    return 1;
+}
+
+int CLuaFile::RconExecute(lua_State *L)
+{
+    lua_getglobal(L, "pLUA");
+    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    lua_Debug Frame;
+    lua_getstack(L, 1, &Frame);
+    lua_getinfo(L, "nlSf", &Frame);
+
+    if (lua_isstring(L, 1))
+        pSelf->m_pClient->Client()->Rcon(lua_tostring(L, 1));
+
     return 0;
 }
 

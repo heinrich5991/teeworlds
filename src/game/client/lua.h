@@ -327,6 +327,11 @@ public:
     static inline int Print(lua_State *L);
     static inline int Console(lua_State *L);
 
+    //Remote console
+    static inline int RconAuth(lua_State *L);
+    static inline int RconAuthed(lua_State *L);
+    static inline int RconExecute(lua_State *L);
+
     //States
     static inline int StateGetOld(lua_State *L);
     static inline int StateGet(lua_State *L);

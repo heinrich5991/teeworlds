@@ -361,7 +361,7 @@ void CLuaFile::Close()
 int CLuaFile::ErrorFunc(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
 
     lua_pop(L,1);
 
@@ -512,7 +512,7 @@ int CLuaFile::Include(lua_State *L)
 int CLuaFile::SetScriptUseSettingPage(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -526,7 +526,7 @@ int CLuaFile::SetScriptUseSettingPage(lua_State *L)
 int CLuaFile::SetScriptTitle(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -540,7 +540,7 @@ int CLuaFile::SetScriptTitle(lua_State *L)
 int CLuaFile::SetScriptInfo(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -554,7 +554,7 @@ int CLuaFile::SetScriptInfo(lua_State *L)
 int CLuaFile::AddEventListener(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -569,7 +569,7 @@ int CLuaFile::AddEventListener(lua_State *L)
 int CLuaFile::RemoveEventListener(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -584,7 +584,7 @@ int CLuaFile::RemoveEventListener(lua_State *L)
 int CLuaFile::SetMenuBrowserGameTypeColor(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -597,7 +597,7 @@ int CLuaFile::SetMenuBrowserGameTypeColor(lua_State *L)
 int CLuaFile::GetMenuBrowserGameTypeName(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -609,7 +609,7 @@ int CLuaFile::GetMenuBrowserGameTypeName(lua_State *L)
 int CLuaFile::ScoreboardAbortRender(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -621,7 +621,7 @@ int CLuaFile::ScoreboardAbortRender(lua_State *L)
 int CLuaFile::ChatGetText(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -633,7 +633,7 @@ int CLuaFile::ChatGetText(lua_State *L)
 int CLuaFile::ChatGetClientID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -645,7 +645,7 @@ int CLuaFile::ChatGetClientID(lua_State *L)
 int CLuaFile::ChatGetTeam(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -657,7 +657,7 @@ int CLuaFile::ChatGetTeam(lua_State *L)
 int CLuaFile::ChatHide(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -669,7 +669,7 @@ int CLuaFile::ChatHide(lua_State *L)
 int CLuaFile::KillGetKillerID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -681,7 +681,7 @@ int CLuaFile::KillGetKillerID(lua_State *L)
 int CLuaFile::KillGetVictimID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -693,7 +693,7 @@ int CLuaFile::KillGetVictimID(lua_State *L)
 int CLuaFile::KillGetWeapon(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -705,7 +705,7 @@ int CLuaFile::KillGetWeapon(lua_State *L)
 int CLuaFile::GetPlayerName(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -730,7 +730,7 @@ int CLuaFile::GetPlayerName(lua_State *L)
 int CLuaFile::GetPlayerClan(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -749,7 +749,7 @@ int CLuaFile::GetPlayerClan(lua_State *L)
 int CLuaFile::GetPlayerCountry(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -768,7 +768,7 @@ int CLuaFile::GetPlayerCountry(lua_State *L)
 int CLuaFile::GetPlayerScore(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -793,7 +793,7 @@ int CLuaFile::GetPlayerScore(lua_State *L)
 int CLuaFile::GetPlayerPing(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -816,7 +816,7 @@ int CLuaFile::GetPlayerPing(lua_State *L)
 int CLuaFile::GetPlayerTeam(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -839,7 +839,7 @@ int CLuaFile::GetPlayerTeam(lua_State *L)
 int CLuaFile::GetPlayerSkin(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -858,7 +858,7 @@ int CLuaFile::GetPlayerSkin(lua_State *L)
 int CLuaFile::GetPlayerColorFeet(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -880,7 +880,7 @@ int CLuaFile::GetPlayerColorFeet(lua_State *L)
 int CLuaFile::GetPlayerColorBody(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -902,7 +902,7 @@ int CLuaFile::GetPlayerColorBody(lua_State *L)
 int CLuaFile::GetPlayerColorSkin(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -940,7 +940,7 @@ int CLuaFile::GetPlayerColorSkin(lua_State *L)
 int CLuaFile::UiGetScreenWidth(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -953,7 +953,7 @@ int CLuaFile::UiGetScreenWidth(lua_State *L)
 int CLuaFile::UiGetScreenHeight(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -966,7 +966,7 @@ int CLuaFile::UiGetScreenHeight(lua_State *L)
 int CLuaFile::MusicPlay(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -979,7 +979,7 @@ int CLuaFile::MusicPlay(lua_State *L)
 int CLuaFile::MusicPause(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -993,7 +993,7 @@ int CLuaFile::MusicPause(lua_State *L)
 int CLuaFile::MusicStop(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1006,7 +1006,7 @@ int CLuaFile::MusicStop(lua_State *L)
 int CLuaFile::MusicNext(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1018,7 +1018,7 @@ int CLuaFile::MusicNext(lua_State *L)
 int CLuaFile::MusicPrev(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1034,7 +1034,7 @@ int CLuaFile::MusicSetVol(lua_State *L)
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
 
-    g_Config.m_SndMusicVolume = max(0, min(lua_tointeger(L, 1), 100));
+    g_Config.m_SndMusicVolume = clamp((int)lua_tointeger(L, 1), 0, 100);
     return 0;
 }
 
@@ -1052,7 +1052,7 @@ int CLuaFile::MusicGetVol(lua_State *L)
 int CLuaFile::MusicGetState(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1064,7 +1064,7 @@ int CLuaFile::MusicGetState(lua_State *L)
 int CLuaFile::MusicGetPlayedIndex(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1076,7 +1076,7 @@ int CLuaFile::MusicGetPlayedIndex(lua_State *L)
 int CLuaFile::SendPlayerInfo(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1088,7 +1088,7 @@ int CLuaFile::SendPlayerInfo(lua_State *L)
 int CLuaFile::Console(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1104,7 +1104,7 @@ int CLuaFile::Emote(lua_State *L)
 {
     static CThrottle s_Throttle;
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1224,7 +1224,7 @@ int CLuaFile::SetConfigValue(lua_State *L)
 int CLuaFile::GetControlValue(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1265,7 +1265,7 @@ int CLuaFile::GetControlValue(lua_State *L)
 int CLuaFile::SetControlValue(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1313,7 +1313,7 @@ int CLuaFile::SetControlValue(lua_State *L)
 int CLuaFile::SetControlValuePredicted(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1361,7 +1361,7 @@ int CLuaFile::SetControlValuePredicted(lua_State *L)
 int CLuaFile::UnSetControlValue(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1423,7 +1423,7 @@ int CLuaFile::UnSetControlValue(lua_State *L)
 int CLuaFile::GetFlow(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1437,7 +1437,7 @@ int CLuaFile::GetFlow(lua_State *L)
 int CLuaFile::SetFlow(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1449,7 +1449,7 @@ int CLuaFile::SetFlow(lua_State *L)
 int CLuaFile::GetCharacterPos(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1464,7 +1464,7 @@ int CLuaFile::GetCharacterPos(lua_State *L)
 int CLuaFile::GetCharacterVel(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1479,7 +1479,7 @@ int CLuaFile::GetCharacterVel(lua_State *L)
 int CLuaFile::GetLocalCharacterId(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1491,7 +1491,7 @@ int CLuaFile::GetLocalCharacterId(lua_State *L)
 int CLuaFile::IntersectLine(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1511,7 +1511,7 @@ int CLuaFile::IntersectLine(lua_State *L)
 int CLuaFile::MovePoint(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1532,7 +1532,7 @@ int CLuaFile::MovePoint(lua_State *L)
 int CLuaFile::MoveBox(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1554,7 +1554,7 @@ int CLuaFile::MoveBox(lua_State *L)
 int CLuaFile::ClosestPointOnLine(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1573,7 +1573,7 @@ int CLuaFile::ClosestPointOnLine(lua_State *L)
 int CLuaFile::GetTile(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1584,7 +1584,7 @@ int CLuaFile::GetTile(lua_State *L)
 int CLuaFile::SetTile(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1597,7 +1597,7 @@ int CLuaFile::SetTile(lua_State *L)
 int CLuaFile::GetMapWidth(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1609,7 +1609,7 @@ int CLuaFile::GetMapWidth(lua_State *L)
 int CLuaFile::GetMapHeight(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1621,7 +1621,7 @@ int CLuaFile::GetMapHeight(lua_State *L)
 int CLuaFile::ChatSend(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1636,7 +1636,7 @@ int CLuaFile::ChatSend(lua_State *L)
 int CLuaFile::ChatTeamSend(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1651,7 +1651,7 @@ int CLuaFile::ChatTeamSend(lua_State *L)
 int CLuaFile::CreateParticle(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1730,7 +1730,7 @@ int CLuaFile::Print(lua_State *L)
 int CLuaFile::RconAuth(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1744,7 +1744,7 @@ int CLuaFile::RconAuth(lua_State *L)
 int CLuaFile::RconAuthed(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1757,7 +1757,7 @@ int CLuaFile::RconAuthed(lua_State *L)
 int CLuaFile::RconExecute(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1771,7 +1771,7 @@ int CLuaFile::RconExecute(lua_State *L)
 int CLuaFile::GetGameType(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1785,7 +1785,7 @@ int CLuaFile::GetGameType(lua_State *L)
 int CLuaFile::IsTeamplay(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1800,7 +1800,7 @@ int CLuaFile::IsTeamplay(lua_State *L)
 int CLuaFile::GetNetError(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1813,7 +1813,7 @@ int CLuaFile::Connect(lua_State *L)
 {
     static CThrottle s_Throttle;
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1831,7 +1831,7 @@ int CLuaFile::Connect(lua_State *L)
 int CLuaFile::StateGetOld(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1843,7 +1843,7 @@ int CLuaFile::StateGetOld(lua_State *L)
 int CLuaFile::StateGet(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1855,7 +1855,7 @@ int CLuaFile::StateGet(lua_State *L)
 int CLuaFile::StateOnline(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1867,7 +1867,7 @@ int CLuaFile::StateOnline(lua_State *L)
 int CLuaFile::StateOffline(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1879,7 +1879,7 @@ int CLuaFile::StateOffline(lua_State *L)
 int CLuaFile::StateConnecting(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1891,7 +1891,7 @@ int CLuaFile::StateConnecting(lua_State *L)
 int CLuaFile::StateLoading(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1903,7 +1903,7 @@ int CLuaFile::StateLoading(lua_State *L)
 int CLuaFile::StateDemoplayback(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1915,7 +1915,7 @@ int CLuaFile::StateDemoplayback(lua_State *L)
 int CLuaFile::MenuActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1927,7 +1927,7 @@ int CLuaFile::MenuActive(lua_State *L)
 int CLuaFile::MenuGameActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1939,7 +1939,7 @@ int CLuaFile::MenuGameActive(lua_State *L)
 int CLuaFile::MenuPlayersActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1951,7 +1951,7 @@ int CLuaFile::MenuPlayersActive(lua_State *L)
 int CLuaFile::MenuServerInfoActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1963,7 +1963,7 @@ int CLuaFile::MenuServerInfoActive(lua_State *L)
 int CLuaFile::MenuCallVoteActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1975,7 +1975,7 @@ int CLuaFile::MenuCallVoteActive(lua_State *L)
 int CLuaFile::MenuServersActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1987,7 +1987,7 @@ int CLuaFile::MenuServersActive(lua_State *L)
 int CLuaFile::MenuMusicActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -1999,7 +1999,7 @@ int CLuaFile::MenuMusicActive(lua_State *L)
 int CLuaFile::MenuDemosActive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2011,7 +2011,7 @@ int CLuaFile::MenuDemosActive(lua_State *L)
 int CLuaFile::GetMousePosMenu(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2025,7 +2025,7 @@ int CLuaFile::GetMousePosMenu(lua_State *L)
 int CLuaFile::SetMouseModeRelative(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2037,7 +2037,7 @@ int CLuaFile::SetMouseModeRelative(lua_State *L)
 int CLuaFile::SetMouseModeAbsolute(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2049,7 +2049,7 @@ int CLuaFile::SetMouseModeAbsolute(lua_State *L)
 int CLuaFile::UiRemoveElement(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2068,7 +2068,7 @@ int CLuaFile::UiRemoveElement(lua_State *L)
 int CLuaFile::UiGetText(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2088,7 +2088,7 @@ int CLuaFile::UiGetText(lua_State *L)
 int CLuaFile::UiSetText(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2109,7 +2109,7 @@ int CLuaFile::UiSetText(lua_State *L)
 int CLuaFile::UiGetColor(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2132,7 +2132,7 @@ int CLuaFile::UiGetColor(lua_State *L)
 int CLuaFile::UiSetColor(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2162,7 +2162,7 @@ int CLuaFile::UiSetColor(lua_State *L)
 int CLuaFile::UiGetRect(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2185,7 +2185,7 @@ int CLuaFile::UiGetRect(lua_State *L)
 int CLuaFile::UiSetRect(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2215,7 +2215,7 @@ int CLuaFile::UiSetRect(lua_State *L)
 int CLuaFile::UiDoButton(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2281,7 +2281,7 @@ int CLuaFile::UiDoButton(lua_State *L)
 int CLuaFile::UiDoEditBox(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2352,7 +2352,7 @@ int CLuaFile::UiDoEditBox(lua_State *L)
 int CLuaFile::UiDoLabel(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2419,7 +2419,7 @@ int CLuaFile::UiDoLabel(lua_State *L)
 int CLuaFile::UiDoRect(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2481,7 +2481,7 @@ int CLuaFile::UiDoRect(lua_State *L)
 int CLuaFile::UiDoImage(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2539,7 +2539,7 @@ int CLuaFile::UiDoImage(lua_State *L)
 int CLuaFile::UiDoImageEx(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2618,7 +2618,7 @@ int CLuaFile::UiDoImageEx(lua_State *L)
 int CLuaFile::UiDoLine(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2673,7 +2673,7 @@ int CLuaFile::UiDoLine(lua_State *L)
 int CLuaFile::UiDoSlider(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2737,7 +2737,7 @@ int CLuaFile::UiDoSlider(lua_State *L)
 int CLuaFile::UiDirectRect(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2772,7 +2772,7 @@ int CLuaFile::UiDirectRect(lua_State *L)
 int CLuaFile::BlendNormal(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2785,7 +2785,7 @@ int CLuaFile::BlendNormal(lua_State *L)
 int CLuaFile::BlendAdditive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2820,7 +2820,7 @@ int CLuaFile::UiGetParticleTextureID(lua_State *L)
 int CLuaFile::UiGetFlagTextureID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2835,7 +2835,7 @@ int CLuaFile::UiGetFlagTextureID(lua_State *L)
 int CLuaFile::TextureLoad(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2853,7 +2853,7 @@ int CLuaFile::TextureLoad(lua_State *L)
 int CLuaFile::TextureUnload(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2880,7 +2880,7 @@ int CLuaFile::ReplaceGameTexture(lua_State *L)
 int CLuaFile::RenderTexture(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2941,7 +2941,7 @@ int CLuaFile::RenderTexture(lua_State *L)
 int CLuaFile::LoadWvFile(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2958,7 +2958,7 @@ int CLuaFile::LoadWvFile(lua_State *L)
 int CLuaFile::PlayWv(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -2986,7 +2986,7 @@ int CLuaFile::PlayWv(lua_State *L)
 int CLuaFile::PlaySound(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3013,7 +3013,7 @@ int CLuaFile::PlaySound(lua_State *L)
 int CLuaFile::SendPacket(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3043,7 +3043,7 @@ int CLuaFile::SendPacket(lua_State *L)
 int CLuaFile::FetchPacket(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3059,7 +3059,7 @@ int CLuaFile::FetchPacket(lua_State *L)
 int CLuaFile::GetNumGroups(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3076,7 +3076,7 @@ int CLuaFile::GetNumGroups(lua_State *L)
 int CLuaFile::GetNumLayers(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3093,7 +3093,7 @@ int CLuaFile::GetNumLayers(lua_State *L)
 int CLuaFile::GetGroupNumLayers(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3115,7 +3115,7 @@ int CLuaFile::GetGroupNumLayers(lua_State *L)
 int CLuaFile::GetLayerType(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3129,9 +3129,9 @@ int CLuaFile::GetLayerType(lua_State *L)
 	int Index = lua_tointeger(L, 1);
 	if(lua_isnumber(L, 2))
 	{
-		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		Group = clamp((int)lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
 		if(pSelf->m_pClient->Layers()->GetGroup(Group))
-			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+			Index = clamp((int)lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
 		else
 		{
 			lua_pushnumber(L, -1);
@@ -3151,7 +3151,7 @@ int CLuaFile::GetLayerType(lua_State *L)
 int CLuaFile::GetLayerFlags(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3165,9 +3165,9 @@ int CLuaFile::GetLayerFlags(lua_State *L)
 	int Index = lua_tointeger(L, 1);
 	if(lua_isnumber(L, 2))
 	{
-		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		Group = clamp((int)lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
 		if(pSelf->m_pClient->Layers()->GetGroup(Group))
-			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+			Index = clamp((int)lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
 		else
 		{
 			lua_pushnumber(L, -1);
@@ -3191,7 +3191,7 @@ int CLuaFile::GetLayerFlags(lua_State *L)
 int CLuaFile::GetLayerSize(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3205,9 +3205,9 @@ int CLuaFile::GetLayerSize(lua_State *L)
 	int Index = lua_tointeger(L, 1);
 	if(lua_isnumber(L, 2))
 	{
-		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		Group = clamp((int)lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
 		if(pSelf->m_pClient->Layers()->GetGroup(Group))
-			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+			Index = clamp((int)lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
 		else
 		{
 			lua_pushnumber(L, -1);
@@ -3241,7 +3241,7 @@ int CLuaFile::GetLayerSize(lua_State *L)
 int CLuaFile::GetLayerTileFlags(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3257,9 +3257,9 @@ int CLuaFile::GetLayerTileFlags(lua_State *L)
 	int y = lua_tointeger(L, 3);
 	if(lua_isnumber(L, 4))
 	{
-		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		Group = clamp((int)lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
 		if(pSelf->m_pClient->Layers()->GetGroup(Group))
-			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+			Index = clamp((int)lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
 		else
 		{
 			lua_pushnumber(L, -1);
@@ -3297,7 +3297,7 @@ int CLuaFile::GetLayerTileFlags(lua_State *L)
 int CLuaFile::SetLayerTileFlags(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3312,9 +3312,9 @@ int CLuaFile::SetLayerTileFlags(lua_State *L)
 	int NewFlags = lua_tointeger(L, 4);
 	if(lua_isnumber(L, 5))
 	{
-		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		Group = clamp((int)lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
 		if(pSelf->m_pClient->Layers()->GetGroup(Group))
-			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+			Index = clamp((int)lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
 		else
 			return 0;
 
@@ -3342,7 +3342,7 @@ int CLuaFile::SetLayerTileFlags(lua_State *L)
 int CLuaFile::GetLayerTileIndex(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3358,9 +3358,9 @@ int CLuaFile::GetLayerTileIndex(lua_State *L)
 	int y = lua_tointeger(L, 3);
 	if(lua_isnumber(L, 4))
 	{
-		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		Group = clamp((int)lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
 		if(pSelf->m_pClient->Layers()->GetGroup(Group))
-			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+			Index = clamp((int)lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
 		else
 		{
 			lua_pushnumber(L, -1);
@@ -3400,7 +3400,7 @@ int CLuaFile::GetLayerTileIndex(lua_State *L)
 int CLuaFile::SetLayerTileIndex(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3415,9 +3415,9 @@ int CLuaFile::SetLayerTileIndex(lua_State *L)
 	int NewIndex = lua_tointeger(L, 4);
 	if(lua_isnumber(L, 5))
 	{
-		Group = clamp(lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
+		Group = clamp((int)lua_tointeger(L, 1), 0, pSelf->m_pClient->Layers()->NumGroups()-1);
 		if(pSelf->m_pClient->Layers()->GetGroup(Group))
-			Index = clamp(lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
+			Index = clamp((int)lua_tointeger(L, 2), 0, pSelf->m_pClient->Layers()->GetGroup(Group)->m_NumLayers-1);
 		else
 			return 0;
 		x = lua_tointeger(L, 3);
@@ -3425,7 +3425,7 @@ int CLuaFile::SetLayerTileIndex(lua_State *L)
 		NewIndex = lua_tointeger(L, 5);
 	}
 	else
-		Index = clamp(Index, 0, pSelf->m_pClient->Layers()->NumLayers());
+		Index = clamp((int)Index, 0, pSelf->m_pClient->Layers()->NumLayers());
 
 	if(!pSelf->m_pClient->Layers()->GetGroup(Group))
 			return 0;
@@ -3446,7 +3446,7 @@ int CLuaFile::SetLayerTileIndex(lua_State *L)
 int CLuaFile::RenderTilemapGenerateSkip(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3459,7 +3459,7 @@ int CLuaFile::RenderTilemapGenerateSkip(lua_State *L)
 int CLuaFile::GetKeyFlags(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3471,7 +3471,7 @@ int CLuaFile::GetKeyFlags(lua_State *L)
 int CLuaFile::GetKeyCode(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3483,7 +3483,7 @@ int CLuaFile::GetKeyCode(lua_State *L)
 int CLuaFile::GetKeyUnicode(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3495,7 +3495,7 @@ int CLuaFile::GetKeyUnicode(lua_State *L)
 int CLuaFile::SetLocalCharacterPos(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3508,7 +3508,7 @@ int CLuaFile::SetLocalCharacterPos(lua_State *L)
 int CLuaFile::DemoStart(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3524,7 +3524,7 @@ int CLuaFile::DemoStart(lua_State *L)
 int CLuaFile::DemoStop(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3536,7 +3536,7 @@ int CLuaFile::DemoStop(lua_State *L)
 int CLuaFile::DemoDelete(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3554,7 +3554,7 @@ int CLuaFile::DemoDelete(lua_State *L)
 int CLuaFile::StatGetNumber(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3580,7 +3580,7 @@ int CLuaFile::StatGetNumber(lua_State *L)
 int CLuaFile::StatGetInfo(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3613,7 +3613,7 @@ int CLuaFile::StatGetInfo(lua_State *L)
 int CLuaFile::StatGetRow(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3654,7 +3654,7 @@ int CLuaFile::StatGetRow(lua_State *L)
 int CLuaFile::TimeGet(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -3666,7 +3666,7 @@ int CLuaFile::TimeGet(lua_State *L)
 int CLuaFile::FPS(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);

@@ -5,7 +5,7 @@
 int CLuaFile::GetConfigValue(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -27,7 +27,7 @@ int CLuaFile::GetConfigValue(lua_State *L)
 int CLuaFile::SetConfigValue(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);

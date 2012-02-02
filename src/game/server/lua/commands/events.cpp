@@ -4,7 +4,7 @@
 int CLuaFile::AddEventListener(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -18,7 +18,7 @@ int CLuaFile::AddEventListener(lua_State *L)
 int CLuaFile::RemoveEventListener(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -33,7 +33,7 @@ int CLuaFile::RemoveEventListener(lua_State *L)
 int CLuaFile::KillGetKillerID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -44,7 +44,7 @@ int CLuaFile::KillGetKillerID(lua_State *L)
 int CLuaFile::KillGetVictimID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -55,7 +55,7 @@ int CLuaFile::KillGetVictimID(lua_State *L)
 int CLuaFile::KillGetWeapon(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -67,7 +67,7 @@ int CLuaFile::KillGetWeapon(lua_State *L)
 int CLuaFile::ChatGetText(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -78,7 +78,7 @@ int CLuaFile::ChatGetText(lua_State *L)
 int CLuaFile::ChatGetClientID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -89,7 +89,7 @@ int CLuaFile::ChatGetClientID(lua_State *L)
 int CLuaFile::ChatGetTeam(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -100,7 +100,7 @@ int CLuaFile::ChatGetTeam(lua_State *L)
 int CLuaFile::ChatHide(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -112,7 +112,7 @@ int CLuaFile::ChatHide(lua_State *L)
 int CLuaFile::WeaponFireGetWeaponID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -124,7 +124,7 @@ int CLuaFile::WeaponFireGetWeaponID(lua_State *L)
 int CLuaFile::WeaponFireGetDir(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -137,7 +137,7 @@ int CLuaFile::WeaponFireGetDir(lua_State *L)
 int CLuaFile::WeaponFireGetClientID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -149,7 +149,7 @@ int CLuaFile::WeaponFireGetClientID(lua_State *L)
 int CLuaFile::WeaponFireSetReloadTime(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -162,7 +162,7 @@ int CLuaFile::WeaponFireSetReloadTime(lua_State *L)
 int CLuaFile::WeaponFireDisableSound(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -174,7 +174,7 @@ int CLuaFile::WeaponFireDisableSound(lua_State *L)
 int CLuaFile::WeaponFireAutoFire(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -187,7 +187,7 @@ int CLuaFile::WeaponFireAutoFire(lua_State *L)
 int CLuaFile::JumpGetClientID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -198,7 +198,7 @@ int CLuaFile::JumpGetClientID(lua_State *L)
 int CLuaFile::JumpGetJumpID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -210,7 +210,7 @@ int CLuaFile::JumpGetJumpID(lua_State *L)
 int CLuaFile::ExplosionGetDamage(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -222,7 +222,7 @@ int CLuaFile::ExplosionGetDamage(lua_State *L)
 int CLuaFile::ExplosionGetOwner(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -234,7 +234,7 @@ int CLuaFile::ExplosionGetOwner(lua_State *L)
 int CLuaFile::ExplosionGetWeapon(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -246,7 +246,7 @@ int CLuaFile::ExplosionGetWeapon(lua_State *L)
 int CLuaFile::ExplosionGetPos(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -259,7 +259,7 @@ int CLuaFile::ExplosionGetPos(lua_State *L)
 int CLuaFile::ExplosionAbort(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -271,7 +271,7 @@ int CLuaFile::ExplosionAbort(lua_State *L)
 int CLuaFile::GetClientConnectClientID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -283,7 +283,7 @@ int CLuaFile::GetClientConnectClientID(lua_State *L)
 int CLuaFile::GetClientEnterClientID(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -295,7 +295,7 @@ int CLuaFile::GetClientEnterClientID(lua_State *L)
 int CLuaFile::AbortSpawn(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);

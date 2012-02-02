@@ -4,7 +4,7 @@
 int CLuaFile::GetPlayerName(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -24,7 +24,7 @@ int CLuaFile::GetPlayerName(lua_State *L)
 int CLuaFile::GetPlayerClan(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -40,7 +40,7 @@ int CLuaFile::GetPlayerClan(lua_State *L)
 int CLuaFile::GetPlayerCountry(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -56,7 +56,7 @@ int CLuaFile::GetPlayerCountry(lua_State *L)
 int CLuaFile::GetPlayerScore(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -80,7 +80,7 @@ int CLuaFile::GetPlayerScore(lua_State *L)
 int CLuaFile::GetPlayerPing(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -102,7 +102,7 @@ int CLuaFile::GetPlayerPing(lua_State *L)
 int CLuaFile::GetPlayerTeam(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -124,7 +124,7 @@ int CLuaFile::GetPlayerTeam(lua_State *L)
 int CLuaFile::GetPlayerSkin(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);

@@ -288,7 +288,7 @@ void CLuaFile::Close()
 int CLuaFile::ErrorFunc(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
 
     lua_pop(L,1);
 
@@ -422,7 +422,7 @@ void CLuaFile::FunctionExec(const char *pFunctionName)
 int CLuaFile::Include(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -440,7 +440,7 @@ int CLuaFile::Include(lua_State *L)
 int CLuaFile::SetScriptUseSettingPage(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -454,7 +454,7 @@ int CLuaFile::SetScriptUseSettingPage(lua_State *L)
 int CLuaFile::SetScriptTitle(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -468,7 +468,7 @@ int CLuaFile::SetScriptTitle(lua_State *L)
 int CLuaFile::SetScriptInfo(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);

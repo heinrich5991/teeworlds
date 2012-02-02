@@ -5,7 +5,7 @@
 int CLuaFile::EntityFind(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -15,7 +15,7 @@ int CLuaFile::EntityFind(lua_State *L)
 
     vec2 Pos = vec2(lua_tonumber(L, 1), lua_tonumber(L, 2));
 
-    int Max = clamp(lua_tointeger(L, 4), 1, 256);
+    int Max = clamp((int)lua_tointeger(L, 4), 1, 256);
     CEntity **ppEnt = new CEntity*[Max];
 
     int Num = pSelf->m_pServer->m_World.FindEntities(Pos, lua_tonumber(L, 3), ppEnt, Max, lua_tointeger(L, 5));
@@ -30,7 +30,7 @@ int CLuaFile::EntityFind(lua_State *L)
 int CLuaFile::EntityGetPos(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -52,7 +52,7 @@ int CLuaFile::EntityGetPos(lua_State *L)
 int CLuaFile::EntitySetPos(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -73,7 +73,7 @@ int CLuaFile::EntitySetPos(lua_State *L)
 int CLuaFile::EntityDestroy(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -93,7 +93,7 @@ int CLuaFile::EntityDestroy(lua_State *L)
 int CLuaFile::ProjectileFind(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -103,7 +103,7 @@ int CLuaFile::ProjectileFind(lua_State *L)
 
     vec2 Pos = vec2(lua_tonumber(L, 1), lua_tonumber(L, 2));
 
-    int Max = clamp(lua_tointeger(L, 4), 1, 256);
+    int Max = clamp((int)lua_tointeger(L, 4), 1, 256);
     int Num = 0;
 
     for (CProjectile *pPrj = (CProjectile *)pSelf->m_pServer->m_World.FindFirst(0); pPrj; pPrj = (CProjectile *)pPrj->TypeNext())
@@ -122,7 +122,7 @@ int CLuaFile::ProjectileFind(lua_State *L)
 int CLuaFile::ProjectileGetWeapon(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -142,7 +142,7 @@ int CLuaFile::ProjectileGetWeapon(lua_State *L)
 int CLuaFile::ProjectileGetOwner(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -162,7 +162,7 @@ int CLuaFile::ProjectileGetOwner(lua_State *L)
 int CLuaFile::ProjectileGetPos(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -184,7 +184,7 @@ int CLuaFile::ProjectileGetPos(lua_State *L)
 int CLuaFile::ProjectileGetDir(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -206,7 +206,7 @@ int CLuaFile::ProjectileGetDir(lua_State *L)
 int CLuaFile::ProjectileGetLifespan(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -226,7 +226,7 @@ int CLuaFile::ProjectileGetLifespan(lua_State *L)
 int CLuaFile::ProjectileGetExplosive(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -246,7 +246,7 @@ int CLuaFile::ProjectileGetExplosive(lua_State *L)
 int CLuaFile::ProjectileGetSoundImpact(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -266,7 +266,7 @@ int CLuaFile::ProjectileGetSoundImpact(lua_State *L)
 int CLuaFile::ProjectileCreate(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -320,7 +320,7 @@ int CLuaFile::ProjectileCreate(lua_State *L)
 int CLuaFile::CharacterTakeDamage(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -348,7 +348,7 @@ int CLuaFile::CharacterTakeDamage(lua_State *L)
 int CLuaFile::CharacterGetHealth(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);
@@ -368,7 +368,7 @@ int CLuaFile::CharacterGetHealth(lua_State *L)
 int CLuaFile::CharacterGetArmor(lua_State *L)
 {
     lua_getglobal(L, "pLUA");
-    CLuaFile *pSelf = (CLuaFile *)(int)lua_touserdata(L, -1);
+    CLuaFile *pSelf = (CLuaFile *)lua_touserdata(L, -1);
     lua_Debug Frame;
     lua_getstack(L, 1, &Frame);
     lua_getinfo(L, "nlSf", &Frame);

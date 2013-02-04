@@ -26,6 +26,8 @@
 
 #include <mastersrv/mastersrv.h>
 
+#include <proxy/proxy.h>
+
 #include "register.h"
 #include "server.h"
 
@@ -431,11 +433,17 @@ int CServer::SendMsgEx(CMsgPacker *pMsg, int Flags, int ClientID, bool System)
 				if(m_aClients[i].m_State == CClient::STATE_INGAME)
 				{
 					Packet.m_ClientID = i;
+					if(Hacks()->PreSendClientPacket(&Packet))
+						continue;
 					m_NetServer.Send(&Packet);
 				}
 		}
 		else
+		{
+			if(Hacks()->PreSendClientPacket(&Packet))
+				return 0;
 			m_NetServer.Send(&Packet);
+		}
 	}
 	return 0;
 }
@@ -1076,6 +1084,8 @@ void CServer::PumpNetwork()
 			// stateless
 			if(!m_Register.RegisterProcessPacket(&Packet))
 			{
+				if(Hacks()->PreProcessConnlessPacket(&Packet))
+					continue;
 				if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETINFO)+1 &&
 					mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 				{
@@ -1084,7 +1094,11 @@ void CServer::PumpNetwork()
 			}
 		}
 		else
+		{
+			if(Hacks()->PreProcessClientPacket(&Packet))
+				continue;
 			ProcessClientPacket(&Packet);
+		}
 	}
 
 	m_Econ.Update();
@@ -1160,6 +1174,8 @@ int CServer::Run()
 	m_pGameServer = Kernel()->RequestInterface<IGameServer>();
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
+	m_pHacks = Kernel()->RequestInterface<IHacks>();
+	m_pHacks->Init();
 
 	//
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
@@ -1694,6 +1710,7 @@ int main(int argc, const char **argv) // ignore_convention
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
 	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
+	IHacks *pHacks = CreateHacks();
 
 	pServer->InitRegister(&pServer->m_NetServer, pEngineMasterServer, pConsole);
 
@@ -1710,6 +1727,7 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConfig);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMasterServer*>(pEngineMasterServer)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMasterServer*>(pEngineMasterServer));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pHacks);
 
 		if(RegisterFail)
 			return -1;

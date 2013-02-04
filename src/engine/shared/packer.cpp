@@ -84,6 +84,12 @@ void CPacker::AddRaw(const void *pData, int Size)
 	}
 }
 
+void CPacker::AddRaw(CUnpacker *pUnpacker)
+{
+	int Remaining = pUnpacker->Remaining();
+	AddRaw(pUnpacker->GetRaw(Remaining), Remaining);
+}
+
 
 void CUnpacker::Reset(const void *pData, int Size)
 {

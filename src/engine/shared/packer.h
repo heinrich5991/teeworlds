@@ -3,7 +3,7 @@
 #ifndef ENGINE_SHARED_PACKER_H
 #define ENGINE_SHARED_PACKER_H
 
-
+class CUnpacker;
 
 class CPacker
 {
@@ -21,6 +21,7 @@ public:
 	void AddInt(int i);
 	void AddString(const char *pStr, int Limit);
 	void AddRaw(const void *pData, int Size);
+	void AddRaw(CUnpacker *pUnpacker);
 
 	int Size() const { return (int)(m_pCurrent-m_aBuffer); }
 	const unsigned char *Data() const { return m_aBuffer; }
@@ -45,6 +46,7 @@ public:
 	int GetInt();
 	const char *GetString(int SanitizeType = SANITIZE);
 	const unsigned char *GetRaw(int Size);
+	int Remaining() const { return m_pEnd-m_pCurrent; }
 	bool Error() const { return m_Error; }
 };
 

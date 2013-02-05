@@ -433,15 +433,11 @@ int CServer::SendMsgEx(CMsgPacker *pMsg, int Flags, int ClientID, bool System)
 				if(m_aClients[i].m_State == CClient::STATE_INGAME)
 				{
 					Packet.m_ClientID = i;
-					if(Hacks()->PreSendClientPacket(&Packet))
-						continue;
 					m_NetServer.Send(&Packet);
 				}
 		}
 		else
 		{
-			if(Hacks()->PreSendClientPacket(&Packet))
-				return 0;
 			m_NetServer.Send(&Packet);
 		}
 	}
@@ -501,7 +497,7 @@ void CServer::DoSnapshot()
 
 			// finish snapshot
 			SnapshotSize = m_SnapshotBuilder.Finish(pData);
-			Hacks()->PostSnap(i, pData, &SnapshotSize);
+			Hacks()->OnSnap(i, pData, &SnapshotSize);
 			Crc = pData->Crc();
 
 			// remove old snapshos
@@ -611,7 +607,7 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 	if(pThis->m_aClients[ClientID].m_State >= CClient::STATE_READY)
 		pThis->GameServer()->OnClientDrop(ClientID, pReason);
 
-	pThis->Hacks()->PostDisconnect(ClientID);
+	pThis->Hacks()->OnDisconnect(ClientID);
 
 	pThis->m_aClients[ClientID].m_State = CClient::STATE_EMPTY;
 	pThis->m_aClients[ClientID].m_aName[0] = 0;
@@ -1087,8 +1083,6 @@ void CServer::PumpNetwork()
 			// stateless
 			if(!m_Register.RegisterProcessPacket(&Packet))
 			{
-				if(Hacks()->PreProcessConnlessPacket(&Packet))
-					continue;
 				if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETINFO)+1 &&
 					mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 				{
@@ -1098,8 +1092,6 @@ void CServer::PumpNetwork()
 		}
 		else
 		{
-			if(Hacks()->PreProcessClientPacket(&Packet))
-				continue;
 			ProcessClientPacket(&Packet);
 		}
 	}
@@ -1209,6 +1201,8 @@ int CServer::Run()
 		dbg_msg("server", "couldn't open socket. port might already be in use");
 		return -1;
 	}
+
+	m_NetServer.SetHacks(m_pHacks);
 
 	m_NetServer.SetCallbacks(NewClientCallback, DelClientCallback, this);
 

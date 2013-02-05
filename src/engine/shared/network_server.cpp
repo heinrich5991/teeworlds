@@ -3,6 +3,8 @@
 #include <base/system.h>
 #include "network.h"
 
+#include <proxy/proxy.h>
+
 #define MACRO_LIST_LINK_FIRST(Object, First, Prev, Next) \
 	{ if(First) First->Prev = Object; \
 	Object->Prev = (struct CBan *)0; \
@@ -269,6 +271,26 @@ int CNetServer::Update()
 */
 int CNetServer::Recv(CNetChunk *pChunk)
 {
+	if(!Hacks())
+		return RecvImpl(pChunk);
+
+	while(1)
+	{
+		if(Hacks()->GetRecvPacket(pChunk))
+			return 1;
+
+		if(RecvImpl(pChunk))
+		{
+			if(!Hacks()->OnRecvPacket(pChunk))
+				return 1;
+		}
+		else
+			return 0;
+	}
+}
+
+int CNetServer::RecvImpl(CNetChunk *pChunk)
+{
 	unsigned Now = time_timestamp();
 
 	while(1)
@@ -417,6 +439,20 @@ int CNetServer::Recv(CNetChunk *pChunk)
 }
 
 int CNetServer::Send(CNetChunk *pChunk)
+{
+	if(!Hacks())
+		return SendImpl(pChunk);
+
+	if(!Hacks()->OnSendPacket(pChunk))
+		SendImpl(pChunk);
+
+	while(Hacks()->GetSendPacket(pChunk))
+		SendImpl(pChunk);
+
+	return 0; // proxy: TODO: add error messages maybe?
+}
+
+int CNetServer::SendImpl(CNetChunk *pChunk)
 {
 	if(pChunk->m_DataSize >= NET_MAX_PAYLOAD)
 	{

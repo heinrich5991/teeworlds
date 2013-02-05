@@ -1,7 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef ENGINE_SHARED_NETWORK_H
-#define ENGINE_SHARED_NETWORK_H
+#ifndef PROXY_06_NETWORK_H
+#define PROXY_06_NETWORK_H
 
 #include "ringbuffer.h"
 #include "huffman.h"
@@ -23,8 +23,6 @@ CURRENT:
 		unsigned char size_seq; // 4bit size, 4bit seq
 		(unsigned char seq;) // 8bit seq, if vital flag is set
 */
-
-class IHacks;
 
 enum
 {
@@ -294,15 +292,7 @@ private:
 
 	void BanRemoveByObject(CBan *pBan);
 
-	int RecvImpl(CNetChunk *pChunk);
-	int SendImpl(CNetChunk *pChunk);
-
-	IHacks *m_pHacks;
-
 public:
-	void SetHacks(IHacks *pHacks) { m_pHacks = pHacks; }
-	IHacks *Hacks() { return m_pHacks; }
-
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
 
 	//

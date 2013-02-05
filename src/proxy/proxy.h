@@ -4,6 +4,7 @@
 #include <engine/kernel.h>
 
 class CNetChunk;
+class CSnapshot;
 
 class IHacks : public IInterface
 {
@@ -15,6 +16,8 @@ public:
 	virtual int PreProcessClientPacket(CNetChunk *pPacket) = 0;
 	virtual int PreSendClientPacket(CNetChunk *pPacket) = 0;
 	virtual int PreProcessConnlessPacket(CNetChunk *pPacket) = 0;
+	virtual void PostSnap(int ClientID, CSnapshot *pSnap, int *pSnapSize) = 0;
+	virtual void PostDisconnect(int ClientID) { }
 };
 
 IHacks *CreateHacks();

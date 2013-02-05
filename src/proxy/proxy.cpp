@@ -7,6 +7,9 @@
 #include <engine/shared/network.h>
 #include <engine/shared/packer.h>
 #include <engine/shared/protocol.h>
+#include <engine/shared/snapshot.h>
+
+#include <game/generated/protocol.h>
 
 #include "0.5-endofline/src/nethash.h"
 #include "0.5-endofline/src/network.h"
@@ -29,6 +32,8 @@ public:
 	virtual int PreProcessClientPacket(CNetChunk *pPacket);
 	virtual int PreSendClientPacket(CNetChunk *pPacket);
 	virtual int PreProcessConnlessPacket(CNetChunk *pPacket);
+	virtual void PostSnap(int ClientID, CSnapshot *pSnap, int *pSnapSize);
+	virtual void PostDisconnect(int ClientID);
 
 private:
 	enum
@@ -56,6 +61,8 @@ CProxy::~CProxy()
 		delete m_apHandlers[i];
 		m_apHandlers[i] = 0;
 	}
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		m_apClientHandlers[i] = 0; // proxy: TODO: reset those somewhere else
 }
 
 void CProxy::Init()
@@ -127,5 +134,35 @@ int CProxy::PreProcessConnlessPacket(CNetChunk *pPacket)
 			return Result;
 	}
 	return 0;
+}
+
+void CProxy::PostSnap(int ClientID, CSnapshot *pSnap, int *pSnapSize)
+{
+	/*int ClientID = -1;
+	// just walk through the items of the snap. internal functions aren't faster
+	for(int i = 0; i < pSnap->NumItems(); i++)
+	{
+		CSnapshotItem *pItem = pSnap->GetItem(i);
+		if(pItem->Type() == NETOBJTYPE_PLAYERINFO)
+		{
+			const CNetObj_PlayerInfo *pInfo = (const CNetObj_PlayerInfo *)pItem->Data();
+
+			if(pInfo->m_Local)
+			{
+				ClientID = pItem->ID();
+				break;
+			}
+		}
+	}*/
+	dbg_assert(0 <= ClientID && ClientID < MAX_CLIENTS, "cid out of range"); // proxy: TODO: check that before release
+	if(m_apClientHandlers[ClientID])
+	{
+		m_apClientHandlers[ClientID]->PostSnap(ClientID, pSnap, pSnapSize);
+	}
+}
+
+void CProxy::PostDisconnect(int ClientID)
+{
+	m_apClientHandlers[ClientID] = 0;
 }
 

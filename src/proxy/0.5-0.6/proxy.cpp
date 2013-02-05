@@ -102,6 +102,7 @@ void CProxy_05_06::TranslatePacket(CNetChunk *pPacket)
 		Protocol5::CNetObjHandler Handler;
 		if(Msg == Protocol5::NETMSGTYPE_CL_STARTINFO
 			|| Msg == Protocol5::NETMSGTYPE_CL_CHANGEINFO
+			|| Msg == Protocol5::NETMSGTYPE_CL_EMOTICON
 			|| Msg == Protocol5::NETMSGTYPE_CL_CALLVOTE)
 		{
 			pRawData = Handler.SecureUnpackMsg(Msg, &Unpacker);
@@ -122,6 +123,24 @@ void CProxy_05_06::TranslatePacket(CNetChunk *pPacket)
 			DataT.m_ColorBody = pData->m_ColorBody;
 			DataT.m_ColorFeet = pData->m_ColorFeet;
 			DataT.Pack((CMsgPacker *)&Packer); // proxy: TODO: hack
+		}
+		else if(Msg == Protocol5::NETMSGTYPE_CL_EMOTICON)
+		{
+			Protocol5::CNetMsg_Cl_Emoticon *pData = (Protocol5::CNetMsg_Cl_Emoticon *)pRawData;
+			Protocol6::CNetMsg_Cl_Emoticon DataT = *(Protocol6::CNetMsg_Cl_Emoticon *)pData;
+			// abuse that the emoticon values are nearly the same
+			// use Protocol6 variants because they have names
+			if(pData->m_Emoticon == Protocol6::EMOTICON_SORRY) // emoticon: music without bubble
+				DataT.m_Emoticon = Protocol6::EMOTICON_MUSIC;
+			else if(pData->m_Emoticon == Protocol6::EMOTICON_EYES) // emoticon: dead tee
+				DataT.m_Emoticon = Protocol6::EMOTICON_SPLATTEE;
+			else if(pData->m_Emoticon == Protocol6::EMOTICON_WTF) // no emoticon
+				DataT.m_Emoticon = -1;
+			else if(pData->m_Emoticon == Protocol6::EMOTICON_QUESTION) // no emoticon
+				DataT.m_Emoticon = -1;
+			if(DataT.m_Emoticon == -1)
+				return;
+			DataT.Pack((CMsgPacker *)&Packer);
 		}
 		else if(Msg == Protocol5::NETMSGTYPE_CL_CALLVOTE)
 		{
@@ -176,8 +195,7 @@ void CProxy_06_05::TranslatePacket(CNetChunk *pPacket)
 	{
 		int MsgT = Msg;
 
-		if(Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONLISTADD
-			|| Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONREMOVE // proxy: TODO: add suport here
+		if(Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONREMOVE // proxy: TODO: add suport here
 			|| Msg == Protocol6::NETMSGTYPE_CL_SETSPECTATORMODE)
 			return;
 
@@ -191,7 +209,8 @@ void CProxy_06_05::TranslatePacket(CNetChunk *pPacket)
 		Packer.AddInt(MsgT << 1 | Sys);
 
 		void *pRawData;
-		if(Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONLISTADD
+		if(Msg == Protocol6::NETMSGTYPE_SV_EMOTICON
+			|| Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONLISTADD
 			|| Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONREMOVE)
 		{
 			Protocol6::CNetObjHandler Handler;
@@ -200,7 +219,23 @@ void CProxy_06_05::TranslatePacket(CNetChunk *pPacket)
 				return;
 		}
 
-		if(Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONLISTADD)
+		if(Msg == Protocol6::NETMSGTYPE_SV_EMOTICON)
+		{
+			Protocol6::CNetMsg_Sv_Emoticon *pData = (Protocol6::CNetMsg_Sv_Emoticon *)pRawData;
+			Protocol5::CNetMsg_Sv_Emoticon DataT = *(Protocol5::CNetMsg_Sv_Emoticon *)pData;
+			// abuse that the emoticon values are nearly the same
+			// use Protocol6 variants because they have names
+			if(pData->m_Emoticon == Protocol6::EMOTICON_SORRY)
+				DataT.m_Emoticon = Protocol6::EMOTICON_OOP;
+			else if(pData->m_Emoticon == Protocol6::EMOTICON_WTF)
+				DataT.m_Emoticon = Protocol6::EMOTICON_ZZZ; // proxy: TODO: debatable
+			else if(pData->m_Emoticon == Protocol6::EMOTICON_EYES)
+				DataT.m_Emoticon = Protocol6::EMOTICON_MUSIC;
+			else if(pData->m_Emoticon == Protocol6::EMOTICON_QUESTION)
+				DataT.m_Emoticon = Protocol6::EMOTICON_DOTDOT;
+			DataT.Pack((CMsgPacker *)&Packer);
+		}
+		else if(Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONLISTADD)
 		{
 			Protocol6::CNetMsg_Sv_VoteOptionListAdd *pData = (Protocol6::CNetMsg_Sv_VoteOptionListAdd *)pRawData;
 			Protocol5::CNetMsg_Sv_VoteOption DataT;

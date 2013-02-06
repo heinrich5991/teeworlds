@@ -96,13 +96,49 @@ void CProxy_05_06::TranslatePacket(CNetChunk *pPacket)
 
 		Packer.AddInt(MsgT << 1 | Sys);
 
-		if(MsgT == Protocol5::NETMSG_INFO)
+		if(Msg == Protocol5::NETMSG_INFO)
 		{
 			const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 			if(str_comp(pVersion, Protocol5::GAME_NETVERSION) == 0)
 				Packer.AddString(Protocol6::GAME_NETVERSION, 0);
 			else
 				Packer.AddString(pVersion, 0);
+		}
+		else if(Msg == Protocol5::NETMSG_INPUT)
+		{
+			int Size = 0;
+			Packer.AddInt(Unpacker.GetInt()); // acked snapshot
+			Packer.AddInt(Unpacker.GetInt()); // intended tick
+			Packer.AddInt(Size = Unpacker.GetInt()); // size
+			if(Unpacker.Error() || Size / 4 > Protocol6::MAX_INPUT_SIZE || Size < (int)sizeof(Protocol5::CNetObj_PlayerInput))
+				return;
+			dbg_msg("dbg", "size/4=%d wanted=%d", Size / 4, sizeof(Protocol5::CNetObj_PlayerInput));
+			int aInputBuf[Protocol6::MAX_INPUT_SIZE];
+			for(int i = 0; i < Size / 4; i++)
+				aInputBuf[i] = Unpacker.GetInt();
+
+			if(Unpacker.Error())
+				return;
+
+			// abuse that both versions have the same input layout
+			Protocol5::CNetObj_PlayerInput *pData = (Protocol5::CNetObj_PlayerInput *)aInputBuf;
+			Protocol6::CNetObj_PlayerInput DataT = *(Protocol6::CNetObj_PlayerInput *)pData;
+
+			DataT.m_PlayerFlags = 0;
+			DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_SCOREBOARD; // to fix ping updates
+			if(pData->m_PlayerState == Protocol5::PLAYERSTATE_IN_MENU)
+			{
+				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_IN_MENU;
+				DataT.m_PlayerFlags &= ~Protocol6::PLAYERFLAG_SCOREBOARD; // no possibility to have scoreboard open
+			}
+			else if(pData->m_PlayerState == Protocol5::PLAYERSTATE_CHATTING)
+				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_CHATTING;
+			else
+				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_PLAYING;
+
+			mem_copy(aInputBuf, &DataT, sizeof(DataT));
+			for(int i = 0; i < Size / 4; i++)
+				Packer.AddInt(aInputBuf[i]);
 		}
 	}
 	else

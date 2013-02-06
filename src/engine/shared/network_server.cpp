@@ -266,9 +266,6 @@ int CNetServer::Update()
 	return 0;
 }
 
-/*
-	TODO: chopp up this function into smaller working parts
-*/
 int CNetServer::Recv(CNetChunk *pChunk)
 {
 	if(!Hacks())
@@ -289,6 +286,9 @@ int CNetServer::Recv(CNetChunk *pChunk)
 	}
 }
 
+/*
+	TODO: chopp up this function into smaller working parts
+*/
 int CNetServer::RecvImpl(CNetChunk *pChunk)
 {
 	unsigned Now = time_timestamp();

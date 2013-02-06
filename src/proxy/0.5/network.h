@@ -1,7 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef PROXY_05ENDOFLINE_NETWORK_H
-#define PROXY_05ENDOFLINE_NETWORK_H
+#ifndef PROXY_05_NETWORK_H
+#define PROXY_05_NETWORK_H
 
 #include <engine/shared/ringbuffer.h>
 #include <engine/shared/huffman.h>
@@ -354,4 +354,4 @@ public:
 
 } // namespace Protocol5
 
-#endif // PROXY_05ENDOFLINE_NETWORK_H
+#endif // PROXY_05_NETWORK_H

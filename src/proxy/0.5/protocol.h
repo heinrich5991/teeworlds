@@ -1,7 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef PROXY_05ENDOFLINE_PROTOCOL_H
-#define PROXY_05ENDOFLINE_PROTOCOL_H
+#ifndef PROXY_05_PROTOCOL_H
+#define PROXY_05_PROTOCOL_H
 
 namespace Protocol5
 {
@@ -92,4 +92,4 @@ enum
 };
 
 } // namespace Protocol5
-#endif // PROXY_05ENDOFLINE_PROTOCOL_H
+#endif // PROXY_05_PROTOCOL_H

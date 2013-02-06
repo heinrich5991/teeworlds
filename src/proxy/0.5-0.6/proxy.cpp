@@ -6,10 +6,12 @@
 #include <engine/shared/snapshot.h>
 
 #include <proxy/0.5/nethash.h>
+#include <proxy/0.5/mastersrv.h>
 #include <proxy/0.5/protocol.h>
 #include <proxy/0.5/protocol_generated.h>
 
 #include <proxy/0.6/nethash.h>
+#include <proxy/0.6/mastersrv.h>
 #include <proxy/0.6/protocol.h>
 #include <proxy/0.6/protocol_generated.h>
 
@@ -53,13 +55,30 @@ CProxy_06_05::CProxy_06_05(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, voi
 
 void CProxy_05_06::TranslatePacket(CNetChunk *pPacket)
 {
-	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
-		return; // proxy: TODO: add connless packet handling
-
 	CUnpacker Unpacker;
 	Unpacker.Reset(pPacket->m_pData, pPacket->m_DataSize);
 	CPacker Packer;
 	Packer.Reset();
+
+	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
+	{
+		if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_GETINFO) + 1
+			&& mem_comp(Unpacker.GetRaw(sizeof(Protocol5::SERVERBROWSE_GETINFO)), Protocol5::SERVERBROWSE_GETINFO,
+				sizeof(Protocol5::SERVERBROWSE_GETINFO)) == 0)
+		{
+			dbg_msg("proxy/5", "translated getinfo");
+			Packer.AddRaw(Protocol6::SERVERBROWSE_GETINFO, sizeof(Protocol6::SERVERBROWSE_GETINFO));
+			Packer.AddRaw(Unpacker.GetRaw(1), 1); // token
+		}
+		else
+			return;
+
+		CNetChunk Packet = *pPacket;
+		Packet.m_DataSize = Packer.Size();
+		Packet.m_pData = Packer.Data();
+		TranslatePacketCB(&Packet);
+		return;
+	}
 
 	int Msg = Unpacker.GetInt();
 	int Sys = Msg&1;
@@ -162,13 +181,74 @@ void CProxy_05_06::TranslatePacket(CNetChunk *pPacket)
 
 void CProxy_06_05::TranslatePacket(CNetChunk *pPacket)
 {
-	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
-		return; // proxy: TODO: add connless packet handling
-
 	CUnpacker Unpacker;
 	Unpacker.Reset(pPacket->m_pData, pPacket->m_DataSize);
 	CPacker Packer;
 	Packer.Reset();
+
+	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
+	{
+		const unsigned char *pRequest = Unpacker.GetRaw(sizeof(Protocol6::SERVERBROWSE_INFO));
+		if(pRequest && mem_comp(pRequest, Protocol6::SERVERBROWSE_INFO,
+				sizeof(Protocol6::SERVERBROWSE_INFO)) == 0)
+		{
+			dbg_msg("proxy/5", "translated info");
+			Packer.AddRaw(Protocol5::SERVERBROWSE_INFO, sizeof(Protocol5::SERVERBROWSE_INFO));
+			const char *pString = Unpacker.GetString();
+			int i = 0;
+			while(!Unpacker.Error() && Unpacker.Remaining() > 0)
+			{
+				//     i 5 6  desc
+				//     0 x x  token
+				//     1 m x  version
+				//     2 x x  name
+				//     3 x x  map
+				//     4 x x  gametype
+				//     5 x x  flags
+				//       x    progression
+				//     6   x  player count
+				//     7   x  max players
+				//     8 x x  client count
+				//     9 x x  max clients
+				// 5k+10 x x  k-th client's name
+				// 5k+11   x  k-th client's clan
+				// 5k+12   x  k-th client's country
+				// 5k+13 x x  k-th client's score
+				// 5k+14   x  k-th client's team
+
+				if(i == 1) // version
+				{
+					char m_aVersion[32];
+					str_copy(m_aVersion, pString, sizeof(m_aVersion));
+					m_aVersion[0] = '0';
+					m_aVersion[1] = '.';
+					m_aVersion[2] = '5';
+					Packer.AddString(Protocol5::GAME_NETVERSION, 0);
+				}
+				else if(i == 6 || i == 7
+					|| (i >= 10 && (i % 5 == 1 || i % 5 == 2 || i % 5 == 4)))
+				{
+					// nothing
+				}
+				else
+					Packer.AddString(pString, 0);
+
+				if(i == 5) // progression
+					Packer.AddString("0", 0);
+
+				pString = Unpacker.GetString();
+				i++;
+			}
+		}
+		else
+			return;
+
+		CNetChunk Packet = *pPacket;
+		Packet.m_DataSize = Packer.Size();
+		Packet.m_pData = Packer.Data();
+		TranslatePacketCB(&Packet);
+		return;
+	}
 
 	int Msg = Unpacker.GetInt();
 	int Sys = Msg&1;

@@ -10,6 +10,7 @@
 
 #include "0.5/nethash.h"
 #include "0.5/protocol.h"
+#include "0.5/mastersrv.h"
 
 #include "0.5-0.6/proxy.h"
 
@@ -19,6 +20,7 @@ class CHacksServer : public IHacks
 {
 private:
 	IServer *m_pServer;
+	CNetServer *m_pNet;
 public:
 	IServer *Server() { return m_pServer; }
 
@@ -43,6 +45,8 @@ public:
 	virtual void OnSnap(int ClientID, CSnapshot *pSnap, int *pSnapSize);
 	virtual void OnDisconnect(int ClientID);
 
+	virtual void SetNet(void *pNet) { m_pNet = (CNetServer *)pNet; }
+
 	int GetPacket(CNetChunk *pPacket, int Dir);
 	int OnPacket(CNetChunk *pPacket, int Dir);
 
@@ -56,6 +60,8 @@ public:
 	void FinalizeCBData(int Dir);
 
 	int Detect5(CNetChunk *pPacket);
+	bool IsConnless5(CNetChunk *pPacket);
+	void SetProxy5(int ClientID);
 
 private:
 	enum
@@ -67,8 +73,13 @@ private:
 		MAX_PACKETS_PER_PACKET=16,
 	};
 
+	struct CClient
+	{
+		NETADDR m_Addr;
+		IProxy *m_apProxies[NUM_DIRS];
+	};
 	IProxy *m_apProxies[NUM_PROXIES];
-	IProxy *m_apClientProxies[MAX_CLIENTS][NUM_DIRS];
+	CClient m_aClients[MAX_CLIENTS];
 
 	struct CCBData
 	{
@@ -82,17 +93,21 @@ private:
 
 	CCBData m_aCBData[NUM_DIRS];
 	int m_CBDir;
+
+	NETADDR m_ConnlessAddr;
+	IProxy *m_pConnlessAddrProxy;
 };
 
 IHacks *CreateHacks() { return new CHacksServer(); }
 
 CHacksServer::CHacksServer()
 {
-	mem_zero(m_apClientProxies, sizeof(m_apClientProxies));
+	mem_zero(m_aClients, sizeof(m_aClients));
 	mem_zero(m_aCBData, sizeof(m_aCBData));
 	m_CBDir = -1;
 	m_apProxies[PROXY_05_06] = CreateProxy_05_06(this, TranslatePacketCB, this);
 	m_apProxies[PROXY_06_05] = CreateProxy_06_05(this, TranslatePacketCB, this);
+	m_pConnlessAddrProxy = 0;
 }
 
 CHacksServer::~CHacksServer()
@@ -101,7 +116,8 @@ CHacksServer::~CHacksServer()
 		delete m_apProxies[i];
 
 	mem_zero(m_apProxies, sizeof(m_apProxies));
-	mem_zero(m_apClientProxies, sizeof(m_apClientProxies));
+	mem_zero(m_aClients, sizeof(m_aClients));
+	m_pConnlessAddrProxy = 0;
 }
 
 void CHacksServer::Init()
@@ -149,13 +165,52 @@ int CHacksServer::OnPacket(CNetChunk *pPacket, int Dir)
 	int ClientID = pPacket->m_ClientID;
 	dbg_assert(-1 <= ClientID && ClientID < MAX_CLIENTS, "cid out of range");
 
-	if(ClientID < 0)
-		return 0; // proxy: TODO: add handling for connless packets
+	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
+	{
+		// 0.5 begin
+		if(Dir == DIR_RECV && IsConnless5(pPacket))
+		{
+			InitCBData(Dir, ClientID);
+			m_apProxies[PROXY_05_06]->TranslatePacket(pPacket);
+			FinalizeCBData(Dir);
+			return 1;
+		}
+		// 0.5 end
 
-	if(m_apClientProxies[ClientID][Dir])
+		if(Dir == DIR_SEND)
+		{
+			for(int i = 0; i < MAX_CLIENTS; i++)
+			{
+				if(m_aClients[ClientID].m_apProxies[DIR_SEND]
+					&& net_addr_comp(&m_aClients[ClientID].m_Addr, &pPacket->m_Address) == 0)
+				{
+					InitCBData(Dir, ClientID);
+					m_aClients[ClientID].m_apProxies[DIR_SEND]->TranslatePacket(pPacket);
+					FinalizeCBData(Dir);
+					return 1;
+				}
+			}
+		}
+
+		// connlesshack begin
+		if(Dir == DIR_SEND && m_pConnlessAddrProxy
+			&& net_addr_comp(&pPacket->m_Address, &m_ConnlessAddr) == 0)
+		{
+			InitCBData(Dir, ClientID);
+			m_apProxies[PROXY_06_05]->TranslatePacket(pPacket);
+			FinalizeCBData(Dir);
+			return 1;
+		}
+		// connlesshack end
+
+		return 0;
+	}
+
+	dbg_assert(0 <= ClientID && ClientID < MAX_CLIENTS, "cid out of range");
+	if(m_aClients[ClientID].m_apProxies[Dir])
 	{
 		InitCBData(Dir, ClientID);
-		m_apClientProxies[ClientID][Dir]->TranslatePacket(pPacket);
+		m_aClients[ClientID].m_apProxies[Dir]->TranslatePacket(pPacket);
 		FinalizeCBData(Dir);
 		return 1;
 	}
@@ -182,6 +237,20 @@ int CHacksServer::GetPacket(CNetChunk *pPacket, int Dir)
 	*pPacket = m_aCBData[Dir].m_aPackets[m_aCBData[Dir].m_Offset];
 	m_aCBData[Dir].m_Offset++;
 	m_aCBData[Dir].m_NumPackets--;
+
+	// connlesshack begin
+	if(Dir == DIR_RECV)
+	{
+		if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
+		{
+			m_ConnlessAddr = pPacket->m_Address;
+			m_pConnlessAddrProxy = m_apProxies[PROXY_06_05];
+		}
+		else
+			m_pConnlessAddrProxy = 0;
+	}
+	// connlesshack end
+
 	return 1;
 }
 
@@ -203,6 +272,8 @@ int CHacksServer::Detect5(CNetChunk *pPacket)
 		int Sys = Msg&1;
 		Msg >>= 1;
 
+		dbg_msg("proxy/det5", "packet sys=%d msg=%d", Sys, Msg);
+
 		if(Unpacker.Error())
 		{
 			dbg_msg("proxy", "shouldn't happen"); // proxy: TODO: remove this
@@ -214,9 +285,7 @@ int CHacksServer::Detect5(CNetChunk *pPacket)
 			const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 			if(str_comp(pVersion, Protocol5::GAME_NETVERSION) == 0)
 			{
-				m_apClientProxies[ClientID][DIR_SEND] = m_apProxies[PROXY_06_05];
-				m_apClientProxies[ClientID][DIR_RECV] = m_apProxies[PROXY_05_06];
-				dbg_msg("proxy", "0.5 detected cid=%x", ClientID);
+				SetProxy5(ClientID);
 				return OnRecvPacket(pPacket);
 			}
 		}
@@ -226,21 +295,48 @@ int CHacksServer::Detect5(CNetChunk *pPacket)
 }
 // 0.5 end
 
+// 0.5 begin
+bool CHacksServer::IsConnless5(CNetChunk *pPacket)
+{
+	if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_GETINFO) + 1
+		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_GETINFO,
+			    sizeof(Protocol5::SERVERBROWSE_GETINFO)) == 0)
+		return true;
+
+
+	char aBuf[128];
+	str_hex(aBuf, sizeof(aBuf), pPacket->m_pData, pPacket->m_DataSize-1);
+	dbg_msg("proxy/is5", "got msg data=%s", aBuf);
+	str_hex(aBuf, sizeof(aBuf), Protocol5::SERVERBROWSE_GETINFO, sizeof(Protocol5::SERVERBROWSE_GETINFO));
+	dbg_msg("proxy/is5", "      wanted=%s", aBuf);
+
+	return false;
+}
+// 0.5 end
+
+void CHacksServer::SetProxy5(int ClientID)
+{
+	dbg_assert(0 <= ClientID && ClientID < MAX_CLIENTS, "cid out of range");
+	m_aClients[ClientID].m_apProxies[DIR_SEND] = m_apProxies[PROXY_06_05];
+	m_aClients[ClientID].m_apProxies[DIR_RECV] = m_apProxies[PROXY_05_06];
+	m_aClients[ClientID].m_Addr = m_pNet->ClientAddr(ClientID);
+	dbg_msg("proxy", "0.5 detected cid=%x", ClientID);
+}
+
 void CHacksServer::OnSnap(int ClientID, CSnapshot *pSnap, int *pSnapSize)
 {
 	dbg_assert(0 <= ClientID && ClientID < MAX_CLIENTS, "cid out of range"); // proxy: TODO: check that before release
-	if(m_apClientProxies[ClientID][DIR_SEND])
+	if(m_aClients[ClientID].m_apProxies[DIR_SEND])
 	{
-		*pSnapSize = m_apClientProxies[ClientID][DIR_SEND]->TranslateSnap(pSnap);
+		*pSnapSize = m_aClients[ClientID].m_apProxies[DIR_SEND]->TranslateSnap(pSnap);
 	}
 }
 
 void CHacksServer::OnDisconnect(int ClientID)
 {
-	if(m_apClientProxies[ClientID][DIR_SEND]
-		|| m_apClientProxies[ClientID][DIR_RECV])
+	if(m_aClients[ClientID].m_apProxies[DIR_SEND]
+		|| m_aClients[ClientID].m_apProxies[DIR_RECV])
 		dbg_msg("proxy", "proxy removed cid=%x", ClientID);
-	m_apClientProxies[ClientID][DIR_SEND] = 0;
-	m_apClientProxies[ClientID][DIR_RECV] = 0;
+	mem_zero(&m_aClients[ClientID], sizeof(m_aClients[ClientID]));
 }
 

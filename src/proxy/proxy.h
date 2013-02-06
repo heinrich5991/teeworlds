@@ -36,7 +36,7 @@ public:
 	// called on client disconnect
 	virtual void OnDisconnect(int ClientID) = 0;
 
-	
+	virtual void SetNet(void *pNet) = 0;
 };
 
 typedef void (*PACKET_FUNC)(CNetChunk *pPacket, void *pUserData);

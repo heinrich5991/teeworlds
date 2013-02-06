@@ -1203,6 +1203,7 @@ int CServer::Run()
 	}
 
 	m_NetServer.SetHacks(m_pHacks);
+	m_pHacks->SetNet(&m_NetServer);
 
 	m_NetServer.SetCallbacks(NewClientCallback, DelClientCallback, this);
 

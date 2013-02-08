@@ -15,45 +15,45 @@
 #include <proxy/0.6/protocol.h>
 #include <proxy/0.6/protocol_generated.h>
 
-#include "proxy.h"
+#include "translator.h"
 
-class CProxy_05_06 : public IProxy
+class CTranslator_05_06 : public ITranslator
 {
 public:
-	CProxy_05_06(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData);
+	CTranslator_05_06(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData);
 	virtual void TranslatePacket(CNetChunk *pPacket);
 	virtual int TranslateSnap(CSnapshot *pSnap);
 };
 
-class CProxy_06_05 : public IProxy
+class CTranslator_06_05 : public ITranslator
 {
 public:
-	CProxy_06_05(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData);
+	CTranslator_06_05(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData);
 	virtual void TranslatePacket(CNetChunk *pPacket);
 	virtual int TranslateSnap(CSnapshot *pSnap);
 };
 
-IProxy *CreateProxy_05_06(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)
+ITranslator *CreateTranslator_05_06(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)
 {
-	return new CProxy_05_06(pHacks, pfnTranslatePacketCB, pUserData);
+	return new CTranslator_05_06(pHacks, pfnTranslatePacketCB, pUserData);
 }
 
-IProxy *CreateProxy_06_05(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)
+ITranslator *CreateTranslator_06_05(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)
 {
-	return new CProxy_06_05(pHacks, pfnTranslatePacketCB, pUserData);
+	return new CTranslator_06_05(pHacks, pfnTranslatePacketCB, pUserData);
 }
 
-CProxy_05_06::CProxy_05_06(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)
-	: IProxy(pHacks, pfnTranslatePacketCB, pUserData)
-{
-}
-
-CProxy_06_05::CProxy_06_05(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)
-	: IProxy(pHacks, pfnTranslatePacketCB, pUserData)
+CTranslator_05_06::CTranslator_05_06(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)
+	: ITranslator(pHacks, pfnTranslatePacketCB, pUserData)
 {
 }
 
-void CProxy_05_06::TranslatePacket(CNetChunk *pPacket)
+CTranslator_06_05::CTranslator_06_05(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)
+	: ITranslator(pHacks, pfnTranslatePacketCB, pUserData)
+{
+}
+
+void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 {
 	CUnpacker Unpacker;
 	Unpacker.Reset(pPacket->m_pData, pPacket->m_DataSize);
@@ -66,7 +66,6 @@ void CProxy_05_06::TranslatePacket(CNetChunk *pPacket)
 			&& mem_comp(Unpacker.GetRaw(sizeof(Protocol5::SERVERBROWSE_GETINFO)), Protocol5::SERVERBROWSE_GETINFO,
 				sizeof(Protocol5::SERVERBROWSE_GETINFO)) == 0)
 		{
-			dbg_msg("proxy/5", "translated getinfo");
 			Packer.AddRaw(Protocol6::SERVERBROWSE_GETINFO, sizeof(Protocol6::SERVERBROWSE_GETINFO));
 			Packer.AddRaw(Unpacker.GetRaw(1), 1); // token
 		}
@@ -112,7 +111,6 @@ void CProxy_05_06::TranslatePacket(CNetChunk *pPacket)
 			Packer.AddInt(Size = Unpacker.GetInt()); // size
 			if(Unpacker.Error() || Size / 4 > Protocol6::MAX_INPUT_SIZE || Size < (int)sizeof(Protocol5::CNetObj_PlayerInput))
 				return;
-			dbg_msg("dbg", "size/4=%d wanted=%d", Size / 4, sizeof(Protocol5::CNetObj_PlayerInput));
 			int aInputBuf[Protocol6::MAX_INPUT_SIZE];
 			for(int i = 0; i < Size / 4; i++)
 				aInputBuf[i] = Unpacker.GetInt();
@@ -215,7 +213,7 @@ void CProxy_05_06::TranslatePacket(CNetChunk *pPacket)
 	TranslatePacketCB(&Packet);
 }
 
-void CProxy_06_05::TranslatePacket(CNetChunk *pPacket)
+void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 {
 	CUnpacker Unpacker;
 	Unpacker.Reset(pPacket->m_pData, pPacket->m_DataSize);
@@ -228,7 +226,6 @@ void CProxy_06_05::TranslatePacket(CNetChunk *pPacket)
 		if(pRequest && mem_comp(pRequest, Protocol6::SERVERBROWSE_INFO,
 				sizeof(Protocol6::SERVERBROWSE_INFO)) == 0)
 		{
-			dbg_msg("proxy/5", "translated info");
 			Packer.AddRaw(Protocol5::SERVERBROWSE_INFO, sizeof(Protocol5::SERVERBROWSE_INFO));
 			const char *pString = Unpacker.GetString();
 			int i = 0;
@@ -254,12 +251,7 @@ void CProxy_06_05::TranslatePacket(CNetChunk *pPacket)
 
 				if(i == 1) // version
 				{
-					char m_aVersion[32];
-					str_copy(m_aVersion, pString, sizeof(m_aVersion));
-					m_aVersion[0] = '0';
-					m_aVersion[1] = '.';
-					m_aVersion[2] = '5';
-					Packer.AddString(Protocol5::GAME_NETVERSION, 0);
+					Packer.AddString("0.5.2", 0);
 				}
 				else if(i == 6 || i == 7
 					|| (i >= 10 && (i % 5 == 1 || i % 5 == 2 || i % 5 == 4)))
@@ -385,13 +377,13 @@ void CProxy_06_05::TranslatePacket(CNetChunk *pPacket)
 	TranslatePacketCB(&Packet);
 }
 
-int CProxy_05_06::TranslateSnap(CSnapshot *pSnap)
+int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 {
 	dbg_assert(false, "not implemented yet");
 	return 0;
 }
 
-int CProxy_06_05::TranslateSnap(CSnapshot *pSnap)
+int CTranslator_06_05::TranslateSnap(CSnapshot *pSnap)
 {
 	CSnapshotBuilder Builder;
 	Builder.Init();

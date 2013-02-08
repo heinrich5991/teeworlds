@@ -26,7 +26,7 @@
 
 #include <mastersrv/mastersrv.h>
 
-#include <proxy/proxy.h>
+#include <proxy/hacks.h>
 
 #include "register.h"
 #include "server.h"

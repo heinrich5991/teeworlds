@@ -3,7 +3,7 @@
 #include <base/system.h>
 #include "network.h"
 
-#include <proxy/proxy.h>
+#include <proxy/hacks.h>
 
 #define MACRO_LIST_LINK_FIRST(Object, First, Prev, Next) \
 	{ if(First) First->Prev = Object; \

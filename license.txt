@@ -22,6 +22,9 @@ IMPORTANT NOTE! The source under src/engine/external are stripped
 libraries with their own licenses. Mostly BSD or zlib/libpng license but
 check the individual libraries.
 
+ANOTHER IMPORTANT NOTE! The source under src/proxy/ does not fall under
+this license!
+
 ------------------------------------------------------------------------
 
 With that being said, contact us if there is anything you want to do

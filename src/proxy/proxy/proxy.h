@@ -14,9 +14,9 @@ enum
 	VERSION_06,
 	NUM_VERSIONS,
 
-	ORIGIN_SERVER=0,
-	ORIGIN_CLIENT,
-	NUM_ORIGINS,
+	ROLE_CLIENT=0,
+	ROLE_SERVER,
+	NUM_ROLES,
 };
 
 class IProxy
@@ -40,7 +40,7 @@ public:
 	}
 	virtual ~IProxy() {}
 
-	virtual void TranslatePacket(CNetChunk *pChunk, int Origin) = 0;
+	virtual void TranslatePacket(CNetChunk *pChunk, int Role) = 0;
 	virtual int TranslateServerSnap(CSnapshot *pSnap) = 0; // in-place, returns size
 };
 

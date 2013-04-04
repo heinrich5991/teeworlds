@@ -13,7 +13,8 @@ public:
 
 ITranslator *CreateTranslatorNull(IHacks *pHacks, PACKET_FUNC pfnTranslatedPacketCB, void *pUserData)
 {
-	return new CTranslatorNull(pHacks, pfnTranslatedPacketCB, pUserData);
+	return 0;
+//	return new CTranslatorNull(pHacks, pfnTranslatedPacketCB, pUserData);
 }
 
 CTranslatorNull::CTranslatorNull(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)

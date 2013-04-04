@@ -10,19 +10,19 @@
 class CProxyTranslator : public IProxy
 {
 private:
-	ITranslator *m_apTranslators[NUM_ORIGINS];
+	ITranslator *m_apTranslators[NUM_ROLES];
 public:
 	CProxyTranslator(ITranslator *pServerT, ITranslator *pClientT)
 		: IProxy(0, 0, 0)
 	{
-		m_apTranslators[ORIGIN_SERVER] = pServerT;
-		m_apTranslators[ORIGIN_CLIENT] = pClientT;
+		m_apTranslators[ROLE_SERVER] = pServerT;
+		m_apTranslators[ROLE_CLIENT] = pClientT;
 	}
 
 	~CProxyTranslator()
 	{
-		delete m_apTranslators[ORIGIN_CLIENT]; // proxy: TODO: come up with nice deallocation idea
-		delete m_apTranslators[ORIGIN_SERVER];
+		delete m_apTranslators[ROLE_CLIENT]; // proxy: TODO: come up with nice deallocation idea
+		delete m_apTranslators[ROLE_SERVER];
 		mem_zero(m_apTranslators, sizeof(m_apTranslators));
 	}
 
@@ -33,7 +33,7 @@ public:
 
 	virtual int TranslateServerSnap(CSnapshot *pSnap)
 	{
-		return m_apTranslators[ORIGIN_SERVER]->TranslateSnap(pSnap);
+		return m_apTranslators[ROLE_SERVER]->TranslateSnap(pSnap);
 	}
 };
 

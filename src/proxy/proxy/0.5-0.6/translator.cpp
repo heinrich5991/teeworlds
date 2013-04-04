@@ -5,15 +5,15 @@
 #include <engine/shared/packer.h>
 #include <engine/shared/snapshot.h>
 
-#include <proxy/0.5/nethash.h>
-#include <proxy/0.5/mastersrv.h>
-#include <proxy/0.5/protocol.h>
-#include <proxy/0.5/protocol_generated.h>
+#include <proxy/proxy/0.5/nethash.h>
+#include <proxy/proxy/0.5/mastersrv.h>
+#include <proxy/proxy/0.5/protocol.h>
+#include <proxy/proxy/0.5/protocol_generated.h>
 
-#include <proxy/0.6/nethash.h>
-#include <proxy/0.6/mastersrv.h>
-#include <proxy/0.6/protocol.h>
-#include <proxy/0.6/protocol_generated.h>
+#include <proxy/proxy/0.6/nethash.h>
+#include <proxy/proxy/0.6/mastersrv.h>
+#include <proxy/proxy/0.6/protocol.h>
+#include <proxy/proxy/0.6/protocol_generated.h>
 
 #include "translator.h"
 
@@ -68,6 +68,14 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 		{
 			Packer.AddRaw(Protocol6::SERVERBROWSE_GETINFO, sizeof(Protocol6::SERVERBROWSE_GETINFO));
 			Packer.AddRaw(Unpacker.GetRaw(1), 1); // token
+		}
+		else if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)
+			&& mem_comp(Unpacker.GetRaw(sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)), Protocol5::SERVERBROWSE_OLD_GETINFO,
+				sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)) == 0)
+		{
+			static const unsigned char Byte255 = 255; // just hope we never hit 255 refreshs
+			Packer.AddRaw(Protocol6::SERVERBROWSE_GETINFO, sizeof(Protocol6::SERVERBROWSE_GETINFO));
+			Packer.AddRaw(&Byte255, 1);
 		}
 		else
 			return;
@@ -226,7 +234,6 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 		if(pRequest && mem_comp(pRequest, Protocol6::SERVERBROWSE_INFO,
 				sizeof(Protocol6::SERVERBROWSE_INFO)) == 0)
 		{
-			Packer.AddRaw(Protocol5::SERVERBROWSE_INFO, sizeof(Protocol5::SERVERBROWSE_INFO));
 			const char *pString = Unpacker.GetString();
 			int i = 0;
 			while(!Unpacker.Error())
@@ -249,7 +256,21 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 				// 5k+13 x x  k-th client's score
 				// 5k+14   x  k-th client's team
 
-				if(i == 1) // version
+				if(i == 0) // token
+				{
+					if(str_toint(pString) != 255) // magic number for SERVERBROWSE_OLD_INFO
+					{
+						Packer.AddRaw(Protocol5::SERVERBROWSE_INFO, sizeof(Protocol5::SERVERBROWSE_INFO));
+						Packer.AddString(pString, 0);
+						dbg_msg("packer", "adding '%s'", pString);
+					}
+					else
+					{
+						Packer.AddRaw(Protocol5::SERVERBROWSE_OLD_INFO, sizeof(Protocol5::SERVERBROWSE_OLD_INFO));
+						dbg_msg("packer", "dropping '%s'", pString);
+					}
+				}
+				else if(i == 1) // version
 				{
 					Packer.AddString("0.5.2", 0);
 					dbg_msg("packer", "adding '0.5.2'");

@@ -40,7 +40,7 @@ public:
 	virtual void SetNet(void *pNet) = 0;
 };
 
-IHacks *CreateHacks();
+IHacks *CreateHacks_Server();
 
 #endif // PROXY_HACKS_H
 

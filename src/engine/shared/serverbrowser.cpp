@@ -112,11 +112,11 @@ int CStatsServerBrowser::Update(int MaxActions)
 
 void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 {
-	static const char SERVERBROWSE_INFO_LEGACY[] = { 255, 255, 255, 255, 'i', 'n', 'f', 'o' };
+	static const unsigned char SERVERBROWSE_INFO_LEGACY[] = { 255, 255, 255, 255, 'i', 'n', 'f', 'o' };
 	char aAddressStr[NETADDR_MAXSTRSIZE];
 	net_addr_str(&pPacket->m_Address, aAddressStr, sizeof(aAddressStr));
 
-	if(pPacket->m_DataSize == sizeof(SERVERBROWSE_COUNT) + 2 && mem_comp(pPacket->m_pData, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT)) == 0)
+	if(pPacket->m_DataSize == (int)sizeof(SERVERBROWSE_COUNT) + 2 && mem_comp(pPacket->m_pData, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT)) == 0)
 	{
 		CMasterServerEntry *pMasterServer = FindMaster(&pPacket->m_Address);
 		if(!pMasterServer)
@@ -129,7 +129,7 @@ void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 		pMasterServer->m_NumServers = (((int)*pCount) << 8) + (int)*(pCount + 1);
 		CheckMasterDone(pMasterServer);
 	}
-	else if(pPacket->m_DataSize >= sizeof(SERVERBROWSE_LIST) && mem_comp(pPacket->m_pData, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST)) == 0)
+	else if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_LIST) && mem_comp(pPacket->m_pData, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST)) == 0)
 	{
 		CMasterServerEntry *pMasterServer = FindMaster(&pPacket->m_Address);
 		int MasterServerIndex = GetMasterIndex(&pPacket->m_Address);
@@ -139,14 +139,14 @@ void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 			return;
 		}
 
-		int Size = pPacket->m_DataSize-sizeof(SERVERBROWSE_LIST);
+		int Size = pPacket->m_DataSize - sizeof(SERVERBROWSE_LIST);
 		int Num = Size/sizeof(CMastersrvAddr);
 		CMastersrvAddr *pAddrs = (CMastersrvAddr *)((char*)pPacket->m_pData+sizeof(SERVERBROWSE_LIST));
 		for(int i = 0; i < Num; i++)
 		{
 			NETADDR Addr;
 
-			static char IPV4Mapping[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF };
+			static const unsigned char IPV4Mapping[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF };
 
 			// copy address
 			if(!mem_comp(IPV4Mapping, pAddrs[i].m_aIp, sizeof(IPV4Mapping)))
@@ -171,7 +171,7 @@ void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 
 		CheckMasterDone(pMasterServer);
 	}
-	else if(pPacket->m_DataSize >= sizeof(SERVERBROWSE_LIST_LEGACY) && mem_comp(pPacket->m_pData, SERVERBROWSE_LIST_LEGACY, sizeof(SERVERBROWSE_LIST_LEGACY)) == 0)
+	else if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_LIST_LEGACY) && mem_comp(pPacket->m_pData, SERVERBROWSE_LIST_LEGACY, sizeof(SERVERBROWSE_LIST_LEGACY)) == 0)
 	{
 		CMasterServerEntry *pMasterServer = FindMaster(&pPacket->m_Address);
 		int MasterServerIndex = GetMasterIndex(&pPacket->m_Address);
@@ -209,7 +209,7 @@ void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 		
 		CheckMasterDone(pMasterServer);
 	}
-	else if((pPacket->m_DataSize >= sizeof(SERVERBROWSE_INFO) && mem_comp(pPacket->m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0) || (pPacket->m_DataSize >= sizeof(SERVERBROWSE_INFO_LEGACY) && mem_comp(pPacket->m_pData, SERVERBROWSE_INFO_LEGACY, sizeof(SERVERBROWSE_INFO_LEGACY)) == 0))
+	else if((pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_INFO) && mem_comp(pPacket->m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0) || (pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_INFO_LEGACY) && mem_comp(pPacket->m_pData, SERVERBROWSE_INFO_LEGACY, sizeof(SERVERBROWSE_INFO_LEGACY)) == 0))
 	{
 		CServerEntry *pServer = Find(&pPacket->m_Address);
 		if(!pServer || !pServer->m_RequestTime)
@@ -231,7 +231,7 @@ void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 
 		int PacketInfoVersion = INFOVERSION_UNKNOWN;
 
-		if(pPacket->m_DataSize >= sizeof(SERVERBROWSE_INFO) && mem_comp(pPacket->m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
+		if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_INFO) && mem_comp(pPacket->m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
 			PacketInfoVersion = INFOVERSION_2;
 		else
 			PacketInfoVersion = INFOVERSION_1;
@@ -244,7 +244,7 @@ void CStatsServerBrowser::ProcessPacket(const CNetChunk *pPacket)
 
 		CServerInfo Info = { 0 };
 
-		if(!ReadInfo((char*)pPacket->m_pData + sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize - sizeof(SERVERBROWSE_INFO), &Info, PacketInfoVersion, aAddressStr, pServer->m_RequestToken))
+		if(!ReadInfo((char*)pPacket->m_pData + (int)sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize - sizeof(SERVERBROWSE_INFO), &Info, PacketInfoVersion, aAddressStr, pServer->m_RequestToken))
 		{
 			pServer->m_Info = Info;
 			pServer->m_GotInfo = 1;

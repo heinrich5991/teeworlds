@@ -27,6 +27,7 @@ public:
 
 class CTranslator_06_05 : public ITranslator
 {
+	int m_MapDownloadSize;
 public:
 	CTranslator_06_05(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData);
 	virtual void TranslatePacket(CNetChunk *pPacket);
@@ -51,6 +52,7 @@ CTranslator_05_06::CTranslator_05_06(IHacks *pHacks, PACKET_FUNC pfnTranslatePac
 CTranslator_06_05::CTranslator_06_05(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)
 	: ITranslator(pHacks, pfnTranslatePacketCB, pUserData)
 {
+	m_MapDownloadSize = 0;
 }
 
 void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
@@ -329,6 +331,21 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 			MsgT = Msg - 1;
 
 		Packer.AddInt(MsgT << 1 | Sys);
+		if(Msg == Protocol6::NETMSG_MAP_CHANGE)
+		{
+			Packer.AddString(Unpacker.GetString(), 0); // map name
+			Packer.AddInt(Unpacker.GetInt());          // map crc
+			m_MapDownloadSize = Unpacker.GetInt();        // map size
+		}
+		else if(Msg == Protocol6::NETMSG_MAP_DATA)
+		{
+			Packer.AddInt(Unpacker.GetInt()); // map chunk is the last one?
+			Packer.AddInt(m_MapDownloadSize);    // map size
+			Unpacker.GetInt();                // map crc
+			Unpacker.GetInt();                // map chunk num
+			Packer.AddInt(Unpacker.GetInt()); // map chunk size
+			                                  // map chunk
+		}
 	}
 	else
 	{

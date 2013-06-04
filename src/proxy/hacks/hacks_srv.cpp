@@ -1,5 +1,6 @@
 
 #include <engine/server.h>
+#include <engine/console.h>
 
 #include <engine/shared/network.h>
 #include <engine/shared/packer.h>
@@ -16,11 +17,14 @@
 
 #include "hacks.h"
 
+#include "hacks_register.h"
+
 class CHacksServer : public CHacks
 {
 private:
 	IServer *m_pServer;
 	CNetServer *m_pNet;
+	CHacksRegister m_Register;
 public:
 	IServer *Server() { return m_pServer; }
 
@@ -42,12 +46,16 @@ public:
 	virtual const NETADDR *GetPeerAddress(int PeerID);
 
 	int Detect5(CNetChunk *pPacket);
+
+	virtual void OnRegisterUpdate(int Nettype);
+	virtual bool OnRegisterPacket(CNetChunk *pPacket);
 };
 
 IHacks *CreateHacks_Server() { return new CHacksServer(); }
 
 CHacksServer::CHacksServer()
 {
+	m_pNet = 0;
 }
 
 CHacksServer::~CHacksServer()
@@ -56,8 +64,10 @@ CHacksServer::~CHacksServer()
 
 void CHacksServer::Init()
 {
+	dbg_assert((bool)m_pNet, "you have to register the net first");
 	CHacks::Init();
 	m_pServer = Kernel()->RequestInterface<IServer>();
+	m_Register.Init(m_pNet, Kernel()->RequestInterface<IEngineMasterServer>(), Kernel()->RequestInterface<IConsole>());
 }
 
 int CHacksServer::GetRole(int Origin)
@@ -213,3 +223,12 @@ int CHacksServer::Detect5(CNetChunk *pPacket)
 }
 // 0.5 end
 
+void CHacksServer::OnRegisterUpdate(int Nettype)
+{
+	m_Register.RegisterUpdate(Nettype);
+}
+
+bool CHacksServer::OnRegisterPacket(CNetChunk *pPacket)
+{
+	return m_Register.RegisterProcessPacket(pPacket);
+}

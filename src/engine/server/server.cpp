@@ -1081,7 +1081,12 @@ void CServer::PumpNetwork()
 		if(Packet.m_ClientID == -1)
 		{
 			// stateless
-			if(!m_Register.RegisterProcessPacket(&Packet))
+			bool ProcessFurtherly;
+			if(!Hacks())
+				ProcessFurtherly = !m_Register.RegisterProcessPacket(&Packet);
+			else
+				ProcessFurtherly = !Hacks()->OnRegisterPacket(&Packet);
+			if(ProcessFurtherly)
 			{
 				if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETINFO)+1 &&
 					mem_comp(Packet.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
@@ -1161,7 +1166,8 @@ int CServer::LoadMap(const char *pMapName)
 
 void CServer::InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole)
 {
-	m_Register.Init(pNetServer, pMasterServer, pConsole);
+	if(!Hacks())
+		m_Register.Init(pNetServer, pMasterServer, pConsole);
 }
 
 int CServer::Run()
@@ -1170,7 +1176,6 @@ int CServer::Run()
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pHacks = Kernel()->RequestInterface<IHacks>();
-	m_pHacks->Init();
 
 	//
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
@@ -1204,6 +1209,7 @@ int CServer::Run()
 
 	m_NetServer.SetHacks(m_pHacks);
 	m_pHacks->SetNet(&m_NetServer);
+	m_pHacks->Init();
 
 	m_NetServer.SetCallbacks(NewClientCallback, DelClientCallback, this);
 
@@ -1308,7 +1314,10 @@ int CServer::Run()
 			}
 
 			// master server stuff
-			m_Register.RegisterUpdate(m_NetServer.NetType());
+			if(!Hacks())
+				m_Register.RegisterUpdate(m_NetServer.NetType());
+			else
+				Hacks()->OnRegisterUpdate(m_NetServer.NetType());
 
 			PumpNetwork();
 

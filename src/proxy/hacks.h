@@ -37,6 +37,11 @@ public:
 	// called on client disconnect
 	virtual void OnDisconnect(int ClientID) = 0;
 
+	// called on register update time
+	virtual void OnRegisterUpdate(int Nettype) = 0;
+	// called to process register related packets
+	virtual bool OnRegisterPacket(CNetChunk *pPacket) = 0;
+
 	virtual void SetNet(void *pNet) = 0;
 };
 

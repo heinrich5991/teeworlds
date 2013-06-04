@@ -154,31 +154,23 @@ void CGameControllerBOMB::PostReset()
 
 bool CGameControllerBOMB::CanJoinTeam(int Team, int NotThisID, char *pBuffer, int BufferSize)
 {
-	if(!m_Running)
+	if(!m_Running && Team != TEAM_SPECTATORS)
 	{
-		if(Team == TEAM_SPECTATORS)
-			m_aClients[NotThisID].m_State = STATE_SPECTATING;
-		else
-			m_aClients[NotThisID].m_State = STATE_ACTIVE;
+		m_aClients[NotThisID].m_State = STATE_ACTIVE;
 		return true;
 	}
-	if((GameServer()->m_apPlayers[NotThisID] && GameServer()->m_apPlayers[NotThisID]->GetTeam() == TEAM_SPECTATORS)
-		|| Team == TEAM_SPECTATORS)
+	if(Team == TEAM_SPECTATORS)
 	{
-		if(m_aClients[NotThisID].m_State >= STATE_ACTIVE || Team == TEAM_SPECTATORS)
-		{
-			m_aClients[NotThisID].m_State = STATE_SPECTATING;
-			str_copy(pBuffer, "You are now a spectator\nYou won't join when the round is over", BufferSize);
-			return Team == TEAM_SPECTATORS;
-		}
-		else if (Team != TEAM_SPECTATORS)
-		{
-			m_aClients[NotThisID].m_State = STATE_ACTIVE;
-			str_copy(pBuffer, "You will join the game when the round is over", BufferSize);
-			return false;
-		}
+		m_aClients[NotThisID].m_State = STATE_SPECTATING;
+		str_copy(pBuffer, "You are a spectator now\nYou won't join when a new round begins", BufferSize);
+		return true;
 	}
-	return false;
+	else
+	{
+		m_aClients[NotThisID].m_State = STATE_ACTIVE;
+		str_copy(pBuffer, "You will join the game when the round is over", BufferSize);
+		return false;
+	}
 }
 
 void CGameControllerBOMB::OnCharacterSpawn(CCharacter *pChr)

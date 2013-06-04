@@ -13,6 +13,7 @@ CGameControllerBOMB::CGameControllerBOMB(CGameContext *pGameServer)
 	m_pGameType = "BOMB";
 	m_Bomb.m_ClientID = -1;
 	m_BombEndTick = -1;
+	m_Running = false;
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		m_aClients[i].m_State = STATE_ACTIVE;
 }
@@ -112,10 +113,17 @@ void CGameControllerBOMB::DoWincheck()
 					NumActivePlayers++;
 					if(m_aClients[i].m_State >= STATE_ALIVE)
 						NumLivingPlayers++;
-					else if(GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+					else if(GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS && m_Running)
 						GameServer()->m_apPlayers[i]->SetTeam(TEAM_SPECTATORS, true);
 				}
 			}
+		}
+
+		if(!m_Running && NumActivePlayers > 1)
+		{
+			m_Running = true;
+			EndBombRound(true);
+			return;
 		}
 
 		if(!m_SuddenDeath && g_Config.m_SvTimelimit && (Server()->Tick()-m_RoundStartTick) >= g_Config.m_SvTimelimit * Server()->TickSpeed() * 60)
@@ -129,8 +137,11 @@ void CGameControllerBOMB::DoWincheck()
 				GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE);
 			}
 		}
-		else
+		else if(m_Running)
+		{
+			m_Running = false;
 			EndBombRound(true);
+		}
 	}
 }
 
@@ -143,6 +154,14 @@ void CGameControllerBOMB::PostReset()
 
 bool CGameControllerBOMB::CanJoinTeam(int Team, int NotThisID, char *pBuffer, int BufferSize)
 {
+	if(!m_Running)
+	{
+		if(Team == TEAM_SPECTATORS)
+			m_aClients[NotThisID].m_State = STATE_SPECTATING;
+		else
+			m_aClients[NotThisID].m_State = STATE_ACTIVE;
+		return true;
+	}
 	if((GameServer()->m_apPlayers[NotThisID] && GameServer()->m_apPlayers[NotThisID]->GetTeam() == TEAM_SPECTATORS)
 		|| Team == TEAM_SPECTATORS)
 	{
@@ -207,7 +226,7 @@ void CGameControllerBOMB::Tick()
 	if(m_Bomb.m_ClientID != -1 && (!GameServer()->m_apPlayers[m_Bomb.m_ClientID] || GameServer()->m_apPlayers[m_Bomb.m_ClientID]->GetTeam() == TEAM_SPECTATORS))
 		m_Bomb.m_ClientID = -1;
 
-	if(m_GameOverTick == -1)
+	if(m_GameOverTick == -1 && m_Running)
 	{
 		if(!m_Warmup && m_Bomb.m_ClientID == -1)
 			MakeRandomBomb();

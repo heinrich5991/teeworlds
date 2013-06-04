@@ -262,35 +262,35 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 					{
 						Packer.AddRaw(Protocol5::SERVERBROWSE_INFO, sizeof(Protocol5::SERVERBROWSE_INFO));
 						Packer.AddString(pString, 0);
-						dbg_msg("packer", "adding '%s'", pString);
+						//dbg_msg("packer", "adding '%s'", pString);
 					}
 					else
 					{
 						Packer.AddRaw(Protocol5::SERVERBROWSE_OLD_INFO, sizeof(Protocol5::SERVERBROWSE_OLD_INFO));
-						dbg_msg("packer", "dropping '%s'", pString);
+						//dbg_msg("packer", "dropping '%s'", pString);
 					}
 				}
 				else if(i == 1) // version
 				{
 					Packer.AddString("0.5.2", 0);
-					dbg_msg("packer", "adding '0.5.2'");
+					//dbg_msg("packer", "adding '0.5.2'");
 				}
 				else if(i == 6 || i == 7
 					|| (i >= 10 && (i % 5 == 1 || i % 5 == 2 || i % 5 == 4)))
 				{
 					// nothing
-					dbg_msg("packer", "dropping '%s'", pString);
+					//dbg_msg("packer", "dropping '%s'", pString);
 				}
 				else
 				{
 					Packer.AddString(pString, 0);
-					dbg_msg("packer", "adding '%s'", pString);
+					//dbg_msg("packer", "adding '%s'", pString);
 				}
 
 				if(i == 5) // progression
 				{
 					Packer.AddString("0", 0);
-					dbg_msg("packer", "inserting '0'");
+					//dbg_msg("packer", "inserting '0'");
 				}
 
 				if(Unpacker.Remaining() <= 0)

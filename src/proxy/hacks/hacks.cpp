@@ -190,7 +190,7 @@ void CHacks::SetProxy(int PeerID, int Version)
 	m_aPeers[PeerID].m_pProxy = CreateProxy(Version);
 	m_aPeers[PeerID].m_Addr = *GetPeerAddress(PeerID);
 
-	dbg_msg("proxy", "version detected pid=%d ver=%d", PeerID, GetVersionString(Version));
+	dbg_msg("proxy", "version detected pid=%d ver=%s", PeerID, GetVersionString(Version));
 }
 
 IProxy *CHacks::CreateProxy(int PeerVersion)

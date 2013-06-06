@@ -162,13 +162,15 @@ bool CGameControllerBOMB::CanJoinTeam(int Team, int NotThisID, char *pBuffer, in
 	if(Team == TEAM_SPECTATORS)
 	{
 		m_aClients[NotThisID].m_State = STATE_SPECTATING;
-		str_copy(pBuffer, "You are a spectator now\nYou won't join when a new round begins", BufferSize);
+		if(pBuffer)
+			str_copy(pBuffer, "You are a spectator now\nYou won't join when a new round begins", BufferSize);
 		return true;
 	}
 	else
 	{
 		m_aClients[NotThisID].m_State = STATE_ACTIVE;
-		str_copy(pBuffer, "You will join the game when the round is over", BufferSize);
+		if(pBuffer)
+			str_copy(pBuffer, "You will join the game when the round is over", BufferSize);
 		return false;
 	}
 }

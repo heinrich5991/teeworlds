@@ -11,6 +11,13 @@
 
 #include "../hacks.h"
 
+static const unsigned char HACKS_MAGIC[] = { 0x40, 0x49, 0x0f, 0xdb };
+
+enum
+{
+	MOD_ID_LENGTH=8,
+};
+
 class CHacks : public IHacks
 {
 protected:

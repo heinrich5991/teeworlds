@@ -13,6 +13,8 @@
 #include <proxy/proxy/0.5/protocol.h>
 #include <proxy/proxy/0.5/mastersrv.h>
 
+#include <proxy/proxy/0.6/nethash.h>
+
 #include <proxy/proxy/proxy.h>
 
 #include "hacks.h"
@@ -46,6 +48,7 @@ public:
 	virtual const NETADDR *GetPeerAddress(int PeerID);
 
 	int Detect5(CNetChunk *pPacket);
+	int DetectHacks(CNetChunk *pPacket);
 
 	virtual void OnRegisterUpdate(int Nettype);
 	virtual bool OnRegisterPacket(CNetChunk *pPacket);
@@ -181,6 +184,40 @@ int CHacksServer::Detect(CNetChunk *pPacket)
 
 	return 0;
 }*/
+
+int CHacksServer::DetectHacks(CNetChunk *pPacket)
+{
+	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
+		return 0;
+
+	int ClientID = pPacket->m_ClientID;
+	dbg_assert(0 <= ClientID && ClientID < MAX_CLIENTS, "cid out of range");
+
+	if(!Server()->ClientIngame(ClientID))
+	{
+		CUnpacker Unpacker;
+		Unpacker.Reset(pPacket->m_pData, pPacket->m_DataSize);
+		
+		const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+		if(str_comp(pVersion, Protocol6::GAME_NETVERSION) != 0)
+			// wrong version, let the server deal with it
+			return 0;
+
+		Unpacker.GetString(); // password
+
+		const unsigned char *pMagic = Unpacker.GetRaw(sizeof(HACKS_MAGIC));
+		int NumProtocols = Unpacker.GetInt();
+		if(Unpacker.Error() || mem_comp(pMagic, HACKS_MAGIC, sizeof(HACKS_MAGIC)) != 0)
+			return 0;
+		for(int i = 0; i < NumProtocols; i++)
+		{
+			const unsigned char *pMod = Unpacker.GetRaw(MOD_ID_LENGTH);
+			int Number = Unpacker.GetInt();
+			if(Unpacker.Error())
+				return 0;
+		}
+	}
+}
 
 // 0.5 begin
 int CHacksServer::Detect5(CNetChunk *pPacket)

@@ -88,6 +88,9 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 		Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3],
 		pReason
 		);*/
+	if(Hacks())
+		if(Hacks()->OnDisconnect(ClientID))
+			return 0;
 	if(m_pfnDelClient)
 		m_pfnDelClient(ClientID, pReason, m_UserPtr);
 

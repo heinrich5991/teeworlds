@@ -39,7 +39,7 @@ public:
 	virtual int OnRecvPacket(CNetChunk *pPacket) { return OnPacket(pPacket, ORIGIN_PEER); }
 
 	virtual void OnSnap(int PeerID, CSnapshot *pSnap, int *pSnapSize);
-	virtual void OnDisconnect(int PeerID);
+	virtual int OnDisconnect(int PeerID);
 
 	virtual int GetPacket(CNetChunk *pPacket, int Origin);
 	virtual int OnPacket(CNetChunk *pPacket, int Origin);

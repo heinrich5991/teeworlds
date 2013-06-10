@@ -34,8 +34,9 @@ public:
 	// called after snap creation, to do post processing on it
 	virtual void OnSnap(int ClientID, CSnapshot *pSnap, int *pSnapSize) = 0;
 
-	// called on client disconnect
-	virtual void OnDisconnect(int ClientID) = 0;
+	// called on peer disconnect, returns nonzero if no
+	// action is to be taken
+	virtual int OnDisconnect(int PeerID) = 0;
 
 	// called on register update time
 	virtual void OnRegisterUpdate(int Nettype) = 0;
@@ -46,6 +47,7 @@ public:
 };
 
 IHacks *CreateHacks_Server();
+IHacks *CreateHacks_Client();
 
 #endif // PROXY_HACKS_H
 

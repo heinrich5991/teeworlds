@@ -229,7 +229,7 @@ void CHacks::OnSnap(int PeerID, CSnapshot *pSnap, int *pSnapSize)
 	}
 }
 
-void CHacks::OnDisconnect(int PeerID)
+int CHacks::OnDisconnect(int PeerID)
 {
 	if(m_aPeers[PeerID].m_pProxy)
 	{
@@ -237,5 +237,6 @@ void CHacks::OnDisconnect(int PeerID)
 		delete m_aPeers[PeerID].m_pProxy;
 	}
 	mem_zero(&m_aPeers[PeerID], sizeof(m_aPeers[PeerID]));
+	return 0;
 }
 

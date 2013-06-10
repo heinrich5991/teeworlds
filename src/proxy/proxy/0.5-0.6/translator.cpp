@@ -100,7 +100,7 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 	{
 		int MsgT = Msg;
 		if(Msg >= Protocol5::NETMSG_SNAP)
-			// a new msg 'NETMSG_CONREADY' was added in between the other messages
+			// a new msg 'NETMSG_CON_READY' was added between the other messages
 			MsgT = Msg + 1;
 
 		Packer.AddInt(MsgT << 1 | Sys);
@@ -112,6 +112,8 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 				Packer.AddString(Protocol6::GAME_NETVERSION, 0);
 			else
 				Packer.AddString(pVersion, 0);
+			Unpacker.GetString(); // player name
+			Unpacker.GetString(); // player clan
 		}
 		else if(Msg == Protocol5::NETMSG_INPUT)
 		{
@@ -327,7 +329,7 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 			return;
 
 		if(Msg >= Protocol6::NETMSG_SNAP)
-			// the new msg 'NETMSG_CONREADY' was added
+			// the new msg 'NETMSG_CON_READY' was added
 			MsgT = Msg - 1;
 
 		Packer.AddInt(MsgT << 1 | Sys);
@@ -335,12 +337,12 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 		{
 			Packer.AddString(Unpacker.GetString(), 0); // map name
 			Packer.AddInt(Unpacker.GetInt());          // map crc
-			m_MapDownloadSize = Unpacker.GetInt();        // map size
+			m_MapDownloadSize = Unpacker.GetInt();     // map size
 		}
 		else if(Msg == Protocol6::NETMSG_MAP_DATA)
 		{
 			Packer.AddInt(Unpacker.GetInt()); // map chunk is the last one?
-			Packer.AddInt(m_MapDownloadSize);    // map size
+			Packer.AddInt(m_MapDownloadSize); // map size
 			Unpacker.GetInt();                // map crc
 			Unpacker.GetInt();                // map chunk num
 			Packer.AddInt(Unpacker.GetInt()); // map chunk size
@@ -351,15 +353,15 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 	{
 		int MsgT = Msg;
 
-		if(Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONREMOVE // proxy: TODO: add suport here
+		if(Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONREMOVE // proxy: TODO: add support here
 			|| Msg == Protocol6::NETMSGTYPE_CL_SETSPECTATORMODE)
 			return;
 
 		if(Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONADD)
 			MsgT = Protocol5::NETMSGTYPE_SV_VOTEOPTION;
-		if (Msg >= Protocol6::NETMSGTYPE_SV_VOTESET)
+		if(Msg >= Protocol6::NETMSGTYPE_SV_VOTESET)
 			MsgT = Msg - 2;
-		if (Msg >= Protocol6::NETMSGTYPE_CL_STARTINFO)
+		if(Msg >= Protocol6::NETMSGTYPE_CL_STARTINFO)
 			MsgT = Msg - 3;
 
 		Packer.AddInt(MsgT << 1 | Sys);
@@ -406,6 +408,9 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 			CNetChunk Packet = *pPacket;
 			for(int i = 0; i < NUM_VOTE_OPTIONS; i++)
 			{
+				Packer.Reset();
+				Packer.AddInt(Protocol5::NETMSGTYPE_SV_VOTEOPTION << 1 | Sys);
+
 				DataT.m_pCommand = m_apVoteOptions[i];
 
 				DataT.Pack((CMsgPacker *)&Packer);

@@ -15,6 +15,7 @@ static const unsigned char HACKS_MAGIC[] = { 0x40, 0x49, 0x0f, 0xdb };
 
 enum
 {
+	NETHASH_LENGTH=16,
 	MOD_ID_LENGTH=8,
 };
 
@@ -40,6 +41,10 @@ public:
 
 	virtual void OnSnap(int PeerID, CSnapshot *pSnap, int *pSnapSize);
 	virtual int OnDisconnect(int PeerID);
+
+	virtual int CreateDeltaServer(int PeerID, CSnapshot *pFrom, CSnapshot *pTo, void *pDelta);
+	virtual int UnpackDeltaClient(int PeerID, CSnapshot *pFrom, CSnapshot *pTo, void *pDelta, int DeltaSize);
+	virtual void *EmptyDeltaClient(int PeerID);
 
 	virtual int GetPacket(CNetChunk *pPacket, int Origin);
 	virtual int OnPacket(CNetChunk *pPacket, int Origin);
@@ -68,6 +73,8 @@ public:
 	virtual int GetVersion() const = 0;
 
 protected:
+	CSnapshotDelta m_SnapshotDelta;
+
 	enum
 	{
 		MAX_PACKETS_PER_PACKET=16,

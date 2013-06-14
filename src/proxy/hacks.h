@@ -43,6 +43,11 @@ public:
 	// called to process register related packets
 	virtual bool OnRegisterPacket(CNetChunk *pPacket) = 0;
 
+	// intended to replace the snapshot diff functions
+	virtual int CreateDeltaServer(int PeerID, CSnapshot *pFrom, CSnapshot *pTo, void *pDelta) = 0;
+	virtual int UnpackDeltaClient(int PeerID, CSnapshot *pFrom, CSnapshot *pTo, void *pDelta, int DeltaSize) = 0;
+	virtual void *EmptyDeltaClient(int PeerID) = 0; // returns pointer to CSnapshotDelta::CData
+
 	virtual void SetNet(void *pNet) = 0;
 };
 

@@ -57,6 +57,7 @@ public:
 
 	//
 	inline int State() const { return m_State; }
+	virtual void SetState(int s) = 0;
 
 	// tick time access
 	inline int PrevGameTick() const { return m_PrevGameTick; }

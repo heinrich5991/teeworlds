@@ -395,7 +395,16 @@ class CNetClient
 	CNetConnection m_Connection;
 	CNetRecvUnpacker m_RecvUnpacker;
 	NETSOCKET m_Socket;
+
+	int RecvImpl(CNetChunk *pChunk);
+	int SendImpl(CNetChunk *pChunk);
+
+	IHacks *m_pHacks;
+
 public:
+	void SetHacks(IHacks *pHacks) { m_pHacks = pHacks; }
+	IHacks *Hacks() { return m_pHacks; }
+
 	// openness
 	bool Open(NETADDR BindAddr, int Flags);
 	int Close();

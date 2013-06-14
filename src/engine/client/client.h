@@ -3,6 +3,8 @@
 #ifndef ENGINE_CLIENT_CLIENT_H
 #define ENGINE_CLIENT_CLIENT_H
 
+class IHacks;
+
 class CGraph
 {
 public:
@@ -64,6 +66,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	IConsole *m_pConsole;
 	IStorage *m_pStorage;
 	IEngineMasterServer *m_pMasterServer;
+	IHacks *m_pHacks;
 
 	enum
 	{
@@ -180,6 +183,7 @@ public:
 	IGameClient *GameClient() { return m_pGameClient; }
 	IEngineMasterServer *MasterServer() { return m_pMasterServer; }
 	IStorage *Storage() { return m_pStorage; }
+	IHacks *Hacks() { return m_pHacks; }
 
 	CClient();
 

@@ -497,7 +497,8 @@ void CServer::DoSnapshot()
 
 			// finish snapshot
 			SnapshotSize = m_SnapshotBuilder.Finish(pData);
-			Hacks()->OnSnap(i, pData, &SnapshotSize);
+			if(Hacks())
+				Hacks()->OnSnap(i, pData, &SnapshotSize);
 			Crc = pData->Crc();
 
 			// remove old snapshos
@@ -606,8 +607,6 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 	// notify the mod about the drop
 	if(pThis->m_aClients[ClientID].m_State >= CClient::STATE_READY)
 		pThis->GameServer()->OnClientDrop(ClientID, pReason);
-
-	pThis->Hacks()->OnDisconnect(ClientID);
 
 	pThis->m_aClients[ClientID].m_State = CClient::STATE_EMPTY;
 	pThis->m_aClients[ClientID].m_aName[0] = 0;
@@ -1207,9 +1206,9 @@ int CServer::Run()
 		return -1;
 	}
 
-	m_NetServer.SetHacks(m_pHacks);
-	m_pHacks->SetNet(&m_NetServer);
-	m_pHacks->Init();
+	m_NetServer.SetHacks(Hacks());
+	Hacks()->SetNet(&m_NetServer);
+	Hacks()->Init();
 
 	m_NetServer.SetCallbacks(NewClientCallback, DelClientCallback, this);
 

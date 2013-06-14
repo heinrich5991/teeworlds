@@ -26,6 +26,10 @@ void CHacks::Init()
 	// would otherwise result in a pure virtual call GetVersion()
 	for(int i = 0; i < NUM_VERSIONS; i++)
 		m_apConnlessProxies[i] = CreateProxy(i);
+
+	CNetObjHandler NetObjHandler;
+	for(int i = 0; i < NUM_NETOBJTYPES; i++)
+		m_SnapshotDelta.SetStaticsize(i, NetObjHandler.GetObjSize(i));
 }
 
 void CHacks::InitCBData(int Origin, int PeerID)
@@ -238,5 +242,26 @@ int CHacks::OnDisconnect(int PeerID)
 	}
 	mem_zero(&m_aPeers[PeerID], sizeof(m_aPeers[PeerID]));
 	return 0;
+}
+
+int CHacks::CreateDeltaServer(int PeerID, CSnapshot *pFrom, CSnapshot *pTo, void *pDelta)
+{
+	if(m_aPeers[PeerID].m_pProxy)
+		return m_aPeers[PeerID].m_pProxy->CreateDeltaServer(pFrom, pTo, pDelta);
+	return m_SnapshotDelta.CreateDelta(pFrom, pTo, pDelta);
+}
+
+int CHacks::UnpackDeltaClient(int PeerID, CSnapshot *pFrom, CSnapshot *pTo, void *pDelta, int DeltaSize)
+{
+	if(m_aPeers[PeerID].m_pProxy)
+		return m_aPeers[PeerID].m_pProxy->UnpackDeltaClient(pFrom, pTo, pDelta, DeltaSize);
+	return m_SnapshotDelta.UnpackDelta(pFrom, pTo, pDelta, DeltaSize);
+}
+
+void *CHacks::EmptyDeltaClient(int PeerID)
+{
+	if(m_aPeers[PeerID].m_pProxy)
+		return m_aPeers[PeerID].m_pProxy->EmptyDeltaClient();
+	return m_SnapshotDelta.EmptyDelta();
 }
 

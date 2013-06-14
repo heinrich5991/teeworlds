@@ -1,6 +1,5 @@
 
 #include <engine/client.h>
-//#include <engine/console.h>
 
 //#include <engine/shared/network.h>
 //#include <engine/shared/packer.h>
@@ -9,9 +8,8 @@
 
 //#include <game/generated/protocol.h>
 
-//#include <proxy/proxy/0.5/nethash.h>
-//#include <proxy/proxy/0.5/protocol.h>
-//#include <proxy/proxy/0.5/mastersrv.h>
+#include <proxy/proxy/0.5/nethash.h>
+#include <proxy/proxy/0.6/nethash.h>
 
 //#include <proxy/proxy/proxy.h>
 
@@ -24,6 +22,7 @@ class CHacksClient : public CHacks
 private:
 	IClient *m_pClient;
 	CNetClient *m_pNet;
+	int m_InDisconnect;
 public:
 	IClient *Client() { return m_pClient; }
 
@@ -47,6 +46,8 @@ public:
 	int Detect5(CNetChunk *pPacket);
 	int DetectHacks(CNetChunk *pPacket);
 
+	virtual int OnDisconnect(int PeerID);
+
 	virtual void OnRegisterUpdate(int Nettype) { dbg_assert(false, "not reachable"); }
 	virtual bool OnRegisterPacket(CNetChunk *pPacket) { dbg_assert(false, "not reachable"); return false; }
 };
@@ -56,6 +57,7 @@ IHacks *CreateHacks_Client() { return new CHacksClient(); }
 CHacksClient::CHacksClient()
 {
 	m_pNet = 0;
+	m_InDisconnect = 0;
 }
 
 CHacksClient::~CHacksClient()
@@ -97,6 +99,75 @@ const NETADDR *CHacksClient::GetPeerAddress(int PeerID)
 	static NETADDR Addr;
 	Addr = m_pNet->ServerAddr();
 	return &Addr;
+}
+
+int CHacksClient::OnDisconnect(int PeerID)
+{
+	dbg_assert(0 <= PeerID && PeerID < 1, "invalid pid");
+	dbg_msg("dbg", "ondisconnect=%d proxy=%p state=%d", m_InDisconnect, m_aPeers[PeerID].m_pProxy, Client()->State());
+
+	if(m_InDisconnect)
+		return 0;
+
+	if(m_aPeers[PeerID].m_pProxy != 0 || Client()->State() != IClient::STATE_LOADING)
+	{
+		return CHacks::OnDisconnect(PeerID);
+	}
+
+	const char *pError = m_pNet->ErrorString();
+	if(!pError)
+		return CHacks::OnDisconnect(PeerID);
+
+	dbg_msg("dbg", "error '%s'", pError);
+
+	int ErrLength = str_length(pError) + 1;
+	const char *pNetHash = 0;
+
+	int Version = VERSION_06;
+	for(int i = 0; i < ErrLength; i++)
+	{
+		bool IsHex = ('0' <= pError[i] && pError[i] <= '9')
+			|| ('a' <= pError[i] && pError[i] <= 'f');
+		if(pNetHash && !IsHex)
+		{
+			// if the nethash has the right size
+			if(&pError[i] - pNetHash == NETHASH_LENGTH)
+			{
+				if(str_comp_num(pNetHash, Protocol6::GAME_NETVERSION_HASH,
+					NETHASH_LENGTH) == 0)
+					; // just do nothing
+				else if(str_comp_num(pNetHash, Protocol5::GAME_NETVERSION_HASH,
+					NETHASH_LENGTH) == 0)
+				{
+					if(Version != -1)
+						Version = VERSION_05; // version 5 detected
+				}
+				// a nethash different from 0.5 and 0.6
+				else
+					Version = -1;
+			}
+			pNetHash = 0;
+			
+		}
+		else if(!pNetHash && IsHex)
+			pNetHash = &pError[i];
+	}
+
+	// is it useful to employ a proxy?
+	if(Version != VERSION_06 && Version != -1)
+	{
+		NETADDR Addr = *GetPeerAddress(PeerID);
+
+		m_InDisconnect = 1;
+		m_pNet->Disconnect(0);
+		m_InDisconnect = 0;
+
+		m_pNet->Connect(&Addr);
+		Client()->SetState(IClient::STATE_CONNECTING);
+		SetProxy(PeerID, Version);
+		return 1;
+	}
+	return CHacks::OnDisconnect(PeerID);
 }
 
 int CHacksClient::Detect(CNetChunk *pPacket)

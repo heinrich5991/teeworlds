@@ -19,6 +19,8 @@
 
 class CTranslator_05_06 : public ITranslator
 {
+	int m_MapDownloadCrc;
+	int m_MapDownloadNum;
 public:
 	CTranslator_05_06(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData);
 	virtual void TranslatePacket(CNetChunk *pPacket);
@@ -47,6 +49,8 @@ ITranslator *CreateTranslator_06_05(IHacks *pHacks, PACKET_FUNC pfnTranslatePack
 CTranslator_05_06::CTranslator_05_06(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)
 	: ITranslator(pHacks, pfnTranslatePacketCB, pUserData)
 {
+	m_MapDownloadCrc = 0;
+	m_MapDownloadNum = 0;
 }
 
 CTranslator_06_05::CTranslator_06_05(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)
@@ -105,6 +109,7 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 
 		Packer.AddInt(MsgT << 1 | Sys);
 
+		// client -> server
 		if(Msg == Protocol5::NETMSG_INFO)
 		{
 			const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
@@ -150,6 +155,37 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 			for(int i = 0; i < Size / 4; i++)
 				Packer.AddInt(aInputBuf[i]);
 		}
+		// server -> client
+		else if(Msg == Protocol5::NETMSG_MAP_CHANGE)
+		{
+			CNetChunk Packet = *pPacket;
+
+			Packer.AddString(Unpacker.GetString(), 0);           // map name
+			Packer.AddInt(m_MapDownloadCrc = Unpacker.GetInt()); // map crc
+			Packer.AddInt(1); // proxy: TODO: fix me             // map size
+			m_MapDownloadNum = 0;
+
+			Packet.m_DataSize = Packer.Size();
+			Packet.m_pData = Packer.Data();
+			TranslatePacketCB(&Packet);
+
+			Packer.Reset();
+			Packer.AddInt(Protocol6::NETMSG_CON_READY << 1 | 1);
+
+			Packet.m_DataSize = Packer.Size();
+			Packet.m_pData = Packer.Data();
+			TranslatePacketCB(&Packet);
+			return;
+		}
+		else if(Msg == Protocol5::NETMSG_MAP_DATA)
+		{
+			Packer.AddInt(Unpacker.GetInt());  // map chunk is the last one?
+			Unpacker.GetInt();                 // map size
+			Packer.AddInt(m_MapDownloadCrc);   // map crc
+			Packer.AddInt(m_MapDownloadNum++); // map chunk num
+			Packer.AddInt(Unpacker.GetInt());  // map chunk size
+			                                   // map chunk
+		}
 	}
 	else
 	{
@@ -175,6 +211,7 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 				return;
 		}
 
+		// client -> server
 		if(Msg == Protocol5::NETMSGTYPE_CL_STARTINFO
 			|| Msg == Protocol5::NETMSGTYPE_CL_CHANGEINFO)
 		{
@@ -187,7 +224,7 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 			DataT.m_UseCustomColor = pData->m_UseCustomColor;
 			DataT.m_ColorBody = pData->m_ColorBody;
 			DataT.m_ColorFeet = pData->m_ColorFeet;
-			DataT.Pack((CMsgPacker *)&Packer); // proxy: TODO: hack
+			DataT.Pack((CMsgPacker *)&Packer);
 		}
 		else if(Msg == Protocol5::NETMSGTYPE_CL_EMOTICON)
 		{
@@ -216,6 +253,7 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 			DataT.m_Reason = "";
 			DataT.Pack((CMsgPacker *)&Packer);
 		}
+		// server -> client
 	}
 
 	Packer.AddRaw(&Unpacker);
@@ -333,6 +371,7 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 			MsgT = Msg - 1;
 
 		Packer.AddInt(MsgT << 1 | Sys);
+		// server -> client
 		if(Msg == Protocol6::NETMSG_MAP_CHANGE)
 		{
 			Packer.AddString(Unpacker.GetString(), 0); // map name
@@ -347,6 +386,49 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 			Unpacker.GetInt();                // map chunk num
 			Packer.AddInt(Unpacker.GetInt()); // map chunk size
 			                                  // map chunk
+		}
+		// client -> server
+		else if(Msg == Protocol6::NETMSG_INFO)
+		{
+			const char *pVersion = Unpacker.GetString(CUnpacker::SANITIZE_CC);
+			if(str_comp(pVersion, Protocol6::GAME_NETVERSION) == 0)
+				Packer.AddString(Protocol5::GAME_NETVERSION, 0);
+			else
+				Packer.AddString(pVersion, 0);
+			Packer.AddString("", 0); // player name
+			Packer.AddString("", 0); // player clan
+		}
+		else if(Msg == Protocol6::NETMSG_INPUT)
+		{
+			int Size = 0;
+			Packer.AddInt(Unpacker.GetInt()); // acked snapshot
+			Packer.AddInt(Unpacker.GetInt()); // intended tick
+			Packer.AddInt(Size = Unpacker.GetInt()); // size
+			if(Unpacker.Error() || Size / 4 > Protocol5::MAX_INPUT_SIZE || Size < (int)sizeof(Protocol6::CNetObj_PlayerInput))
+				return;
+			int aInputBuf[Protocol5::MAX_INPUT_SIZE];
+			for(int i = 0; i < Size / 4; i++)
+				aInputBuf[i] = Unpacker.GetInt();
+
+			if(Unpacker.Error())
+				return;
+
+			// abuse that both versions have the same input layout
+			Protocol6::CNetObj_PlayerInput *pData = (Protocol6::CNetObj_PlayerInput *)aInputBuf;
+			Protocol5::CNetObj_PlayerInput DataT = *(Protocol5::CNetObj_PlayerInput *)pData;
+
+			DataT.m_PlayerState = Protocol5::PLAYERSTATE_UNKNOWN;
+			if(pData->m_PlayerFlags&Protocol6::PLAYERFLAG_IN_MENU)
+				DataT.m_PlayerState = Protocol5::PLAYERSTATE_IN_MENU;
+			else if(pData->m_PlayerFlags&Protocol6::PLAYERFLAG_CHATTING)
+				DataT.m_PlayerState = Protocol5::PLAYERSTATE_CHATTING;
+			else if(pData->m_PlayerFlags&Protocol6::PLAYERFLAG_PLAYING)
+				DataT.m_PlayerState = Protocol5::PLAYERSTATE_PLAYING;
+
+
+			mem_copy(aInputBuf, &DataT, sizeof(DataT));
+			for(int i = 0; i < Size / 4; i++)
+				Packer.AddInt(aInputBuf[i]);
 		}
 	}
 	else
@@ -369,7 +451,10 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 		void *pRawData;
 		if(Msg == Protocol6::NETMSGTYPE_SV_EMOTICON
 			|| Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONLISTADD
-			|| Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONREMOVE)
+			|| Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONREMOVE
+			|| Msg == Protocol6::NETMSGTYPE_CL_STARTINFO
+			|| Msg == Protocol6::NETMSGTYPE_CL_CHANGEINFO
+			|| Msg == Protocol6::NETMSGTYPE_CL_CALLVOTE)
 		{
 			Protocol6::CNetObjHandler Handler;
 			pRawData = Handler.SecureUnpackMsg(Msg, &Unpacker);
@@ -377,6 +462,7 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 				return;
 		}
 
+		// server -> client
 		if(Msg == Protocol6::NETMSGTYPE_SV_EMOTICON)
 		{
 			Protocol6::CNetMsg_Sv_Emoticon *pData = (Protocol6::CNetMsg_Sv_Emoticon *)pRawData;
@@ -421,6 +507,30 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 
 			return;
 		}
+		// client -> server
+		else if(Msg == Protocol6::NETMSGTYPE_CL_STARTINFO
+			|| Msg == Protocol6::NETMSGTYPE_CL_CHANGEINFO)
+		{
+			Protocol6::CNetMsg_Cl_StartInfo *pData = (Protocol6::CNetMsg_Cl_StartInfo *)pRawData;
+			Protocol5::CNetMsg_Cl_StartInfo DataT;
+			DataT.m_pName = pData->m_pName;
+			//pData->m_pClan;
+			//pData->m_Country;
+			DataT.m_pSkin = pData->m_pSkin;
+			DataT.m_UseCustomColor = pData->m_UseCustomColor;
+			DataT.m_ColorBody = pData->m_ColorBody;
+			DataT.m_ColorFeet = pData->m_ColorFeet;
+			DataT.Pack((CMsgPacker *)&Packer);
+		}
+		else if(Msg == Protocol6::NETMSGTYPE_CL_CALLVOTE)
+		{
+			Protocol6::CNetMsg_Cl_CallVote *pData = (Protocol6::CNetMsg_Cl_CallVote *)pRawData;
+			Protocol5::CNetMsg_Cl_CallVote DataT;
+			DataT.m_Type = pData->m_Type;
+			DataT.m_Value = pData->m_Value;
+			//Data->m_Reason;
+			DataT.Pack((CMsgPacker *)&Packer);
+		}
 	}
 
 	Packer.AddRaw(&Unpacker);
@@ -432,8 +542,159 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 
 int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 {
-	dbg_assert(false, "not implemented yet");
-	return 0;
+	CSnapshotBuilder Builder;
+	Builder.Init();
+
+	bool FoundRedFlag = false, FoundBlueFlag = false;
+	int RedFlagCarriedBy = -1, BlueFlagCarriedBy = -1;
+
+	// first, gather some info
+	for(int i = 0; i < pSnap->NumItems(); i++)
+	{
+		CSnapshotItem *pItem = pSnap->GetItem(i);
+		if(pItem->Type() == Protocol5::NETOBJTYPE_FLAG)
+		{
+			Protocol6::CNetObj_Flag *pData = (Protocol6::CNetObj_Flag *)pItem->Data();
+			Protocol5::CNetObj_Flag DataT;
+
+			DataT.m_X = pData->m_X;
+			DataT.m_Y = pData->m_Y;
+			DataT.m_Team = pData->m_Team;
+			if(pData->m_Team == 0)
+			{
+				if(!FoundRedFlag)
+					RedFlagCarriedBy = DataT.m_CarriedBy;
+				else
+					RedFlagCarriedBy = -1;
+				FoundRedFlag = true;
+			}
+			else if(pData->m_Team == 1)
+			{
+				if(!FoundBlueFlag)
+					BlueFlagCarriedBy = DataT.m_CarriedBy;
+				else
+					RedFlagCarriedBy = -1;
+				FoundBlueFlag = true;
+			}
+		}
+	}
+
+	// second, build new snapshot
+	for(int i = 0; i < pSnap->NumItems(); i++)
+	{
+		CSnapshotItem *pItem = pSnap->GetItem(i);
+		int Type = pItem->Type();
+		int ID = pItem->ID();
+		int Size = pSnap->GetItemSize(i);
+
+		int NewType = Type;
+		if(Type >= Protocol5::NETOBJTYPE_CHARACTERCORE)
+			NewType = Type + 1;
+		if(Type >= Protocol5::NETEVENTTYPE_COMMON)
+			NewType = Type + 2;
+
+		if(Type == Protocol5::NETOBJTYPE_CHARACTER)
+		{
+			Protocol5::CNetObj_Character *pData = (Protocol5::CNetObj_Character *)pItem->Data();
+
+			// abuse that it has the same layout
+			Protocol6::CNetObj_Character DataT = *(Protocol6::CNetObj_Character *)pData;
+
+			DataT.m_PlayerFlags = 0;
+			DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_SCOREBOARD; // to fix ping updates
+			if(pData->m_PlayerState == Protocol5::PLAYERSTATE_IN_MENU)
+			{
+				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_IN_MENU;
+				DataT.m_PlayerFlags &= ~Protocol6::PLAYERFLAG_SCOREBOARD; // no possibility to have scoreboard open
+			}
+			else if(pData->m_PlayerState == Protocol5::PLAYERSTATE_CHATTING)
+				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_CHATTING;
+			else
+				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_PLAYING;
+			void *pWrite = Builder.NewItem(NewType, ID, sizeof(DataT));
+			mem_copy(pWrite, &DataT, sizeof(DataT));
+		}
+		else if(Type == Protocol5::NETOBJTYPE_FLAG)
+		{
+			Protocol5::CNetObj_Flag *pData = (Protocol5::CNetObj_Flag *)pItem->Data();
+			Protocol6::CNetObj_Flag DataT;
+
+			DataT.m_X = pData->m_X;
+			DataT.m_Y = pData->m_Y;
+			DataT.m_Team = pData->m_Team;
+			//pData->m_CarriedBy;
+			void *pWrite = Builder.NewItem(NewType, ID, sizeof(DataT));
+			mem_copy(pWrite, &DataT, sizeof(DataT));
+		}
+		else if(Type == Protocol5::NETOBJTYPE_GAME)
+		{
+			Protocol5::CNetObj_Game *pData = (Protocol5::CNetObj_Game *)pItem->Data();
+			Protocol6::CNetObj_GameInfo DataT;
+
+			DataT.m_GameFlags = pData->m_Flags;
+			DataT.m_GameStateFlags = 0;
+			if(pData->m_GameOver)
+				DataT.m_GameStateFlags |= Protocol6::GAMESTATEFLAG_GAMEOVER;
+			if(pData->m_SuddenDeath)
+				DataT.m_GameStateFlags |= Protocol6::GAMESTATEFLAG_SUDDENDEATH;
+			if(pData->m_Paused)
+				DataT.m_GameStateFlags |= Protocol6::GAMESTATEFLAG_PAUSED;
+			DataT.m_ScoreLimit = pData->m_ScoreLimit;
+			DataT.m_TimeLimit = pData->m_TimeLimit;
+			DataT.m_WarmupTimer = pData->m_Warmup;
+			DataT.m_RoundNum = pData->m_RoundNum;
+			DataT.m_RoundCurrent = pData->m_RoundCurrent;
+
+			if(pData->m_Flags)
+			{
+				Protocol6::CNetObj_GameData DataT;
+				DataT.m_TeamscoreRed = pData->m_TeamscoreRed;
+				DataT.m_TeamscoreBlue = pData->m_TeamscoreBlue;
+				DataT.m_FlagCarrierRed = RedFlagCarriedBy;
+				DataT.m_FlagCarrierBlue = BlueFlagCarriedBy;
+
+				void *pWrite = Builder.NewItem(Protocol6::NETOBJTYPE_GAMEDATA, ID, sizeof(DataT));
+				mem_copy(pWrite, &DataT, sizeof(DataT));
+			}
+
+			void *pWrite = Builder.NewItem(Protocol6::NETOBJTYPE_GAMEINFO, ID, sizeof(DataT));
+			mem_copy(pWrite, &DataT, sizeof(DataT));
+		}
+		else if(Type == Protocol6::NETOBJTYPE_CLIENTINFO)
+		{
+			Protocol5::CNetObj_ClientInfo *pData = (Protocol5::CNetObj_ClientInfo *)pItem->Data();
+			Protocol6::CNetObj_ClientInfo DataT;
+
+			DataT.m_Name0 = pData->m_Name0; // proxy: TODO: utf-8 parsing?
+			DataT.m_Name1 = pData->m_Name1;
+			DataT.m_Name2 = pData->m_Name2;
+			DataT.m_Name3 = pData->m_Name3;
+			//pData->m_Name4;
+			//pData->m_Name5;
+			DataT.m_Skin0 = pData->m_Skin0;
+			DataT.m_Skin1 = pData->m_Skin1;
+			DataT.m_Skin2 = pData->m_Skin2;
+			DataT.m_Skin3 = pData->m_Skin3;
+			DataT.m_Skin4 = pData->m_Skin4;
+			DataT.m_Skin5 = pData->m_Skin5;
+			DataT.m_Country = -1;
+			DataT.m_Clan0 = 0;
+			DataT.m_Clan1 = 0;
+			DataT.m_Clan2 = 0;
+			DataT.m_UseCustomColor = pData->m_UseCustomColor;
+			DataT.m_ColorBody = pData->m_ColorBody;
+			DataT.m_ColorFeet = pData->m_ColorFeet;
+
+			void *pWrite = Builder.NewItem(NewType, ID, sizeof(DataT));
+			mem_copy(pWrite, &DataT, sizeof(DataT));
+		}
+		else
+		{
+			void *pWrite = Builder.NewItem(NewType, ID, Size);
+			mem_copy(pWrite, pItem->Data(), Size);
+		}
+	}
+	return Builder.Finish(pSnap);
 }
 
 int CTranslator_06_05::TranslateSnap(CSnapshot *pSnap)

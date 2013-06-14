@@ -3,6 +3,8 @@
 #include <base/system.h>
 #include "network.h"
 
+#include <proxy/hacks.h>
+
 bool CNetClient::Open(NETADDR BindAddr, int Flags)
 {
 	// open socket
@@ -30,6 +32,9 @@ int CNetClient::Close()
 int CNetClient::Disconnect(const char *pReason)
 {
 	//dbg_msg("netclient", "disconnected. reason=\"%s\"", pReason);
+	if(Hacks())
+		if(Hacks()->OnDisconnect(0))
+			return 0;
 	m_Connection.Disconnect(pReason);
 	return 0;
 }
@@ -55,6 +60,26 @@ int CNetClient::ResetErrorString()
 }
 
 int CNetClient::Recv(CNetChunk *pChunk)
+{
+	if(!Hacks())
+		return RecvImpl(pChunk);
+
+	while(1)
+	{
+		if(Hacks()->GetRecvPacket(pChunk))
+			return 1;
+
+		if(RecvImpl(pChunk))
+		{
+			if(!Hacks()->OnRecvPacket(pChunk))
+				return 1;
+		}
+		else
+			return 0;
+	}
+}
+
+int CNetClient::RecvImpl(CNetChunk *pChunk)
 {
 	while(1)
 	{
@@ -92,6 +117,20 @@ int CNetClient::Recv(CNetChunk *pChunk)
 }
 
 int CNetClient::Send(CNetChunk *pChunk)
+{
+	if(!Hacks())
+		return SendImpl(pChunk);
+
+	if(!Hacks()->OnSendPacket(pChunk))
+		SendImpl(pChunk);
+
+	while(Hacks()->GetSendPacket(pChunk))
+		SendImpl(pChunk);
+
+	return 0; // proxy: TODO: add error messages maybe?
+}
+
+int CNetClient::SendImpl(CNetChunk *pChunk)
 {
 	if(pChunk->m_DataSize >= NET_MAX_PAYLOAD)
 	{

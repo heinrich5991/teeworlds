@@ -144,6 +144,7 @@ int CHacksServer::DetectHacks(CNetChunk *pPacket)
 				return 0;
 		}
 	}
+	return 0;
 }
 
 // 0.5 begin

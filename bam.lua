@@ -241,7 +241,7 @@ function build(settings)
 	-- build client, server, version server and master server
 	client_exe = Link(client_settings, "teeworlds", game_shared, game_client,
 		engine, client, game_editor, zlib, pnglite, wavpack,
-		client_link_other, client_osxlaunch)
+		client_link_other, client_osxlaunch, proxy)
 
 	server_exe = Link(server_settings, "teeworlds_srv", engine, server,
 		game_shared, game_server, zlib, server_link_other,

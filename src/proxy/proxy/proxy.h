@@ -42,6 +42,10 @@ public:
 
 	virtual void TranslatePacket(CNetChunk *pChunk, int Role) = 0;
 	virtual int TranslateServerSnap(CSnapshot *pSnap) = 0; // in-place, returns size
+
+	virtual int CreateDeltaServer(CSnapshot *pFrom, CSnapshot *pTo, void *pData) = 0;
+	virtual int UnpackDeltaClient(CSnapshot *pFrom, CSnapshot *pTo, void *pData, int DataSize) = 0;
+	virtual void *EmptyDeltaClient() = 0;
 };
 
 IProxy *CreateProxy(int ServerVer, int ClientVer, IHacks *pHacks, PACKET_FUNC pfnTranslatedPacketCB, void *pUserData);

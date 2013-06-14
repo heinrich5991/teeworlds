@@ -38,6 +38,8 @@
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
 
+#include <proxy/hacks.h>
+
 #include "friends.h"
 #include "serverbrowser.h"
 #include "client.h"
@@ -1277,7 +1279,10 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					}
 
 					// decompress snapshot
-					pDeltaData = m_SnapshotDelta.EmptyDelta();
+					if(Hacks())
+						pDeltaData = Hacks()->EmptyDeltaClient(0);
+					else
+						pDeltaData = m_SnapshotDelta.EmptyDelta();
 					DeltaSize = sizeof(int)*3;
 
 					if(CompleteSize)
@@ -1293,7 +1298,11 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
 					// unpack delta
 					PurgeTick = DeltaTick;
-					SnapSize = m_SnapshotDelta.UnpackDelta(pDeltaShot, pTmpBuffer3, pDeltaData, DeltaSize);
+					if(Hacks())
+						SnapSize = Hacks()->UnpackDeltaClient(0, pDeltaShot, pTmpBuffer3, pDeltaData, DeltaSize);
+					else
+						SnapSize = m_SnapshotDelta.UnpackDelta(pDeltaShot, pTmpBuffer3, pDeltaData, DeltaSize);
+
 					if(SnapSize < 0)
 					{
 						m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "delta unpack failed!");
@@ -1336,6 +1345,9 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
 					// add new
 					m_SnapshotStorage.Add(GameTick, time_get(), SnapSize, pTmpBuffer3, 1);
+
+					if(Hacks())
+						Hacks()->OnSnap(0, pTmpBuffer3, &SnapSize);
 
 					// add snapshot to demo
 					if(m_DemoRecorder.IsRecording())
@@ -1682,6 +1694,7 @@ void CClient::InitInterfaces()
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
 	m_pMasterServer = Kernel()->RequestInterface<IEngineMasterServer>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
+	m_pHacks = Kernel()->RequestInterface<IHacks>();
 
 	//
 	m_ServerBrowser.SetBaseInfo(&m_NetClient, m_pGameClient->NetVersion());
@@ -1711,6 +1724,10 @@ void CClient::Run()
 			return;
 		}
 	}
+
+	m_NetClient.SetHacks(Hacks());
+	Hacks()->SetNet(&m_NetClient);
+	Hacks()->Init();
 
 	// init font rendering
 	Kernel()->RequestInterface<IEngineTextRender>()->Init();
@@ -2218,6 +2235,7 @@ int main(int argc, const char **argv) // ignore_convention
 	IEngineTextRender *pEngineTextRender = CreateEngineTextRender();
 	IEngineMap *pEngineMap = CreateEngineMap();
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
+	IHacks *pHacks = CreateHacks_Client();
 
 	{
 		bool RegisterFail = false;
@@ -2247,6 +2265,7 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateEditor());
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateGameClient());
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pHacks);
 
 		if(RegisterFail)
 			return -1;

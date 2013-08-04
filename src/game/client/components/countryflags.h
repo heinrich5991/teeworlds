@@ -13,7 +13,7 @@ public:
 	{
 		int m_CountryCode;
 		char m_aCountryCodeString[8];
-		int m_Texture;
+		IGraphics::CTextureHandle m_Texture;
 
 		bool operator<(const CCountryFlag &Other) { return str_comp(m_aCountryCodeString, Other.m_aCountryCodeString) < 0; }
 	};
@@ -23,7 +23,7 @@ public:
 	int Num() const;
 	const CCountryFlag *GetByCountryCode(int CountryCode) const;
 	const CCountryFlag *GetByIndex(int Index) const;
-	//int Find(int CountryCode) const;
+	void Render(int CountryCode, const vec4 *pColor, float x, float y, float w, float h);
 
 private:
 	enum

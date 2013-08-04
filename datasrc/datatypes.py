@@ -168,6 +168,18 @@ class Pointer(BaseType):
 	def EmitDefinition(self, name):
 		return ["&"+self.target.TargetName()]
 
+class TextureHandle(BaseType):
+	def __init__(self):
+		BaseType.__init__(self, "IGraphics::CTextureHandle")
+	def EmitDefinition(self, name):
+		return ["IGraphics::CTextureHandle()"]	
+
+class SampleHandle(BaseType):
+	def __init__(self):
+		BaseType.__init__(self, "ISound::CSampleHandle")
+	def EmitDefinition(self, name):
+		return ["ISound::CSampleHandle()"]	
+
 # helper functions
 
 def EmitTypeDeclaration(root):
@@ -320,6 +332,24 @@ class NetIntRange(NetIntAny):
 	def emit_unpack_check(self):
 		return ["if(pMsg->%s < %s || pMsg->%s > %s) { m_pMsgFailedOn = \"%s\"; break; }" % (self.name, self.min, self.name, self.max, self.name)]
 
+class NetEnum(NetIntRange):
+	def __init__(self, name, enum):
+		NetIntRange.__init__(self, name, 0, len(enum.values))
+
+class NetFlag(NetIntAny):
+	def __init__(self, name, flag):
+		NetIntAny.__init__(self, name)
+		if len(flag.values) > 0:
+			self.mask = "%s_%s" % (flag.name, flag.values[0])
+			for i in flag.values[1:]:
+				self.mask += "|%s_%s" % (flag.name, i)
+		else:
+			self.mask = "0"
+	def emit_validate(self):
+		return ["ClampFlag(\"%s\", pObj->%s, %s);"%(self.name, self.name, self.mask)]
+	def emit_unpack_check(self):
+		return ["if((pMsg->%s & (%s)) != pMsg->%s) { m_pMsgFailedOn = \"%s\"; break; }" % (self.name, self.mask, self.name, self.name)]
+
 class NetBool(NetIntRange):
 	def __init__(self, name):
 		NetIntRange.__init__(self,name,0,1)
@@ -327,3 +357,37 @@ class NetBool(NetIntRange):
 class NetTick(NetIntRange):
 	def __init__(self, name):
 		NetIntRange.__init__(self,name,0,'max_int')
+
+class NetArray(NetVariable):
+	def __init__(self, var, size):
+		self.base_name = var.name
+		self.var = var
+		self.size = size
+		self.name = self.base_name + "[%d]"%self.size
+	def emit_declaration(self):
+		self.var.name = self.name
+		return self.var.emit_declaration()
+	def emit_validate(self):
+		lines = []
+		for i in range(self.size):
+			self.var.name = self.base_name + "[%d]"%i
+			lines += self.var.emit_validate()
+		return lines
+	def emit_unpack(self):
+		lines = []
+		for i in range(self.size):
+			self.var.name = self.base_name + "[%d]"%i
+			lines += self.var.emit_unpack()
+		return lines
+	def emit_pack(self):
+		lines = []
+		for i in range(self.size):
+			self.var.name = self.base_name + "[%d]"%i
+			lines += self.var.emit_pack()
+		return lines
+	def emit_unpack_check(self):
+		lines = []
+		for i in range(self.size):
+			self.var.name = self.base_name + "[%d]"%i
+			lines += self.var.emit_unpack_check()
+		return lines

@@ -1,4 +1,4 @@
-Copyright (C) 2007-2011 Magnus Auvinen
+Copyright (C) 2007-2013 Magnus Auvinen
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -18,6 +18,11 @@ freely, subject to the following restrictions:
 
 ------------------------------------------------------------------------
 
+All content under 'data' except the font (which has its own license) is
+released under CC-BY-SA 3.0 (http://creativecommons.org/licenses/by-sa/3.0/).
+
+------------------------------------------------------------------------
+
 IMPORTANT NOTE! The source under src/engine/external are stripped
 libraries with their own licenses. Mostly BSD or zlib/libpng license but
 check the individual libraries.
@@ -28,4 +33,4 @@ this license!
 ------------------------------------------------------------------------
 
 With that being said, contact us if there is anything you want to do
-that the license does not premit.
+that the license does not permit.

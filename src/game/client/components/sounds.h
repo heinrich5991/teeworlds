@@ -2,6 +2,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_SOUNDS_H
 #define GAME_CLIENT_COMPONENTS_SOUNDS_H
+
+#include <engine/sound.h>
 #include <game/client/component.h>
 
 class CSounds : public CComponent
@@ -19,6 +21,8 @@ class CSounds : public CComponent
 	int64 m_QueueWaitTime;
 	class CJob m_SoundJob;
 	bool m_WaitForSoundJob;
+	
+	ISound::CSampleHandle GetSampleId(int SetId);
 
 public:
 	// sound channels
@@ -37,8 +41,8 @@ public:
 
 	void ClearQueue();
 	void Enqueue(int Channel, int SetId);
-	void Play(int Channel, int SetId, float Vol, vec2 Pos);
-	void PlayAndRecord(int Channel, int SetId, float Vol, vec2 Pos);
+	void Play(int Channel, int SetId, float Vol);
+	void PlayAt(int Channel, int SetId, float Vol, vec2 Pos);
 	void Stop(int SetId);
 };
 

@@ -25,6 +25,7 @@ public:
 	int Tick() const { return m_CurrentGameTick; }
 	int TickSpeed() const { return m_TickSpeed; }
 
+	virtual int MaxClients() const = 0;
 	virtual const char *ClientName(int ClientID) = 0;
 	virtual const char *ClientClan(int ClientID) = 0;
 	virtual int ClientCountry(int ClientID) = 0;
@@ -37,7 +38,7 @@ public:
 	template<class T>
 	int SendPackMsg(T *pMsg, int Flags, int ClientID)
 	{
-		CMsgPacker Packer(pMsg->MsgID());
+		CMsgPacker Packer(pMsg->MsgID(), false);
 		if(pMsg->Pack(&Packer))
 			return -1;
 		return SendMsg(&Packer, Flags, ClientID);
@@ -54,10 +55,18 @@ public:
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
 
+	enum
+	{
+		RCON_CID_SERV=-1,
+		RCON_CID_VOTE=-2,
+	};
+	virtual void SetRconCID(int ClientID) = 0;
 	virtual bool IsAuthed(int ClientID) = 0;
+	virtual bool IsBanned(int ClientID) = 0;
 	virtual void Kick(int ClientID, const char *pReason) = 0;
 
 	virtual void DemoRecorder_HandleAutoStart() = 0;
+	virtual bool DemoRecorder_IsRecording() = 0;
 };
 
 class IGameServer : public IInterface

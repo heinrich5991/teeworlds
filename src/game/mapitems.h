@@ -7,7 +7,7 @@
 enum
 {
 	LAYERTYPE_INVALID=0,
-	LAYERTYPE_GAME, // not used
+	LAYERTYPE_GAME,
 	LAYERTYPE_TILES,
 	LAYERTYPE_QUADS,
 
@@ -39,7 +39,7 @@ enum
 	ENTITY_WEAPON_SHOTGUN,
 	ENTITY_WEAPON_GRENADE,
 	ENTITY_POWERUP_NINJA,
-	ENTITY_WEAPON_RIFLE,
+	ENTITY_WEAPON_LASER,
 	NUM_ENTITIES,
 
 	TILE_AIR=0,
@@ -90,7 +90,16 @@ public:
 	unsigned char m_Reserved;
 };
 
-struct CMapItemImage
+struct CMapItemInfo
+{
+	int m_Version;
+	int m_Author;
+	int m_MapVersion;
+	int m_Credits;
+	int m_License;
+} ;
+
+struct CMapItemImage_v1
 {
 	int m_Version;
 	int m_Width;
@@ -99,6 +108,12 @@ struct CMapItemImage
 	int m_ImageName;
 	int m_ImageData;
 } ;
+
+struct CMapItemImage : public CMapItemImage_v1
+{
+	enum { CURRENT_VERSION=2 };
+	int m_Format;
+};
 
 struct CMapItemGroup_v1
 {
@@ -166,6 +181,8 @@ struct CMapItemLayerQuads
 
 struct CMapItemVersion
 {
+	enum { CURRENT_VERSION=1 };
+
 	int m_Version;
 } ;
 
@@ -178,7 +195,7 @@ struct CEnvPoint
 	bool operator<(const CEnvPoint &Other) { return m_Time < Other.m_Time; }
 } ;
 
-struct CMapItemEnvelope
+struct CMapItemEnvelope_v1
 {
 	int m_Version;
 	int m_Channels;
@@ -186,5 +203,11 @@ struct CMapItemEnvelope
 	int m_NumPoints;
 	int m_aName[8];
 } ;
+
+struct CMapItemEnvelope : public CMapItemEnvelope_v1
+{
+	enum { CURRENT_VERSION=2 };
+	int m_Synchronized;
+};
 
 #endif

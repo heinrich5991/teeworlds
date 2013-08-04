@@ -7,12 +7,11 @@
 
 class CDamageInd : public CComponent
 {
-	int64 m_Lastupdate;
 	struct CItem
 	{
 		vec2 m_Pos;
 		vec2 m_Dir;
-		float m_Life;
+		float m_StartTime;
 		float m_StartAngle;
 	};
 
@@ -32,5 +31,6 @@ public:
 
 	void Create(vec2 Pos, vec2 Dir);
 	virtual void OnRender();
+	virtual void OnReset();
 };
 #endif

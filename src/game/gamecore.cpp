@@ -118,13 +118,13 @@ void CCharacterCore::Tick(bool UseInput)
 			{
 				if(Grounded)
 				{
-					m_TriggeredEvents |= COREEVENT_GROUND_JUMP;
+					m_TriggeredEvents |= COREEVENTFLAG_GROUND_JUMP;
 					m_Vel.y = -m_pWorld->m_Tuning.m_GroundJumpImpulse;
 					m_Jumped |= 1;
 				}
 				else if(!(m_Jumped&2))
 				{
-					m_TriggeredEvents |= COREEVENT_AIR_JUMP;
+					m_TriggeredEvents |= COREEVENTFLAG_AIR_JUMP;
 					m_Vel.y = -m_pWorld->m_Tuning.m_AirJumpImpulse;
 					m_Jumped |= 3;
 				}
@@ -143,14 +143,16 @@ void CCharacterCore::Tick(bool UseInput)
 				m_HookDir = TargetDirection;
 				m_HookedPlayer = -1;
 				m_HookTick = 0;
-				m_TriggeredEvents |= COREEVENT_HOOK_LAUNCH;
+				//m_TriggeredEvents |= COREEVENTFLAG_HOOK_LAUNCH;
 			}
 		}
 		else
 		{
 			m_HookedPlayer = -1;
 			m_HookState = HOOK_IDLE;
-			m_HookPos = m_Pos;
+			m_HookPos = vec2(0,0);
+			m_HookDir = vec2(0,0);
+			m_HookTick = 0;
 		}
 	}
 
@@ -182,7 +184,7 @@ void CCharacterCore::Tick(bool UseInput)
 	else if(m_HookState == HOOK_RETRACT_END)
 	{
 		m_HookState = HOOK_RETRACTED;
-		m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
+		//m_TriggeredEvents |= COREEVENTFLAG_HOOK_RETRACT;
 		m_HookState = HOOK_RETRACTED;
 	}
 	else if(m_HookState == HOOK_FLYING)
@@ -221,7 +223,7 @@ void CCharacterCore::Tick(bool UseInput)
 				{
 					if (m_HookedPlayer == -1 || distance(m_HookPos, pCharCore->m_Pos) < Distance)
 					{
-						m_TriggeredEvents |= COREEVENT_HOOK_ATTACH_PLAYER;
+						m_TriggeredEvents |= COREEVENTFLAG_HOOK_ATTACH_PLAYER;
 						m_HookState = HOOK_GRABBED;
 						m_HookedPlayer = i;
 						Distance = distance(m_HookPos, pCharCore->m_Pos);
@@ -235,12 +237,12 @@ void CCharacterCore::Tick(bool UseInput)
 			// check against ground
 			if(GoingToHitGround)
 			{
-				m_TriggeredEvents |= COREEVENT_HOOK_ATTACH_GROUND;
+				m_TriggeredEvents |= COREEVENTFLAG_HOOK_ATTACH_GROUND;
 				m_HookState = HOOK_GRABBED;
 			}
 			else if(GoingToRetract)
 			{
-				m_TriggeredEvents |= COREEVENT_HOOK_HIT_NOHOOK;
+				m_TriggeredEvents |= COREEVENTFLAG_HOOK_HIT_NOHOOK;
 				m_HookState = HOOK_RETRACT_START;
 			}
 
@@ -302,7 +304,7 @@ void CCharacterCore::Tick(bool UseInput)
 		}
 	}
 
-	if(m_pWorld && m_pWorld->m_Tuning.m_PlayerCollision)
+	if(m_pWorld)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -317,7 +319,7 @@ void CCharacterCore::Tick(bool UseInput)
 			// handle player <-> player collision
 			float Distance = distance(m_Pos, pCharCore->m_Pos);
 			vec2 Dir = normalize(m_Pos - pCharCore->m_Pos);
-			if(Distance < PhysSize*1.25f && Distance > 0.0f)
+			if(m_pWorld->m_Tuning.m_PlayerCollision && Distance < PhysSize*1.25f && Distance > 0.0f)
 			{
 				float a = (PhysSize*1.45f - Distance);
 				float Velocity = 0.5f;
@@ -332,7 +334,7 @@ void CCharacterCore::Tick(bool UseInput)
 			}
 
 			// handle hook influence
-			if(m_HookedPlayer == i)
+			if(m_HookedPlayer == i && m_pWorld->m_Tuning.m_PlayerHooking)
 			{
 				if(Distance > PhysSize*1.50f) // TODO: fix tweakable variable
 				{
@@ -410,8 +412,6 @@ void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
 	pObjCore->m_HookTick = m_HookTick;
 	pObjCore->m_HookX = round(m_HookPos.x);
 	pObjCore->m_HookY = round(m_HookPos.y);
-	pObjCore->m_HookDx = round(m_HookDir.x*256.0f);
-	pObjCore->m_HookDy = round(m_HookDir.y*256.0f);
 	pObjCore->m_HookedPlayer = m_HookedPlayer;
 	pObjCore->m_Jumped = m_Jumped;
 	pObjCore->m_Direction = m_Direction;
@@ -428,8 +428,7 @@ void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
 	m_HookTick = pObjCore->m_HookTick;
 	m_HookPos.x = pObjCore->m_HookX;
 	m_HookPos.y = pObjCore->m_HookY;
-	m_HookDir.x = pObjCore->m_HookDx/256.0f;
-	m_HookDir.y = pObjCore->m_HookDy/256.0f;
+	m_HookDir = normalize(m_HookPos-m_Pos);
 	m_HookedPlayer = pObjCore->m_HookedPlayer;
 	m_Jumped = pObjCore->m_Jumped;
 	m_Direction = pObjCore->m_Direction;

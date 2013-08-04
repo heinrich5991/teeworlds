@@ -7,9 +7,7 @@
 #include <ctype.h>
 #include <time.h>
 
-/*#include "detect.h"*/
 #include "system.h"
-/*#include "e_console.h"*/
 
 #if defined(CONF_FAMILY_UNIX)
 	#include <sys/time.h>
@@ -46,6 +44,10 @@
 	#error NOT IMPLEMENTED
 #endif
 
+#if defined(CONF_PLATFORM_SOLARIS)
+	#include <sys/filio.h>
+#endif
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -78,7 +80,7 @@ void dbg_assert_imp(const char *filename, int line, int test, const char *msg)
 
 void dbg_break()
 {
-	*((unsigned*)0) = 0x0;
+	*((volatile unsigned*)0) = 0x0;
 }
 
 void dbg_msg(const char *sys, const char *fmt, ...)
@@ -123,7 +125,7 @@ static IOHANDLE logfile = 0;
 static void logger_file(const char *line)
 {
 	io_write(logfile, line, strlen(line));
-	io_write(logfile, "\n", 1);
+	io_write_newline(logfile);
 	io_flush(logfile);
 }
 
@@ -139,8 +141,6 @@ void dbg_logger_file(const char *filename)
 
 }
 /* */
-
-int memory_alloced = 0;
 
 typedef struct MEMHEADER
 {
@@ -163,8 +163,12 @@ void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned al
 {
 	/* TODO: fix alignment */
 	/* TODO: add debugging */
+	MEMTAIL *tail;
 	MEMHEADER *header = (struct MEMHEADER *)malloc(size+sizeof(MEMHEADER)+sizeof(MEMTAIL));
-	MEMTAIL *tail = (struct MEMTAIL *)(((char*)(header+1))+size);
+	dbg_assert(header != 0, "mem_alloc failure");
+	if(!header)
+		return NULL;
+	tail = (struct MEMTAIL *)(((char*)(header+1))+size);
 	header->size = size;
 	header->filename = filename;
 	header->line = line;
@@ -220,8 +224,9 @@ void mem_debug_dump(IOHANDLE file)
 	{
 		while(header)
 		{
-			str_format(buf, sizeof(buf), "%s(%d): %d\n", header->filename, header->line, header->size);
+			str_format(buf, sizeof(buf), "%s(%d): %d", header->filename, header->line, header->size);
 			io_write(file, buf, strlen(buf));
+			io_write_newline(file);
 			header = header->next;
 		}
 
@@ -276,8 +281,13 @@ IOHANDLE io_open(const char *filename, int flags)
 		if(!filename || !length || filename[length-1] == '\\')
 			return 0x0;
 		handle = FindFirstFile(filename, &finddata);
-		if(handle == INVALID_HANDLE_VALUE || str_comp(filename+length-str_length(finddata.cFileName), finddata.cFileName))
+		if(handle == INVALID_HANDLE_VALUE)
 			return 0x0;
+		else if(str_comp(filename+length-str_length(finddata.cFileName), finddata.cFileName) != 0)
+		{
+			FindClose(handle);
+			return 0x0;
+		}
 		FindClose(handle);
 	#endif
 		return (IOHANDLE)fopen(filename, "rb");
@@ -337,6 +347,15 @@ long int io_length(IOHANDLE io)
 unsigned io_write(IOHANDLE io, const void *buffer, unsigned size)
 {
 	return fwrite(buffer, 1, size, (FILE*)io);
+}
+
+unsigned io_write_newline(IOHANDLE io)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	return fwrite("\r\n", 1, 2, (FILE*)io);
+#else
+	return fwrite("\n", 1, 1, (FILE*)io);
+#endif
 }
 
 int io_close(IOHANDLE io)
@@ -460,7 +479,7 @@ int lock_try(LOCK lock)
 #if defined(CONF_FAMILY_UNIX)
 	return pthread_mutex_trylock((LOCKINTERNAL *)lock);
 #elif defined(CONF_FAMILY_WINDOWS)
-	return TryEnterCriticalSection((LPCRITICAL_SECTION)lock);
+	return !TryEnterCriticalSection((LPCRITICAL_SECTION)lock);
 #else
 	#error not implemented on this platform
 #endif
@@ -487,6 +506,23 @@ void lock_release(LOCK lock)
 	#error not implemented on this platform
 #endif
 }
+
+#if !defined(CONF_PLATFORM_MACOSX)
+	#if defined(CONF_FAMILY_UNIX)
+	void semaphore_init(SEMAPHORE *sem) { sem_init(sem, 0, 0); }
+	void semaphore_wait(SEMAPHORE *sem) { sem_wait(sem); }
+	void semaphore_signal(SEMAPHORE *sem) { sem_post(sem); }
+	void semaphore_destroy(SEMAPHORE *sem) { sem_destroy(sem); }
+	#elif defined(CONF_FAMILY_WINDOWS)
+	void semaphore_init(SEMAPHORE *sem) { *sem = CreateSemaphore(0, 0, 10000, 0); }
+	void semaphore_wait(SEMAPHORE *sem) { WaitForSingleObject((HANDLE)*sem, INFINITE); }
+	void semaphore_signal(SEMAPHORE *sem) { ReleaseSemaphore((HANDLE)*sem, 1, NULL); }
+	void semaphore_destroy(SEMAPHORE *sem) { CloseHandle((HANDLE)*sem); }
+	#else
+		#error not implemented on this platform
+	#endif
+#endif
+
 
 /* -----  time ----- */
 int64 time_get()
@@ -578,18 +614,18 @@ int net_addr_comp(const NETADDR *a, const NETADDR *b)
 	return mem_comp(a, b, sizeof(NETADDR));
 }
 
-void net_addr_str(const NETADDR *addr, char *string, int max_length)
+void net_addr_str(const NETADDR *addr, char *string, int max_length, int add_port)
 {
 	if(addr->type == NETTYPE_IPV4)
 	{
-		if(addr->port != 0)
+		if(add_port != 0)
 			str_format(string, max_length, "%d.%d.%d.%d:%d", addr->ip[0], addr->ip[1], addr->ip[2], addr->ip[3], addr->port);
 		else
 			str_format(string, max_length, "%d.%d.%d.%d", addr->ip[0], addr->ip[1], addr->ip[2], addr->ip[3]);
 	}
 	else if(addr->type == NETTYPE_IPV6)
 	{
-		if(addr->port != 0)
+		if(add_port != 0)
 			str_format(string, max_length, "[%x:%x:%x:%x:%x:%x:%x:%x]:%d",
 				(addr->ip[0]<<8)|addr->ip[1], (addr->ip[2]<<8)|addr->ip[3], (addr->ip[4]<<8)|addr->ip[5], (addr->ip[6]<<8)|addr->ip[7],
 				(addr->ip[8]<<8)|addr->ip[9], (addr->ip[10]<<8)|addr->ip[11], (addr->ip[12]<<8)|addr->ip[13], (addr->ip[14]<<8)|addr->ip[15],
@@ -824,7 +860,15 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 	sock = socket(domain, type, 0);
 	if(sock < 0)
 	{
+#if defined(CONF_FAMILY_WINDOWS)
+		char buf[128];
+		int error = WSAGetLastError();
+		if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
+			buf[0] = 0;
+		dbg_msg("net", "failed to create socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
+#else
 		dbg_msg("net", "failed to create socket with domain %d and type %d (%d '%s')", domain, type, errno, strerror(errno));
+#endif
 		return -1;
 	}
 
@@ -841,7 +885,15 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 	e = bind(sock, addr, sockaddrlen);
 	if(e != 0)
 	{
+#if defined(CONF_FAMILY_WINDOWS)
+		char buf[128];
+		int error = WSAGetLastError();
+		if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
+			buf[0] = 0;
+		dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
+#else
 		dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, errno, strerror(errno));
+#endif
 		priv_net_close_socket(sock);
 		return -1;
 	}
@@ -855,6 +907,7 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 	NETSOCKET sock = invalid_socket;
 	NETADDR tmpbindaddr = bindaddr;
 	int broadcast = 1;
+	int recvsize = 65536;
 
 	if(bindaddr.type&NETTYPE_IPV4)
 	{
@@ -869,13 +922,13 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 		{
 			sock.type |= NETTYPE_IPV4;
 			sock.ipv4sock = socket;
+
+			/* set broadcast */
+			setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
+
+			/* set receive buffer size */
+			setsockopt(socket, SOL_SOCKET, SO_RCVBUF, (char*)&recvsize, sizeof(recvsize));
 		}
-
-		/* set non-blocking */
-		net_set_non_blocking(sock);
-
-		/* set boardcast */
-		setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
 	}
 
 	if(bindaddr.type&NETTYPE_IPV6)
@@ -891,14 +944,17 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 		{
 			sock.type |= NETTYPE_IPV6;
 			sock.ipv6sock = socket;
+
+			/* set broadcast */
+			setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
+
+			/* set receive buffer size */
+			setsockopt(socket, SOL_SOCKET, SO_RCVBUF, (char*)&recvsize, sizeof(recvsize));
 		}
-
-		/* set non-blocking */
-		net_set_non_blocking(sock);
-
-		/* set boardcast */
-		setsockopt(socket, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
 	}
+
+	/* set non-blocking */
+	net_set_non_blocking(sock);
 
 	/* return */
 	return sock;
@@ -1119,7 +1175,7 @@ int net_tcp_accept(NETSOCKET sock, NETSOCKET *new_sock, NETADDR *a)
 		sockaddr_len = sizeof(addr);
 
 		s = accept(sock.ipv4sock, (struct sockaddr *)&addr, &sockaddr_len);
-		
+
 		if (s != -1)
 		{
 			sockaddr_to_netaddr((const struct sockaddr *)&addr, a);
@@ -1135,7 +1191,7 @@ int net_tcp_accept(NETSOCKET sock, NETSOCKET *new_sock, NETADDR *a)
 		sockaddr_len = sizeof(addr);
 
 		s = accept(sock.ipv6sock, (struct sockaddr *)&addr, &sockaddr_len);
-		
+
 		if (s != -1)
 		{
 			sockaddr_to_netaddr((const struct sockaddr *)&addr, a);
@@ -1186,7 +1242,7 @@ int net_tcp_send(NETSOCKET sock, const void *data, int size)
 		bytes = send((int)sock.ipv4sock, (const char*)data, size, 0);
 	if(sock.ipv6sock >= 0)
 		bytes = send((int)sock.ipv6sock, (const char*)data, size, 0);
-		
+
 	return bytes;
 }
 
@@ -1198,7 +1254,7 @@ int net_tcp_recv(NETSOCKET sock, void *data, int maxsize)
 		bytes = recv((int)sock.ipv4sock, (char*)data, maxsize, 0);
 	if(sock.ipv6sock >= 0)
 		bytes = recv((int)sock.ipv6sock, (char*)data, maxsize, 0);
-		
+
 	return bytes;
 }
 
@@ -1477,7 +1533,7 @@ int net_socket_read_wait(NETSOCKET sock, int time)
 	return 0;
 }
 
-unsigned time_timestamp()
+int time_timestamp()
 {
 	return time(0);
 }
@@ -1633,10 +1689,10 @@ int str_comp_filenames(const char *a, const char *b)
 				return result;
 		}
 
-		if(*a != *b)
+		if(tolower(*a) != tolower(*b))
 			break;
 	}
-	return *a - *b;
+	return tolower(*a) - tolower(*b);
 }
 
 const char *str_find_nocase(const char *haystack, const char *needle)

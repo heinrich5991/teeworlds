@@ -3,17 +3,14 @@
 #ifndef GAME_SERVER_GAMECONTEXT_H
 #define GAME_SERVER_GAMECONTEXT_H
 
-#include <engine/server.h>
 #include <engine/console.h>
-#include <engine/shared/memheap.h>
+#include <engine/server.h>
 
 #include <game/layers.h>
 #include <game/voting.h>
 
 #include "eventhandler.h"
-#include "gamecontroller.h"
 #include "gameworld.h"
-#include "player.h"
 
 /*
 	Tick
@@ -48,18 +45,23 @@ class CGameContext : public IGameServer
 	static void ConTuneParam(IConsole::IResult *pResult, void *pUserData);
 	static void ConTuneReset(IConsole::IResult *pResult, void *pUserData);
 	static void ConTuneDump(IConsole::IResult *pResult, void *pUserData);
+	static void ConPause(IConsole::IResult *pResult, void *pUserData);
 	static void ConChangeMap(IConsole::IResult *pResult, void *pUserData);
 	static void ConRestart(IConsole::IResult *pResult, void *pUserData);
 	static void ConBroadcast(IConsole::IResult *pResult, void *pUserData);
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSetTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConSetTeamAll(IConsole::IResult *pResult, void *pUserData);
+	static void ConSwapTeams(IConsole::IResult *pResult, void *pUserData);
+	static void ConShuffleTeams(IConsole::IResult *pResult, void *pUserData);
+	static void ConLockTeams(IConsole::IResult *pResult, void *pUserData);
+	static void ConForceTeamBalance(IConsole::IResult *pResult, void *pUserData);
 	static void ConAddVote(IConsole::IResult *pResult, void *pUserData);
 	static void ConRemoveVote(IConsole::IResult *pResult, void *pUserData);
-	static void ConForceVote(IConsole::IResult *pResult, void *pUserData);
 	static void ConClearVotes(IConsole::IResult *pResult, void *pUserData);
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainSettingUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
@@ -77,20 +79,24 @@ public:
 	void Clear();
 
 	CEventHandler m_Events;
-	CPlayer *m_apPlayers[MAX_CLIENTS];
+	class CPlayer *m_apPlayers[MAX_CLIENTS];
 
-	IGameController *m_pController;
+	class IGameController *m_pController;
 	CGameWorld m_World;
 
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientID);
 
+	int m_LockTeams;
+
 	// voting
-	void StartVote(const char *pDesc, const char *pCommand, const char *pReason);
-	void EndVote();
-	void SendVoteSet(int ClientID);
+	void StartVote(int Type, const char *pDesc, const char *pCommand, const char *pReason);
+	void EndVote(int Type, bool Force);
+	void ForceVote(int Type, const char *pDescription, const char *pReason);
+	void SendVoteSet(int Type, int ToClientID);
 	void SendVoteStatus(int ClientID, int Total, int Yes, int No);
-	void AbortVoteKickOnDisconnect(int ClientID);
+	void AbortVoteOnDisconnect(int ClientID);
+	void AbortVoteOnTeamChange(int ClientID);
 
 	int m_VoteCreator;
 	int64 m_VoteCloseTime;
@@ -99,6 +105,7 @@ public:
 	char m_aVoteDescription[VOTE_DESC_LENGTH];
 	char m_aVoteCommand[VOTE_CMD_LENGTH];
 	char m_aVoteReason[VOTE_REASON_LENGTH];
+	int m_VoteClientID;
 	int m_NumVoteOptions;
 	int m_VoteEnforce;
 	enum
@@ -106,8 +113,10 @@ public:
 		VOTE_ENFORCE_UNKNOWN=0,
 		VOTE_ENFORCE_NO,
 		VOTE_ENFORCE_YES,
+
+		VOTE_TIME=25,
 	};
-	CHeap *m_pVoteOptionHeap;
+	class CHeap *m_pVoteOptionHeap;
 	CVoteOptionServer *m_pVoteOptionFirst;
 	CVoteOptionServer *m_pVoteOptionLast;
 
@@ -118,7 +127,6 @@ public:
 	void CreatePlayerSpawn(vec2 Pos);
 	void CreateDeath(vec2 Pos, int Who);
 	void CreateSound(vec2 Pos, int Sound, int Mask=-1);
-	void CreateSoundGlobal(int Sound, int Target=-1);
 
 
 	enum
@@ -134,12 +142,19 @@ public:
 	void SendChat(int ClientID, int Team, const char *pText);
 	void SendEmoticon(int ClientID, int Emoticon);
 	void SendWeaponPickup(int ClientID, int Weapon);
-	void SendBroadcast(const char *pText, int ClientID);
+	void SendMotd(int ClientID);
+	void SendSettings(int ClientID);
 
+	void SendGameMsg(int GameMsgID, int ClientID);
+	void SendGameMsg(int GameMsgID, int ParaI1, int ClientID);
+	void SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ParaI3, int ClientID);
 
 	//
 	void CheckPureTuning();
 	void SendTuningParams(int ClientID);
+
+	//
+	void SwapTeams();
 
 	// engine events
 	virtual void OnInit();
@@ -153,7 +168,9 @@ public:
 
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID);
 
-	virtual void OnClientConnected(int ClientID);
+	virtual void OnClientConnected(int ClientID) { OnClientConnected(ClientID, false); }
+	void OnClientConnected(int ClientID, bool Dummy);
+	void OnClientTeamChange(int ClientID);
 	virtual void OnClientEnter(int ClientID);
 	virtual void OnClientDrop(int ClientID, const char *pReason);
 	virtual void OnClientDirectInput(int ClientID, void *pInput);

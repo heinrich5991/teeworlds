@@ -195,13 +195,14 @@ int CSnapshotDelta::CreateDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pDstData
 
 	// fetch previous indices
 	// we do this as a separate pass because it helps the cache
-	for(i = 0; i < pTo->NumItems(); i++)
+	const int NumItems = pTo->NumItems();
+	for(i = 0; i < NumItems; i++)
 	{
 		pCurItem = pTo->GetItem(i); // O(1) .. O(n)
 		aPastIndecies[i] = GetItemIndexHashed(pCurItem->Key(), Hashlist); // O(n) .. O(n^n)
 	}
 
-	for(i = 0; i < pTo->NumItems(); i++)
+	for(i = 0; i < NumItems; i++)
 	{
 		// do delta
 		ItemSize = pTo->GetItemSize(i); // O(1) .. O(n)
@@ -474,7 +475,7 @@ int CSnapshotStorage::Get(int Tick, int64 *pTagtime, CSnapshot **ppData, CSnapsh
 			if(ppData)
 				*ppData = pHolder->m_pSnap;
 			if(ppAltData)
-				*ppData = pHolder->m_pAltSnap;
+				*ppAltData = pHolder->m_pAltSnap;
 			return pHolder->m_SnapSize;
 		}
 
@@ -490,6 +491,24 @@ void CSnapshotBuilder::Init()
 {
 	m_DataSize = 0;
 	m_NumItems = 0;
+}
+
+void CSnapshotBuilder::Init(const CSnapshot *pSnapshot)
+{
+	if(pSnapshot->m_DataSize > CSnapshot::MAX_SIZE || pSnapshot->m_NumItems > MAX_ITEMS)
+	{
+		dbg_assert(m_DataSize < CSnapshot::MAX_SIZE, "too much data");
+		dbg_assert(m_NumItems < MAX_ITEMS, "too many items");
+		dbg_msg("snapshot", "invalid snapshot"); // remove me
+		m_DataSize = 0;
+		m_NumItems = 0;
+		return;
+	}
+
+	m_DataSize = pSnapshot->m_DataSize;
+	m_NumItems = pSnapshot->m_NumItems;
+	mem_copy(m_aOffsets, pSnapshot->Offsets(), sizeof(int)*m_NumItems);
+	mem_copy(m_aData, pSnapshot->DataStart(), m_DataSize);
 }
 
 CSnapshotItem *CSnapshotBuilder::GetItem(int Index)

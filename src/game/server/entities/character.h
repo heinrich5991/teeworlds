@@ -4,17 +4,7 @@
 #define GAME_SERVER_ENTITIES_CHARACTER_H
 
 #include <game/server/entity.h>
-#include <game/generated/server_data.h>
-#include <game/generated/protocol.h>
 
-#include <game/gamecore.h>
-
-enum
-{
-	WEAPON_GAME = -3, // team switching etc
-	WEAPON_SELF = -2, // console kill command
-	WEAPON_WORLD = -1, // death tiles etc
-};
 
 class CCharacter : public CEntity
 {
@@ -30,7 +20,9 @@ public:
 	virtual void Destroy();
 	virtual void Tick();
 	virtual void TickDefered();
+	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
+	virtual void PostSnap();
 
 	bool IsGrounded();
 
@@ -96,6 +88,7 @@ private:
 
 	// last tick that the player took any action ie some input
 	int m_LastAction;
+	int m_LastNoAmmoSound;
 
 	// these are non-heldback inputs
 	CNetObj_PlayerInput m_LatestPrevInput;
@@ -111,6 +104,8 @@ private:
 
 	int m_Health;
 	int m_Armor;
+
+	int m_TriggeredEvents;
 
 	// ninja
 	struct

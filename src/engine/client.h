@@ -5,6 +5,7 @@
 #include "kernel.h"
 
 #include "message.h"
+#include "graphics.h"
 
 class IClient : public IInterface
 {
@@ -19,11 +20,14 @@ protected:
 	float m_GameIntraTick;
 	float m_GameTickTime;
 
+	int m_CurMenuTick;
+	int64 m_MenuStartTime;
+
 	int m_PredTick;
 	float m_PredIntraTick;
 
 	float m_LocalTime;
-	float m_FrameTime;
+	float m_RenderFrameTime;
 
 	int m_GameTickSpeed;
 public:
@@ -62,6 +66,7 @@ public:
 	// tick time access
 	inline int PrevGameTick() const { return m_PrevGameTick; }
 	inline int GameTick() const { return m_CurGameTick; }
+	inline int MenuTick() const { return m_CurMenuTick; }
 	inline int PredGameTick() const { return m_PredTick; }
 	inline float IntraGameTick() const { return m_GameIntraTick; }
 	inline float PredIntraGameTick() const { return m_PredIntraTick; }
@@ -69,7 +74,7 @@ public:
 	inline int GameTickSpeed() const { return m_GameTickSpeed; }
 
 	// other time access
-	inline float FrameTime() const { return m_FrameTime; }
+	inline float RenderFrameTime() const { return m_RenderFrameTime; }
 	inline float LocalTime() const { return m_LocalTime; }
 
 	// actions
@@ -80,6 +85,7 @@ public:
 	virtual void DemoRecorder_Start(const char *pFilename, bool WithTimestamp) = 0;
 	virtual void DemoRecorder_HandleAutoStart() = 0;
 	virtual void DemoRecorder_Stop() = 0;
+	virtual void RecordGameMessage(bool State) = 0;
 	virtual void AutoScreenshot_Start() = 0;
 	virtual void ServerBrowserUpdate() = 0;
 
@@ -115,6 +121,8 @@ public:
 	virtual void *SnapFindItem(int SnapID, int Type, int ID) = 0;
 	virtual void *SnapGetItem(int SnapID, int Index, CSnapItem *pItem) = 0;
 	virtual void SnapInvalidateItem(int SnapID, int Index) = 0;
+	
+	virtual void *SnapNewItem(int Type, int ID, int Size) = 0;
 
 	virtual void SnapSetStaticsize(int ItemType, int Size) = 0;
 
@@ -123,7 +131,7 @@ public:
 	template<class T>
 	int SendPackMsg(T *pMsg, int Flags)
 	{
-		CMsgPacker Packer(pMsg->MsgID());
+		CMsgPacker Packer(pMsg->MsgID(), false);
 		if(pMsg->Pack(&Packer))
 			return -1;
 		return SendMsg(&Packer, Flags);
@@ -136,7 +144,7 @@ public:
 
 	virtual bool SoundInitFailed() = 0;
 
-	virtual int GetDebugFont() = 0;
+	virtual IGraphics::CTextureHandle GetDebugFont() = 0; // TODO: remove this function
 };
 
 class IGameClient : public IInterface
@@ -149,6 +157,7 @@ public:
 	virtual void OnRconLine(const char *pLine) = 0;
 	virtual void OnInit() = 0;
 	virtual void OnNewSnapshot() = 0;
+	virtual void OnDemoRecSnap() = 0;
 	virtual void OnEnterGame() = 0;
 	virtual void OnShutdown() = 0;
 	virtual void OnRender() = 0;

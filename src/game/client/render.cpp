@@ -75,7 +75,7 @@ void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
 
 void CRenderTools::SelectSprite(int Id, int Flags, int sx, int sy)
 {
-	if(Id < 0 || Id > g_pData->m_NumSprites)
+	if(Id < 0 || Id >= g_pData->m_NumSprites)
 		return;
 	SelectSprite(&g_pData->m_aSprites[Id], Flags, sx, sy);
 }
@@ -104,7 +104,7 @@ void CRenderTools::DrawRoundRectExt(float x, float y, float w, float h, float r,
 		float Sa3 = sinf(a3);
 
 		if(Corners&1) // TL
-		ArrayF[NumItems++] = IGraphics::CFreeformItem(
+			ArrayF[NumItems++] = IGraphics::CFreeformItem(
 			x+r, y+r,
 			x+(1-Ca1)*r, y+(1-Sa1)*r,
 			x+(1-Ca3)*r, y+(1-Sa3)*r,
@@ -130,6 +130,34 @@ void CRenderTools::DrawRoundRectExt(float x, float y, float w, float h, float r,
 			x+w-r+Ca1*r, y+h-r+Sa1*r,
 			x+w-r+Ca3*r, y+h-r+Sa3*r,
 			x+w-r+Ca2*r, y+h-r+Sa2*r);
+
+		if(Corners&16) // ITL
+		ArrayF[NumItems++] = IGraphics::CFreeformItem(
+			x, y,
+			x+(1-Ca1)*r, y-r+Sa1*r,
+			x+(1-Ca3)*r, y-r+Sa3*r,
+			x+(1-Ca2)*r, y-r+Sa2*r);
+	
+		if(Corners&32) // ITR
+		ArrayF[NumItems++] = IGraphics::CFreeformItem(
+			x+w, y,
+			x+w-r+Ca1*r, y-r+Sa1*r,
+			x+w-r+Ca3*r, y-r+Sa3*r,
+			x+w-r+Ca2*r, y-r+Sa2*r);
+	
+		if(Corners&64) // IBL
+		ArrayF[NumItems++] = IGraphics::CFreeformItem(
+			x, y+h,
+			x+(1-Ca1)*r, y+h+(1-Sa1)*r,
+			x+(1-Ca3)*r, y+h+(1-Sa3)*r,
+			x+(1-Ca2)*r, y+h+(1-Sa2)*r);
+
+		if(Corners&128) // IBR
+		ArrayF[NumItems++] = IGraphics::CFreeformItem(
+			x+w, y+h,
+			x+w-r+Ca1*r, y+h+(1-Sa1)*r,
+			x+w-r+Ca3*r, y+h+(1-Sa3)*r,
+			x+w-r+Ca2*r, y+h+(1-Sa2)*r);
 	}
 	Graphics()->QuadsDrawFreeform(ArrayF, NumItems);
 
@@ -149,6 +177,152 @@ void CRenderTools::DrawRoundRectExt(float x, float y, float w, float h, float r,
 	Graphics()->QuadsDrawTL(ArrayQ, NumItems);
 }
 
+void CRenderTools::DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners)
+{
+	int Num = 8;
+	for(int i = 0; i < Num; i+=2)
+	{
+		float a1 = i/(float)Num * pi/2;
+		float a2 = (i+1)/(float)Num * pi/2;
+		float a3 = (i+2)/(float)Num * pi/2;
+		float Ca1 = cosf(a1);
+		float Ca2 = cosf(a2);
+		float Ca3 = cosf(a3);
+		float Sa1 = sinf(a1);
+		float Sa2 = sinf(a2);
+		float Sa3 = sinf(a3);
+
+		if(Corners&1) // TL
+		{
+			Graphics()->SetColor(ColorTopLeft.r, ColorTopLeft.g, ColorTopLeft.b, ColorTopLeft.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x+r, y+r,
+									x+(1-Ca1)*r, y+(1-Sa1)*r,
+									x+(1-Ca3)*r, y+(1-Sa3)*r,
+									x+(1-Ca2)*r, y+(1-Sa2)*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+
+		if(Corners&2) // TR
+		{
+			Graphics()->SetColor(ColorTopRight.r, ColorTopRight.g, ColorTopRight.b, ColorTopRight.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x+w-r, y+r,
+									x+w-r+Ca1*r, y+(1-Sa1)*r,
+									x+w-r+Ca3*r, y+(1-Sa3)*r,
+									x+w-r+Ca2*r, y+(1-Sa2)*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+
+		if(Corners&4) // BL
+		{
+			Graphics()->SetColor(ColorBottomLeft.r, ColorBottomLeft.g, ColorBottomLeft.b, ColorBottomLeft.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x+r, y+h-r,
+									x+(1-Ca1)*r, y+h-r+Sa1*r,
+									x+(1-Ca3)*r, y+h-r+Sa3*r,
+									x+(1-Ca2)*r, y+h-r+Sa2*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+
+		if(Corners&8) // BR
+		{
+			Graphics()->SetColor(ColorBottomRight.r, ColorBottomRight.g, ColorBottomRight.b, ColorBottomRight.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x+w-r, y+h-r,
+									x+w-r+Ca1*r, y+h-r+Sa1*r,
+									x+w-r+Ca3*r, y+h-r+Sa3*r,
+									x+w-r+Ca2*r, y+h-r+Sa2*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+
+		if(Corners&16) // ITL
+		{
+			Graphics()->SetColor(ColorTopLeft.r, ColorTopLeft.g, ColorTopLeft.b, ColorTopLeft.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x, y,
+									x+(1-Ca1)*r, y-r+Sa1*r,
+									x+(1-Ca3)*r, y-r+Sa3*r,
+									x+(1-Ca2)*r, y-r+Sa2*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+	
+		if(Corners&32) // ITR
+		{
+			Graphics()->SetColor(ColorTopRight.r, ColorTopRight.g, ColorTopRight.b, ColorTopRight.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x+w, y,
+									x+w-r+Ca1*r, y-r+Sa1*r,
+									x+w-r+Ca3*r, y-r+Sa3*r,
+									x+w-r+Ca2*r, y-r+Sa2*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+	
+		if(Corners&64) // IBL
+		{
+			Graphics()->SetColor(ColorBottomLeft.r, ColorBottomLeft.g, ColorBottomLeft.b, ColorBottomLeft.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x, y+h,
+									x+(1-Ca1)*r, y+h+(1-Sa1)*r,
+									x+(1-Ca3)*r, y+h+(1-Sa3)*r,
+									x+(1-Ca2)*r, y+h+(1-Sa2)*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+
+		if(Corners&128) // IBR
+		{
+			Graphics()->SetColor(ColorBottomRight.r, ColorBottomRight.g, ColorBottomRight.b, ColorBottomRight.a);
+			IGraphics::CFreeformItem ItemF = IGraphics::CFreeformItem(
+									x+w, y+h,
+									x+w-r+Ca1*r, y+h+(1-Sa1)*r,
+									x+w-r+Ca3*r, y+h+(1-Sa3)*r,
+									x+w-r+Ca2*r, y+h+(1-Sa2)*r);
+			Graphics()->QuadsDrawFreeform(&ItemF, 1);
+		}
+	}
+
+	Graphics()->SetColor4(ColorTopLeft, ColorTopRight, ColorBottomLeft, ColorBottomRight);
+	IGraphics::CQuadItem ItemQ = IGraphics::CQuadItem(x+r, y+r, w-r*2, h-r*2); // center
+	Graphics()->QuadsDrawTL(&ItemQ, 1);
+	Graphics()->SetColor4(ColorTopLeft, ColorTopRight, ColorTopLeft, ColorTopRight);
+	ItemQ = IGraphics::CQuadItem(x+r, y, w-r*2, r); // top
+	Graphics()->QuadsDrawTL(&ItemQ, 1);
+	Graphics()->SetColor4(ColorBottomLeft, ColorBottomRight, ColorBottomLeft, ColorBottomRight);
+	ItemQ = IGraphics::CQuadItem(x+r, y+h-r, w-r*2, r); // bottom
+	Graphics()->QuadsDrawTL(&ItemQ, 1);
+	Graphics()->SetColor4(ColorTopLeft, ColorTopLeft, ColorBottomLeft, ColorBottomLeft);
+	ItemQ = IGraphics::CQuadItem(x, y+r, r, h-r*2); // left
+	Graphics()->QuadsDrawTL(&ItemQ, 1);
+	Graphics()->SetColor4(ColorTopRight, ColorTopRight, ColorBottomRight, ColorBottomRight);
+	ItemQ = IGraphics::CQuadItem(x+w-r, y+r, r, h-r*2); // right
+	Graphics()->QuadsDrawTL(&ItemQ, 1);
+
+	if(!(Corners&1))
+	{
+		Graphics()->SetColor(ColorTopLeft.r, ColorTopLeft.g, ColorTopLeft.b, ColorTopLeft.a);
+		IGraphics::CQuadItem ItemQ = IGraphics::CQuadItem(x, y, r, r); // TL
+		Graphics()->QuadsDrawTL(&ItemQ, 1);
+	}
+	if(!(Corners&2))
+	{
+		Graphics()->SetColor(ColorTopRight.r, ColorTopRight.g, ColorTopRight.b, ColorTopRight.a);
+		IGraphics::CQuadItem ItemQ = IGraphics::CQuadItem(x+w, y, -r, r); // TR
+		Graphics()->QuadsDrawTL(&ItemQ, 1);
+	}
+	if(!(Corners&4))
+	{
+		Graphics()->SetColor(ColorBottomLeft.r, ColorBottomLeft.g, ColorBottomLeft.b, ColorBottomLeft.a);
+		IGraphics::CQuadItem ItemQ = IGraphics::CQuadItem(x, y+h, r, -r); // BL
+		Graphics()->QuadsDrawTL(&ItemQ, 1);
+	}
+	if(!(Corners&8))
+	{
+		Graphics()->SetColor(ColorBottomRight.r, ColorBottomRight.g, ColorBottomRight.b, ColorBottomRight.a);
+		IGraphics::CQuadItem ItemQ = IGraphics::CQuadItem(x+w, y+h, -r, -r); // BR
+		Graphics()->QuadsDrawTL(&ItemQ, 1);
+	}
+}
+
 void CRenderTools::DrawRoundRect(float x, float y, float w, float h, float r)
 {
 	DrawRoundRectExt(x,y,w,h,r,0xf);
@@ -156,12 +330,21 @@ void CRenderTools::DrawRoundRect(float x, float y, float w, float h, float r)
 
 void CRenderTools::DrawUIRect(const CUIRect *r, vec4 Color, int Corners, float Rounding)
 {
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 
 	// TODO: FIX US
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
 	DrawRoundRectExt(r->x,r->y,r->w,r->h,Rounding*UI()->Scale(), Corners);
+	Graphics()->QuadsEnd();
+}
+
+void CRenderTools::DrawUIRect4(const CUIRect *r, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, int Corners, float Rounding)
+{
+	Graphics()->TextureClear();
+
+	Graphics()->QuadsBegin();
+	DrawRoundRectExt4(r->x,r->y,r->w,r->h,ColorTopLeft,ColorTopRight,ColorBottomLeft,ColorBottomRight,Rounding*UI()->Scale(), Corners);
 	Graphics()->QuadsEnd();
 }
 
@@ -171,17 +354,15 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 	vec2 Position = Pos;
 
 	//Graphics()->TextureSet(data->images[IMAGE_CHAR_DEFAULT].id);
-	Graphics()->TextureSet(pInfo->m_Texture);
 
 	// TODO: FIX ME
-	Graphics()->QuadsBegin();
 	//Graphics()->QuadsDraw(pos.x, pos.y-128, 128, 128);
 
 	// first pass we draw the outline
 	// second pass we draw the filling
 	for(int p = 0; p < 2; p++)
 	{
-		int OutLine = p==0 ? 1 : 0;
+		bool OutLine = p==0;
 
 		for(int f = 0; f < 2; f++)
 		{
@@ -189,77 +370,135 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 			float BaseSize = pInfo->m_Size;
 			if(f == 1)
 			{
-				Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
-
-				// draw body
-				Graphics()->SetColor(pInfo->m_ColorBody.r, pInfo->m_ColorBody.g, pInfo->m_ColorBody.b, pInfo->m_ColorBody.a);
 				vec2 BodyPos = Position + vec2(pAnim->GetBody()->m_X, pAnim->GetBody()->m_Y)*AnimScale;
-				SelectSprite(OutLine?SPRITE_TEE_BODY_OUTLINE:SPRITE_TEE_BODY, 0, 0, 0);
-				IGraphics::CQuadItem QuadItem(BodyPos.x, BodyPos.y, BaseSize, BaseSize);
-				Graphics()->QuadsDraw(&QuadItem, 1);
+				IGraphics::CQuadItem BodyItem(BodyPos.x, BodyPos.y, BaseSize, BaseSize);
+				IGraphics::CQuadItem Item;
+
+				// draw decoration
+				if(pInfo->m_aTextures[2].IsValid())
+				{
+					Graphics()->TextureSet(pInfo->m_aTextures[2]);
+					Graphics()->QuadsBegin();
+					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
+					Graphics()->SetColor(pInfo->m_aColors[2].r, pInfo->m_aColors[2].g, pInfo->m_aColors[2].b, pInfo->m_aColors[2].a);
+					SelectSprite(OutLine?SPRITE_TEE_DECORATION_OUTLINE:SPRITE_TEE_DECORATION, 0, 0, 0);
+					Item = BodyItem;
+					Graphics()->QuadsDraw(&Item, 1);
+					Graphics()->QuadsEnd();
+				}
+
+				// draw body (behind tattoo)
+				Graphics()->TextureSet(pInfo->m_aTextures[0]);
+				Graphics()->QuadsBegin();
+				Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
+				if(OutLine)
+				{
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+					SelectSprite(SPRITE_TEE_BODY_OUTLINE, 0, 0, 0);
+				}
+				else
+				{
+					Graphics()->SetColor(pInfo->m_aColors[0].r, pInfo->m_aColors[0].g, pInfo->m_aColors[0].b, pInfo->m_aColors[0].a);
+					SelectSprite(SPRITE_TEE_BODY, 0, 0, 0);
+				}
+				Item = BodyItem;
+				Graphics()->QuadsDraw(&Item, 1);
+				Graphics()->QuadsEnd();
+
+				// draw tattoo
+				if(pInfo->m_aTextures[1].IsValid() && !OutLine)
+				{
+					Graphics()->TextureSet(pInfo->m_aTextures[1]);
+					Graphics()->QuadsBegin();
+					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
+					Graphics()->SetColor(pInfo->m_aColors[1].r, pInfo->m_aColors[1].g, pInfo->m_aColors[1].b, pInfo->m_aColors[1].a);
+					SelectSprite(SPRITE_TEE_TATTOO, 0, 0, 0);
+					Item = BodyItem;
+					Graphics()->QuadsDraw(&Item, 1);
+					Graphics()->QuadsEnd();
+				}
+
+				// draw body (in front of tattoo)
+				if(!OutLine)
+				{
+					Graphics()->TextureSet(pInfo->m_aTextures[0]);
+					Graphics()->QuadsBegin();
+					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+					for(int t = 0; t < 2; t++)
+					{
+						SelectSprite(t==0?SPRITE_TEE_BODY_SHADOW:SPRITE_TEE_BODY_UPPER_OUTLINE, 0, 0, 0);
+						Item = BodyItem;
+						Graphics()->QuadsDraw(&Item, 1);
+					}
+					Graphics()->QuadsEnd();
+				}
 
 				// draw eyes
+				Graphics()->TextureSet(pInfo->m_aTextures[5]);
+				Graphics()->QuadsBegin();
+				Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
+				Graphics()->SetColor(pInfo->m_aColors[5].r, pInfo->m_aColors[5].g, pInfo->m_aColors[5].b, pInfo->m_aColors[5].a);
 				if(p == 1)
 				{
 					switch (Emote)
 					{
 						case EMOTE_PAIN:
-							SelectSprite(SPRITE_TEE_EYE_PAIN, 0, 0, 0);
+							SelectSprite(SPRITE_TEE_EYES_PAIN, 0, 0, 0);
 							break;
 						case EMOTE_HAPPY:
-							SelectSprite(SPRITE_TEE_EYE_HAPPY, 0, 0, 0);
+							SelectSprite(SPRITE_TEE_EYES_HAPPY, 0, 0, 0);
 							break;
 						case EMOTE_SURPRISE:
-							SelectSprite(SPRITE_TEE_EYE_SURPRISE, 0, 0, 0);
+							SelectSprite(SPRITE_TEE_EYES_SURPRISE, 0, 0, 0);
 							break;
 						case EMOTE_ANGRY:
-							SelectSprite(SPRITE_TEE_EYE_ANGRY, 0, 0, 0);
+							SelectSprite(SPRITE_TEE_EYES_ANGRY, 0, 0, 0);
 							break;
 						default:
-							SelectSprite(SPRITE_TEE_EYE_NORMAL, 0, 0, 0);
+							SelectSprite(SPRITE_TEE_EYES_NORMAL, 0, 0, 0);
 							break;
 					}
 
-					float EyeScale = BaseSize*0.40f;
-					float h = Emote == EMOTE_BLINK ? BaseSize*0.15f : EyeScale;
-					float EyeSeparation = (0.075f - 0.010f*absolute(Direction.x))*BaseSize;
+					float EyeScale = BaseSize*0.60f;
+					float h = Emote == EMOTE_BLINK ? BaseSize*0.15f/2.0f : EyeScale/2.0f;
 					vec2 Offset = vec2(Direction.x*0.125f, -0.05f+Direction.y*0.10f)*BaseSize;
-					IGraphics::CQuadItem Array[2] = {
-						IGraphics::CQuadItem(BodyPos.x-EyeSeparation+Offset.x, BodyPos.y+Offset.y, EyeScale, h),
-						IGraphics::CQuadItem(BodyPos.x+EyeSeparation+Offset.x, BodyPos.y+Offset.y, -EyeScale, h)};
-					Graphics()->QuadsDraw(Array, 2);
+					IGraphics::CQuadItem QuadItem(BodyPos.x+Offset.x, BodyPos.y+Offset.y, EyeScale, h);
+					Graphics()->QuadsDraw(&QuadItem, 1);
 				}
+				Graphics()->QuadsEnd();
 			}
 
 			// draw feet
+			Graphics()->TextureSet(pInfo->m_aTextures[4]);
+			Graphics()->QuadsBegin();
 			CAnimKeyframe *pFoot = f ? pAnim->GetFrontFoot() : pAnim->GetBackFoot();
 
-			float w = BaseSize;
-			float h = BaseSize/2;
+			float w = BaseSize/2.25f;
+			float h = w;
 
 			Graphics()->QuadsSetRotation(pFoot->m_Angle*pi*2);
 
-			bool Indicate = !pInfo->m_GotAirJump && g_Config.m_ClAirjumpindicator;
-			float cs = 1.0f; // color scale
-
 			if(OutLine)
+			{
+				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 				SelectSprite(SPRITE_TEE_FOOT_OUTLINE, 0, 0, 0);
+			}
 			else
 			{
-				SelectSprite(SPRITE_TEE_FOOT, 0, 0, 0);
+				bool Indicate = !pInfo->m_GotAirJump && g_Config.m_ClAirjumpindicator;
+				float cs = 1.0f; // color scale
 				if(Indicate)
 					cs = 0.5f;
+				Graphics()->SetColor(pInfo->m_aColors[4].r*cs, pInfo->m_aColors[4].g*cs, pInfo->m_aColors[4].b*cs, pInfo->m_aColors[4].a);
+				SelectSprite(SPRITE_TEE_FOOT, 0, 0, 0);
 			}
 
-			Graphics()->SetColor(pInfo->m_ColorFeet.r*cs, pInfo->m_ColorFeet.g*cs, pInfo->m_ColorFeet.b*cs, pInfo->m_ColorFeet.a);
 			IGraphics::CQuadItem QuadItem(Position.x+pFoot->m_X*AnimScale, Position.y+pFoot->m_Y*AnimScale, w, h);
 			Graphics()->QuadsDraw(&QuadItem, 1);
+			Graphics()->QuadsEnd();
 		}
 	}
-
-	Graphics()->QuadsEnd();
-
-
 }
 
 static void CalcScreenParams(float Amount, float WMax, float HMax, float Aspect, float *w, float *h)
@@ -314,7 +553,7 @@ void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
 				CTile *pTiles = (CTile *)pLayers->Map()->GetData(pTmap->m_Data);
 				for(int y = 0; y < pTmap->m_Height; y++)
 				{
-					for(int x = 1; x < pTmap->m_Width; x++)
+					for(int x = 1; x < pTmap->m_Width;)
 					{
 						int sx;
 						for(sx = 1; x+sx < pTmap->m_Width && sx < 255; sx++)
@@ -324,6 +563,7 @@ void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
 						}
 
 						pTiles[y*pTmap->m_Width+x].m_Skip = sx-1;
+						x += sx;
 					}
 				}
 			}

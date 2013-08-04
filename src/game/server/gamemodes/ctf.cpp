@@ -6,17 +6,63 @@
 
 #include <game/server/entities/character.h>
 #include <game/server/entities/flag.h>
-#include <game/server/player.h>
 #include <game/server/gamecontext.h>
+#include <game/server/player.h>
 #include "ctf.h"
 
-CGameControllerCTF::CGameControllerCTF(class CGameContext *pGameServer)
+CGameControllerCTF::CGameControllerCTF(CGameContext *pGameServer)
 : IGameController(pGameServer)
 {
+	// game
 	m_apFlags[0] = 0;
 	m_apFlags[1] = 0;
 	m_pGameType = "CTF";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
+}
+
+// balancing
+bool CGameControllerCTF::CanBeMovedOnBalance(int ClientID) const
+{
+	CCharacter* Character = GameServer()->m_apPlayers[ClientID]->GetCharacter();
+	if(Character)
+	{
+		for(int fi = 0; fi < 2; fi++)
+		{
+			CFlag *F = m_apFlags[fi];
+			if(F && F->m_pCarryingCharacter == Character)
+				return false;
+		}
+	}
+	return true;
+}
+
+// event
+int CGameControllerCTF::OnCharacterDeath(CCharacter *pVictim, CPlayer *pKiller, int WeaponID)
+{
+	IGameController::OnCharacterDeath(pVictim, pKiller, WeaponID);
+	int HadFlag = 0;
+
+	// drop flags
+	for(int i = 0; i < 2; i++)
+	{
+		CFlag *F = m_apFlags[i];
+		if(F && pKiller && pKiller->GetCharacter() && F->m_pCarryingCharacter == pKiller->GetCharacter())
+			HadFlag |= 2;
+		if(F && F->m_pCarryingCharacter == pVictim)
+		{
+			GameServer()->SendGameMsg(GAMEMSG_CTF_DROP, -1);
+			F->m_DropTick = Server()->Tick();
+			F->m_pCarryingCharacter = 0;
+			F->m_Vel = vec2(0,0);
+
+			if(pKiller && pKiller->GetTeam() != pVictim->GetPlayer()->GetTeam())
+				pKiller->m_Score++;
+
+			HadFlag |= 1;
+		}
+	}
+
+	return HadFlag;
 }
 
 bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
@@ -38,106 +84,67 @@ bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 	return true;
 }
 
-int CGameControllerCTF::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int WeaponID)
+// game
+void CGameControllerCTF::DoWincheckMatch()
 {
-	IGameController::OnCharacterDeath(pVictim, pKiller, WeaponID);
-	int HadFlag = 0;
-
-	// drop flags
-	for(int i = 0; i < 2; i++)
+	// check score win condition
+	if((m_GameInfo.m_ScoreLimit > 0 && (m_aTeamscore[TEAM_RED] >= m_GameInfo.m_ScoreLimit || m_aTeamscore[TEAM_BLUE] >= m_GameInfo.m_ScoreLimit)) ||
+		(m_GameInfo.m_TimeLimit > 0 && (Server()->Tick()-m_GameStartTick) >= m_GameInfo.m_TimeLimit*Server()->TickSpeed()*60))
 	{
-		CFlag *F = m_apFlags[i];
-		if(F && pKiller && pKiller->GetCharacter() && F->m_pCarryingCharacter == pKiller->GetCharacter())
-			HadFlag |= 2;
-		if(F && F->m_pCarryingCharacter == pVictim)
+		if(m_SuddenDeath)
 		{
-			GameServer()->CreateSoundGlobal(SOUND_CTF_DROP);
-			F->m_DropTick = Server()->Tick();
-			F->m_pCarryingCharacter = 0;
-			F->m_Vel = vec2(0,0);
-
-			if(pKiller && pKiller->GetTeam() != pVictim->GetPlayer()->GetTeam())
-				pKiller->m_Score++;
-
-			HadFlag |= 1;
+			if(m_aTeamscore[TEAM_RED]/100 != m_aTeamscore[TEAM_BLUE]/100)
+				EndMatch();
 		}
-	}
-
-	return HadFlag;
-}
-
-void CGameControllerCTF::DoWincheck()
-{
-	if(m_GameOverTick == -1 && !m_Warmup)
-	{
-		// check score win condition
-		if((g_Config.m_SvScorelimit > 0 && (m_aTeamscore[TEAM_RED] >= g_Config.m_SvScorelimit || m_aTeamscore[TEAM_BLUE] >= g_Config.m_SvScorelimit)) ||
-			(g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_RoundStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60))
+		else
 		{
-			if(m_SuddenDeath)
-			{
-				if(m_aTeamscore[TEAM_RED]/100 != m_aTeamscore[TEAM_BLUE]/100)
-					EndRound();
-			}
+			if(m_aTeamscore[TEAM_RED] != m_aTeamscore[TEAM_BLUE])
+				EndMatch();
 			else
-			{
-				if(m_aTeamscore[TEAM_RED] != m_aTeamscore[TEAM_BLUE])
-					EndRound();
-				else
-					m_SuddenDeath = 1;
-			}
+				m_SuddenDeath = 1;
 		}
 	}
 }
 
-bool CGameControllerCTF::CanBeMovedOnBalance(int ClientID)
-{
-	CCharacter* Character = GameServer()->m_apPlayers[ClientID]->GetCharacter();
-	if(Character)
-	{
-		for(int fi = 0; fi < 2; fi++)
-		{
-			CFlag *F = m_apFlags[fi];
-			if(F->m_pCarryingCharacter == Character)
-				return false;
-		}
-	}
-	return true;
-}
-
+// general
 void CGameControllerCTF::Snap(int SnappingClient)
 {
 	IGameController::Snap(SnappingClient);
 
-	CNetObj_GameData *pGameDataObj = (CNetObj_GameData *)Server()->SnapNewItem(NETOBJTYPE_GAMEDATA, 0, sizeof(CNetObj_GameData));
-	if(!pGameDataObj)
+	CNetObj_GameDataFlag *pGameDataFlag = static_cast<CNetObj_GameDataFlag *>(Server()->SnapNewItem(NETOBJTYPE_GAMEDATAFLAG, 0, sizeof(CNetObj_GameDataFlag)));
+	if(!pGameDataFlag)
 		return;
 
-	pGameDataObj->m_TeamscoreRed = m_aTeamscore[TEAM_RED];
-	pGameDataObj->m_TeamscoreBlue = m_aTeamscore[TEAM_BLUE];
-
+	pGameDataFlag->m_FlagDropTickRed = 0;
 	if(m_apFlags[TEAM_RED])
 	{
 		if(m_apFlags[TEAM_RED]->m_AtStand)
-			pGameDataObj->m_FlagCarrierRed = FLAG_ATSTAND;
+			pGameDataFlag->m_FlagCarrierRed = FLAG_ATSTAND;
 		else if(m_apFlags[TEAM_RED]->m_pCarryingCharacter && m_apFlags[TEAM_RED]->m_pCarryingCharacter->GetPlayer())
-			pGameDataObj->m_FlagCarrierRed = m_apFlags[TEAM_RED]->m_pCarryingCharacter->GetPlayer()->GetCID();
+			pGameDataFlag->m_FlagCarrierRed = m_apFlags[TEAM_RED]->m_pCarryingCharacter->GetPlayer()->GetCID();
 		else
-			pGameDataObj->m_FlagCarrierRed = FLAG_TAKEN;
+		{
+			pGameDataFlag->m_FlagCarrierRed = FLAG_TAKEN;
+			pGameDataFlag->m_FlagDropTickRed = m_apFlags[TEAM_RED]->m_DropTick;
+		}
 	}
 	else
-		pGameDataObj->m_FlagCarrierRed = FLAG_MISSING;
+		pGameDataFlag->m_FlagCarrierRed = FLAG_MISSING;
+	pGameDataFlag->m_FlagDropTickBlue = 0;
 	if(m_apFlags[TEAM_BLUE])
 	{
 		if(m_apFlags[TEAM_BLUE]->m_AtStand)
-			pGameDataObj->m_FlagCarrierBlue = FLAG_ATSTAND;
+			pGameDataFlag->m_FlagCarrierBlue = FLAG_ATSTAND;
 		else if(m_apFlags[TEAM_BLUE]->m_pCarryingCharacter && m_apFlags[TEAM_BLUE]->m_pCarryingCharacter->GetPlayer())
-			pGameDataObj->m_FlagCarrierBlue = m_apFlags[TEAM_BLUE]->m_pCarryingCharacter->GetPlayer()->GetCID();
+			pGameDataFlag->m_FlagCarrierBlue = m_apFlags[TEAM_BLUE]->m_pCarryingCharacter->GetPlayer()->GetCID();
 		else
-			pGameDataObj->m_FlagCarrierBlue = FLAG_TAKEN;
+		{
+			pGameDataFlag->m_FlagCarrierBlue = FLAG_TAKEN;
+			pGameDataFlag->m_FlagDropTickBlue = m_apFlags[TEAM_BLUE]->m_DropTick;
+		}
 	}
 	else
-		pGameDataObj->m_FlagCarrierBlue = FLAG_MISSING;
+		pGameDataFlag->m_FlagCarrierBlue = FLAG_MISSING;
 }
 
 void CGameControllerCTF::Tick()
@@ -158,7 +165,7 @@ void CGameControllerCTF::Tick()
 		if(GameServer()->Collision()->GetCollisionAt(F->m_Pos.x, F->m_Pos.y)&CCollision::COLFLAG_DEATH || F->GameLayerClipped(F->m_Pos))
 		{
 			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "flag_return");
-			GameServer()->CreateSoundGlobal(SOUND_CTF_RETURN);
+			GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
 			F->Reset();
 			continue;
 		}
@@ -177,26 +184,15 @@ void CGameControllerCTF::Tick()
 					m_aTeamscore[fi^1] += 100;
 					F->m_pCarryingCharacter->GetPlayer()->m_Score += 5;
 
-					char aBuf[512];
+					char aBuf[64];
 					str_format(aBuf, sizeof(aBuf), "flag_capture player='%d:%s'",
 						F->m_pCarryingCharacter->GetPlayer()->GetCID(),
 						Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()));
 					GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
-					float CaptureTime = (Server()->Tick() - F->m_GrabTick)/(float)Server()->TickSpeed();
-					if(CaptureTime <= 60)
-					{
-						str_format(aBuf, sizeof(aBuf), "The %s flag was captured by '%s' (%d.%s%d seconds)", fi ? "blue" : "red", Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()), (int)CaptureTime%60, ((int)(CaptureTime*100)%100)<10?"0":"", (int)(CaptureTime*100)%100);
-					}
-					else
-					{
-						str_format(aBuf, sizeof(aBuf), "The %s flag was captured by '%s'", fi ? "blue" : "red", Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()));
-					}
-					GameServer()->SendChat(-1, -2, aBuf);
+					GameServer()->SendGameMsg(GAMEMSG_CTF_CAPTURE, fi, F->m_pCarryingCharacter->GetPlayer()->GetCID(), Server()->Tick()-F->m_GrabTick, -1);
 					for(int i = 0; i < 2; i++)
 						m_apFlags[i]->Reset();
-
-					GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE);
 				}
 			}
 		}
@@ -222,8 +218,7 @@ void CGameControllerCTF::Tick()
 							pChr->GetPlayer()->GetCID(),
 							Server()->ClientName(pChr->GetPlayer()->GetCID()));
 						GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-
-						GameServer()->CreateSoundGlobal(SOUND_CTF_RETURN);
+						GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
 						F->Reset();
 					}
 				}
@@ -245,20 +240,7 @@ void CGameControllerCTF::Tick()
 						F->m_pCarryingCharacter->GetPlayer()->GetCID(),
 						Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()));
 					GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-
-					for(int c = 0; c < MAX_CLIENTS; c++)
-					{
-						CPlayer *pPlayer = GameServer()->m_apPlayers[c];
-						if(!pPlayer)
-							continue;
-
-						if(pPlayer->GetTeam() == TEAM_SPECTATORS && pPlayer->m_SpectatorID != SPEC_FREEVIEW && GameServer()->m_apPlayers[pPlayer->m_SpectatorID] && GameServer()->m_apPlayers[pPlayer->m_SpectatorID]->GetTeam() == fi)
-							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_EN, c);
-						else if(pPlayer->GetTeam() == fi)
-							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_EN, c);
-						else
-							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, c);
-					}
+					GameServer()->SendGameMsg(GAMEMSG_CTF_GRAB, fi, -1);
 					break;
 				}
 			}
@@ -267,7 +249,7 @@ void CGameControllerCTF::Tick()
 			{
 				if(Server()->Tick() > F->m_DropTick + Server()->TickSpeed()*30)
 				{
-					GameServer()->CreateSoundGlobal(SOUND_CTF_RETURN);
+					GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
 					F->Reset();
 				}
 				else

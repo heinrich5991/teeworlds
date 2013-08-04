@@ -25,7 +25,7 @@ public:
 	void ScaleMin();
 
 	void Add(float v, float r, float g, float b);
-	void Render(IGraphics *pGraphics, int Font, float x, float y, float w, float h, const char *pDescription);
+	void Render(IGraphics *pGraphics, IGraphics::CTextureHandle FontTexture, float x, float y, float w, float h, const char *pDescription);
 };
 
 
@@ -86,10 +86,13 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	unsigned m_SnapshotParts;
 	int64 m_LocalStartTime;
 
-	int m_DebugFont;
-	float m_FrameTimeLow;
-	float m_FrameTimeHigh;
-	int m_Frames;
+	IGraphics::CTextureHandle m_DebugFont;
+	
+	int64 m_LastRenderTime;
+	float m_RenderFrameTimeLow;
+	float m_RenderFrameTimeHigh;
+	int m_RenderFrames;
+
 	NETADDR m_ServerAddress;
 	int m_WindowMustRefocus;
 	int m_SnapCrcErrors;
@@ -97,6 +100,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	bool m_EditorActive;
 	bool m_SoundInitFailed;
 	bool m_ResortServerBrowser;
+	bool m_RecordGameMessage;
 
 	int m_AckGameTick;
 	int m_CurrentRecvTick;
@@ -121,6 +125,8 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	char m_aMapdownloadName[256];
 	IOHANDLE m_MapdownloadFile;
 	int m_MapdownloadChunk;
+	int m_MapdownloadChunkNum;
+	int m_MapDownloadChunkSize;
 	int m_MapdownloadCrc;
 	int m_MapdownloadAmount;
 	int m_MapdownloadTotalsize;
@@ -154,6 +160,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 
 	class CSnapshotStorage::CHolder m_aDemorecSnapshotHolders[NUM_SNAPSHOT_TYPES];
 	char *m_aDemorecSnapshotData[NUM_SNAPSHOT_TYPES][2][CSnapshot::MAX_SIZE];
+	class CSnapshotBuilder m_DemoRecSnapshotBuilder;
 
 	class CSnapshotDelta m_SnapshotDelta;
 
@@ -175,6 +182,12 @@ class CClient : public IClient, public CDemoPlayer::IListner
 		class CHostLookup m_VersionServeraddr;
 	} m_VersionInfo;
 
+	volatile int m_GfxState;
+	static void GraphicsThreadProxy(void *pThis) { ((CClient*)pThis)->GraphicsThread(); }
+	void GraphicsThread();
+
+	int64 TickStartTime(int Tick);
+
 public:
 	IEngine *Engine() { return m_pEngine; }
 	IEngineGraphics *Graphics() { return m_pGraphics; }
@@ -190,7 +203,6 @@ public:
 	// ----- send functions -----
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags);
 
-	int SendMsgEx(CMsgPacker *pMsg, int Flags, bool System=true);
 	void SendInfo();
 	void SendEnterGame();
 	void SendReady();
@@ -204,7 +216,7 @@ public:
 
 	virtual bool SoundInitFailed() { return m_SoundInitFailed; }
 
-	virtual int GetDebugFont() { return m_DebugFont; }
+	virtual IGraphics::CTextureHandle GetDebugFont() { return m_DebugFont; }
 
 	void DirectInput(int *pInput, int Size);
 	void SendInput();
@@ -238,6 +250,7 @@ public:
 	void SnapInvalidateItem(int SnapID, int Index);
 	void *SnapFindItem(int SnapID, int Type, int ID);
 	int SnapNumItems(int SnapID);
+	void *SnapNewItem(int Type, int ID, int Size);
 	void SnapSetStaticsize(int ItemType, int Size);
 
 	void Render();
@@ -284,6 +297,7 @@ public:
 	static void Con_Play(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Record(IConsole::IResult *pResult, void *pUserData);
 	static void Con_StopRecord(IConsole::IResult *pResult, void *pUserData);
+	static void Con_AddDemoMarker(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainServerBrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void RegisterCommands();
@@ -292,6 +306,8 @@ public:
 	void DemoRecorder_Start(const char *pFilename, bool WithTimestamp);
 	void DemoRecorder_HandleAutoStart();
 	void DemoRecorder_Stop();
+	void DemoRecorder_AddDemoMarker();
+	void RecordGameMessage(bool State) { m_RecordGameMessage = State; }
 
 	void AutoScreenshot_Start();
 	void AutoScreenshot_Cleanup();

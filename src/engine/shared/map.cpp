@@ -3,6 +3,7 @@
 #include <base/system.h>
 #include <engine/map.h>
 #include <engine/storage.h>
+#include <game/mapitems.h>
 #include "datafile.h"
 
 class CMap : public IEngineMap
@@ -24,12 +25,20 @@ public:
 		m_DataFile.Close();
 	}
 
-	virtual bool Load(const char *pMapName)
+	virtual bool Load(const char *pMapName, IStorage *pStorage)
 	{
-		IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
+		if(!pStorage)
+			pStorage = Kernel()->RequestInterface<IStorage>();
 		if(!pStorage)
 			return false;
-		return m_DataFile.Open(pStorage, pMapName, IStorage::TYPE_ALL);
+		if(!m_DataFile.Open(pStorage, pMapName, IStorage::TYPE_ALL))
+			return false;
+		// check version
+		CMapItemVersion *pItem = (CMapItemVersion *)m_DataFile.FindItem(MAPITEMTYPE_VERSION, 0);
+		if(!pItem || pItem->m_Version != CMapItemVersion::CURRENT_VERSION)
+			return false;
+		
+		return true;
 	}
 
 	virtual bool IsLoaded()

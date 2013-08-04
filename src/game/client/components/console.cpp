@@ -271,7 +271,7 @@ void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 	if(pInfo->m_EnumCount == pInfo->m_WantedCompletion)
 	{
 		float tw = pInfo->m_pSelf->TextRender()->TextWidth(pInfo->m_Cursor.m_pFont, pInfo->m_Cursor.m_FontSize, pStr, -1);
-		pInfo->m_pSelf->Graphics()->TextureSet(-1);
+		pInfo->m_pSelf->Graphics()->TextureClear();
 		pInfo->m_pSelf->Graphics()->QuadsBegin();
 			pInfo->m_pSelf->Graphics()->SetColor(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f);
 			pInfo->m_pSelf->RenderTools()->DrawRoundRect(pInfo->m_Cursor.m_X-3, pInfo->m_Cursor.m_Y, tw+5, pInfo->m_Cursor.m_FontSize+4, pInfo->m_Cursor.m_FontSize/3);
@@ -351,7 +351,7 @@ void CGameConsole::OnRender()
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 
 	// do console shadow
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	IGraphics::CColorVertex Array[4] = {
 		IGraphics::CColorVertex(0, 0,0,0, 0.5f),
@@ -375,7 +375,7 @@ void CGameConsole::OnRender()
 	Graphics()->QuadsEnd();
 
 	// do small bar shadow
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	Array[0] = IGraphics::CColorVertex(0, 0,0,0, 0.0f);
 	Array[1] = IGraphics::CColorVertex(1, 0,0,0, 0.0f);
@@ -434,12 +434,6 @@ void CGameConsole::OnRender()
 
 		x = Cursor.m_X;
 
-		// render console input (wrap line)
-		int Lines = TextRender()->TextLineCount(0, FontSize, pConsole->m_Input.GetString(), Screen.w - 10.0f - x);
-		y -= (Lines - 1) * FontSize;
-		TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
-		Cursor.m_LineWidth = Screen.w - 10.0f - x;
-
 		//hide rcon password
 		char aInputString[256];
 		str_copy(aInputString, pConsole->m_Input.GetString(), sizeof(aInputString));
@@ -449,10 +443,22 @@ void CGameConsole::OnRender()
 				aInputString[i] = '*';
 		}
 
+		// render console input (wrap line)
+		TextRender()->SetCursor(&Cursor, x, y, FontSize, 0);
+		Cursor.m_LineWidth = Screen.w - 10.0f - x;
+		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset());
+		TextRender()->TextEx(&Cursor, aInputString+pConsole->m_Input.GetCursorOffset(), -1);
+		int Lines = Cursor.m_LineCount;
+		
+		y -= (Lines - 1) * FontSize;
+		TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
+		Cursor.m_LineWidth = Screen.w - 10.0f - x;
+		
 		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset());
 		static float MarkerOffset = TextRender()->TextWidth(0, FontSize, "|", -1)/3;
 		CTextCursor Marker = Cursor;
 		Marker.m_X -= MarkerOffset;
+		Marker.m_LineWidth = -1;
 		TextRender()->TextEx(&Marker, "|", -1);
 		TextRender()->TextEx(&Cursor, aInputString+pConsole->m_Input.GetCursorOffset(), -1);
 
@@ -612,16 +618,10 @@ void CGameConsole::Dump(int Type)
 	IOHANDLE io = Storage()->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(io)
 	{
-		#if defined(CONF_FAMILY_WINDOWS)
-			static const char Newline[] = "\r\n";
-		#else
-			static const char Newline[] = "\n";
-		#endif
-
 		for(CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.First(); pEntry; pEntry = pConsole->m_Backlog.Next(pEntry))
 		{
 			io_write(io, pEntry->m_aText, str_length(pEntry->m_aText));
-			io_write(io, Newline, sizeof(Newline)-1);
+			io_write_newline(io);
 		}
 		io_close(io);
 	}

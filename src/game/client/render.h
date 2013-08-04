@@ -3,26 +3,24 @@
 #ifndef GAME_CLIENT_RENDER_H
 #define GAME_CLIENT_RENDER_H
 
+#include <engine/graphics.h>
 #include <base/vmath.h>
 #include <game/mapitems.h>
 #include "ui.h"
-
 
 class CTeeRenderInfo
 {
 public:
 	CTeeRenderInfo()
 	{
-		m_Texture = -1;
-		m_ColorBody = vec4(1,1,1,1);
-		m_ColorFeet = vec4(1,1,1,1);
+		for(int i = 0; i < 6; i++)
+			m_aColors[i] = vec4(1,1,1,1);
 		m_Size = 1.0f;
 		m_GotAirJump = 1;
 	};
 
-	int m_Texture;
-	vec4 m_ColorBody;
-	vec4 m_ColorFeet;
+	IGraphics::CTextureHandle m_aTextures[6];
+	vec4 m_aColors[6];
 	float m_Size;
 	int m_GotAirJump;
 };
@@ -60,8 +58,10 @@ public:
 	// rects
 	void DrawRoundRect(float x, float y, float w, float h, float r);
 	void DrawRoundRectExt(float x, float y, float w, float h, float r, int Corners);
+	void DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners);
 
 	void DrawUIRect(const CUIRect *pRect, vec4 Color, int Corners, float Rounding);
+	void DrawUIRect4(const CUIRect *pRect, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, int Corners, float Rounding);
 
 	// larger rendering methods
 	void RenderTilemapGenerateSkip(class CLayers *pLayers);

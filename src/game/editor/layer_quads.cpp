@@ -7,8 +7,9 @@
 
 #include "editor.h"
 #include <game/generated/client_data.h>
+#include <game/client/localization.h>
 #include <game/client/render.h>
-#include <game/localization.h>
+
 
 CLayerQuads::CLayerQuads()
 {
@@ -23,11 +24,14 @@ CLayerQuads::~CLayerQuads()
 
 void CLayerQuads::Render()
 {
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size())
-		Graphics()->TextureSet(m_pEditor->m_Map.m_lImages[m_Image]->m_TexID);
+		Graphics()->TextureSet(m_pEditor->m_Map.m_lImages[m_Image]->m_Texture);
 
-	m_pEditor->RenderTools()->RenderQuads(m_lQuads.base_ptr(), m_lQuads.size(), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT, m_pEditor->EnvelopeEval, m_pEditor);
+	Graphics()->BlendNone();
+	m_pEditor->RenderTools()->RenderQuads(m_lQuads.base_ptr(), m_lQuads.size(), LAYERRENDERFLAG_OPAQUE, m_pEditor->EnvelopeEval, m_pEditor);
+	Graphics()->BlendNormal();
+	m_pEditor->RenderTools()->RenderQuads(m_lQuads.base_ptr(), m_lQuads.size(), LAYERRENDERFLAG_TRANSPARENT, m_pEditor->EnvelopeEval, m_pEditor);
 }
 
 CQuad *CLayerQuads::NewQuad()
@@ -88,7 +92,7 @@ void CLayerQuads::BrushSelecting(CUIRect Rect)
 		IGraphics::CLineItem(Rect.x+Rect.w, Rect.y, Rect.x+Rect.w, Rect.y+Rect.h),
 		IGraphics::CLineItem(Rect.x+Rect.w, Rect.y+Rect.h, Rect.x, Rect.y+Rect.h),
 		IGraphics::CLineItem(Rect.x, Rect.y+Rect.h, Rect.x, Rect.y)};
-	Graphics()->TextureSet(-1);
+	Graphics()->TextureClear();
 	Graphics()->LinesBegin();
 	Graphics()->LinesDraw(Array, 4);
 	Graphics()->LinesEnd();

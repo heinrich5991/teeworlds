@@ -3,7 +3,10 @@
 #ifndef ENGINE_GRAPHICS_H
 #define ENGINE_GRAPHICS_H
 
+#include <base/vmath.h>
+
 #include "kernel.h"
+
 
 class CImageInfo
 {
@@ -41,6 +44,8 @@ class CVideoMode
 public:
 	int m_Width, m_Height;
 	int m_Red, m_Green, m_Blue;
+
+	bool operator<(const CVideoMode &Other) { return Other.m_Width < m_Width; }
 };
 
 class IGraphics : public IInterface
@@ -49,13 +54,30 @@ class IGraphics : public IInterface
 protected:
 	int m_ScreenWidth;
 	int m_ScreenHeight;
+	int m_DesktopScreenWidth;
+	int m_DesktopScreenHeight;
 public:
 	/* Constants: Texture Loading Flags
 		TEXLOAD_NORESAMPLE - Prevents the texture from any resampling
 	*/
 	enum
 	{
-		TEXLOAD_NORESAMPLE=1,
+		TEXLOAD_NORESAMPLE = 1,
+		TEXLOAD_NOMIPMAPS = 2,
+	};
+
+
+	class CTextureHandle
+	{
+		friend class IGraphics;
+		int m_Id;
+	public:
+		CTextureHandle()
+		: m_Id(-1)
+		{}
+
+		bool IsValid() const { return Id() >= 0; }
+		int Id() const { return m_Id; }
 	};
 
 	int ScreenWidth() const { return m_ScreenWidth; }
@@ -74,13 +96,18 @@ public:
 	virtual void BlendNone() = 0;
 	virtual void BlendNormal() = 0;
 	virtual void BlendAdditive() = 0;
+	virtual void WrapNormal() = 0;
+	virtual void WrapClamp() = 0;
 	virtual int MemoryUsage() const = 0;
 
-	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) =0;
-	virtual int UnloadTexture(int Index) = 0;
-	virtual int LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags) = 0;
-	virtual int LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) = 0;
-	virtual void TextureSet(int TextureID) = 0;
+	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) = 0;
+
+	virtual int UnloadTexture(CTextureHandle Index) = 0;
+	virtual CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags) = 0;
+	virtual int LoadTextureRawSub(CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData) = 0;
+	virtual CTextureHandle LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) = 0;
+	virtual void TextureSet(CTextureHandle Texture) = 0;
+	void TextureClear() { TextureSet(CTextureHandle()); }
 
 	struct CLineItem
 	{
@@ -115,7 +142,7 @@ public:
 			: m_X0(x0), m_Y0(y0), m_X1(x1), m_Y1(y1), m_X2(x2), m_Y2(y2), m_X3(x3), m_Y3(y3) {}
 	};
 	virtual void QuadsDrawFreeform(const CFreeformItem *pArray, int Num) = 0;
-	virtual void QuadsText(float x, float y, float Size, float r, float g, float b, float a, const char *pText) = 0;
+	virtual void QuadsText(float x, float y, float Size, const char *pText) = 0;
 
 	struct CColorVertex
 	{
@@ -126,18 +153,35 @@ public:
 	};
 	virtual void SetColorVertex(const CColorVertex *pArray, int Num) = 0;
 	virtual void SetColor(float r, float g, float b, float a) = 0;
+	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight) = 0;
 
 	virtual void TakeScreenshot(const char *pFilename) = 0;
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes) = 0;
 
+	virtual int GetDesktopScreenWidth() = 0;
+	virtual int GetDesktopScreenHeight() = 0;
+
 	virtual void Swap() = 0;
+
+	// syncronization
+	virtual void InsertSignal(class semaphore *pSemaphore) = 0;
+	virtual bool IsIdle() = 0;
+	virtual void WaitForIdle() = 0;
+
+protected:
+	inline CTextureHandle CreateTextureHandle(int Index)
+	{
+		CTextureHandle Tex;
+		Tex.m_Id = Index;
+		return Tex;
+	}
 };
 
 class IEngineGraphics : public IGraphics
 {
 	MACRO_INTERFACE("enginegraphics", 0)
 public:
-	virtual bool Init() = 0;
+	virtual int Init() = 0;
 	virtual void Shutdown() = 0;
 
 	virtual void Minimize() = 0;
@@ -149,5 +193,6 @@ public:
 };
 
 extern IEngineGraphics *CreateEngineGraphics();
+extern IEngineGraphics *CreateEngineGraphicsThreaded();
 
 #endif

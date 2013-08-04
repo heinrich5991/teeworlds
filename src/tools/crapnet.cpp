@@ -42,7 +42,7 @@ static int m_ConfigInterval = 10; // seconds between different pingconfigs
 static int m_ConfigLog = 0;
 static int m_ConfigReorder = 0;
 
-void Run(int Port, NETADDR Dest)
+void Run(unsigned short Port, NETADDR Dest)
 {
 	NETADDR Src = {NETTYPE_IPV4, {0,0,0,0}, Port};
 	NETSOCKET Socket = net_udp_create(Src);
@@ -129,7 +129,7 @@ void Run(int Port, NETADDR Dest)
 			if(m_ConfigLog)
 			{
 				char aAddrStr[NETADDR_MAXSTRSIZE];
-				net_addr_str(&From, aAddrStr, sizeof(aAddrStr));
+				net_addr_str(&From, aAddrStr, sizeof(aAddrStr), true);
 				dbg_msg("crapnet", "<< %08d %s (%d)", p->m_ID, aAddrStr, p->m_DataSize);
 			}
 		}
@@ -193,7 +193,7 @@ void Run(int Port, NETADDR Dest)
 				if(m_ConfigLog)
 				{
 					char aAddrStr[NETADDR_MAXSTRSIZE];
-					net_addr_str(&p->m_SendTo, aAddrStr, sizeof(aAddrStr));
+					net_addr_str(&p->m_SendTo, aAddrStr, sizeof(aAddrStr), true);
 					dbg_msg("crapnet", ">> %08d %s (%d) %s", p->m_ID, aAddrStr, p->m_DataSize, aFlags);
 				}
 

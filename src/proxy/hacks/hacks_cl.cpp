@@ -97,7 +97,7 @@ const NETADDR *CHacksClient::GetPeerAddress(int PeerID)
 {
 	dbg_assert(0 <= PeerID && PeerID < 1, "invalid pid");
 	static NETADDR Addr;
-	Addr = m_pNet->ServerAddr();
+	Addr = *m_pNet->ServerAddr();
 	return &Addr;
 }
 

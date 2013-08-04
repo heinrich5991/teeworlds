@@ -378,7 +378,7 @@ public:
 	int GotProblems();
 	const char *ErrorString();
 
-	NETADDR ServerAddr() const { return m_Connection.PeerAddress(); }
+	const NETADDR *ServerAddr() const { return m_Connection.PeerAddress(); }
 };
 
 

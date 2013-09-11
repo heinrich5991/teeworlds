@@ -408,8 +408,12 @@ void CCharacterCore::Move()
 	m_Pos = NewPos;
 
 	// handle freeze-tiles
-	if(m_pCollision->GetCollisionAt(m_Pos.x, m_Pos.y)&CCollision::COLFLAG_FREEZE)
+	int TileFlag = m_pCollision->GetCollisionAt(m_Pos.x, m_Pos.y);
+
+	if(TileFlag&CCollision::COLFLAG_FREEZE)
 		m_FreezeTick = SERVER_TICK_SPEED * 3;
+	else if(TileFlag&CCollision::COLFLAG_UNFREEZE)
+		m_FreezeTick = 0;
 }
 
 void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)

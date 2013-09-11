@@ -22,6 +22,7 @@ public:
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
 		COLFLAG_FREEZE=8,
+		COLFLAG_UNFREEZE=16,
 	};
 
 	CCollision();

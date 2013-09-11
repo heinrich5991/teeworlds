@@ -157,16 +157,13 @@ void CCharacterCore::Tick(bool UseInput)
 		}
 	}
 
-	if(m_FreezeTick > 0)
-		m_Direction = 0;
-
 	// add the speed modification according to players wanted direction
-	if(m_Direction < 0)
-		m_Vel.x = SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, -Accel);
-	if(m_Direction > 0)
-		m_Vel.x = SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, Accel);
-	if(m_Direction == 0)
+	if(m_Direction == 0 || m_FreezeTick > 0)
 		m_Vel.x *= Friction;
+	else if(m_Direction < 0)
+		m_Vel.x = SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, -Accel);
+	else if(m_Direction > 0)
+		m_Vel.x = SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, Accel);
 
 	// handle jumping
 	// 1 bit = to keep track if a jump has been made on this input

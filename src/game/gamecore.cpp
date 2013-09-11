@@ -408,7 +408,11 @@ void CCharacterCore::Move()
 	int TileFlag = m_pCollision->GetCollisionAt(m_Pos.x, m_Pos.y);
 
 	if(TileFlag&CCollision::COLFLAG_FREEZE)
+	{
+		if(m_FreezeTick == 0)
+			m_TriggeredEvents |= COREEVENTFLAG_FREEZE;
 		m_FreezeTick = SERVER_TICK_SPEED * 3;
+	}
 	else if(TileFlag&CCollision::COLFLAG_UNFREEZE)
 		m_FreezeTick = 0;
 }

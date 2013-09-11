@@ -52,6 +52,9 @@ public:
 
 	void SetEmote(int Emote, int Tick);
 
+	void Freeze();
+	void Unfreeze();
+
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 

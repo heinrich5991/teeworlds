@@ -293,9 +293,6 @@ void CCharacter::FireWeapon()
 	{
 		case WEAPON_HAMMER:
 		{
-			// freeze test line
-			m_Core.m_FreezeTick = SERVER_TICK_SPEED * 3;
-
 			// reset objects Hit
 			m_NumObjectsHit = 0;
 			GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE);
@@ -811,6 +808,16 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;
 
 	return true;
+}
+
+void CCharacter::Freeze()
+{
+	m_Core.m_FreezeTick = Server()->TickSpeed() * 3;
+}
+
+void CCharacter::Unfreeze()
+{
+	m_Core.m_FreezeTick = 0;
 }
 
 void CCharacter::Snap(int SnappingClient)

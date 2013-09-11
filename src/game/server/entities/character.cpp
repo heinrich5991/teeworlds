@@ -812,7 +812,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 
 void CCharacter::Freeze()
 {
-	m_Core.m_FreezeTick = Server()->TickSpeed() * 3;
+	m_Core.m_FreezeTick = Server()->TickSpeed() * GameServer()->Tuning()->m_FreezeTime;
 }
 
 void CCharacter::Unfreeze()

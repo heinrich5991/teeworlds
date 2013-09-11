@@ -23,6 +23,8 @@ MACRO_TUNING_PARAM(VelrampStart, velramp_start, 550)
 MACRO_TUNING_PARAM(VelrampRange, velramp_range, 2000)
 MACRO_TUNING_PARAM(VelrampCurvature, velramp_curvature, 1.4f)
 
+MACRO_TUNING_PARAM(FreezeTime, freeze_time, 3.0f)
+
 // weapon tuning
 MACRO_TUNING_PARAM(GunCurvature, gun_curvature, 1.25f)
 MACRO_TUNING_PARAM(GunSpeed, gun_speed, 2200.0f)

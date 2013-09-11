@@ -411,7 +411,7 @@ void CCharacterCore::Move()
 	{
 		if(m_FreezeTick == 0)
 			m_TriggeredEvents |= COREEVENTFLAG_FREEZE;
-		m_FreezeTick = SERVER_TICK_SPEED * 3;
+		m_FreezeTick = SERVER_TICK_SPEED * m_pWorld->m_Tuning.m_FreezeTime;
 	}
 	else if(TileFlag&CCollision::COLFLAG_UNFREEZE)
 		m_FreezeTick = 0;

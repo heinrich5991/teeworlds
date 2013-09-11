@@ -301,7 +301,7 @@ void CCharacter::FireWeapon()
 			{
 				CCharacter *pTarget = apEnts[i];
 
-				if ((pTarget == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
+				if ((pTarget == this) || GameServer()->Collision()->IntersectLineProj(ProjStartPos, pTarget->m_Pos, NULL, NULL))
 					continue;
 
 				// set his velocity to fast upward (for now)

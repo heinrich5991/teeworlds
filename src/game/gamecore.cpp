@@ -199,7 +199,7 @@ void CCharacterCore::Tick(bool UseInput)
 		// make sure that the hook doesn't go though the ground
 		bool GoingToHitGround = false;
 		bool GoingToRetract = false;
-		int Hit = m_pCollision->IntersectLine(m_HookPos, NewPos, &NewPos, 0);
+		int Hit = m_pCollision->IntersectLineHook(m_HookPos, NewPos, &NewPos, 0);
 		if(Hit)
 		{
 			if(Hit&CCollision::COLFLAG_NOHOOK)

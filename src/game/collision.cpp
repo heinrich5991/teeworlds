@@ -40,10 +40,22 @@ void CCollision::Init(class CLayers *pLayers)
 			m_pTiles[i].m_Index = COLFLAG_DEATH;
 			break;
 		case TILE_SOLID:
-			m_pTiles[i].m_Index = COLFLAG_SOLID;
+			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_HOOK|COLFLAG_SOLID_PROJ;
 			break;
 		case TILE_NOHOOK:
-			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
+			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_HOOK|COLFLAG_SOLID_PROJ|COLFLAG_NOHOOK;
+			break;
+		case TILE_SEMISOLID_HOOK:
+			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_PROJ;
+			break;
+		case TILE_SEMISOLID_PROJ:
+			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_HOOK;
+			break;
+		case TILE_SEMISOLID_PROJ_NOHOOK:
+			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_HOOK|COLFLAG_NOHOOK;
+			break;
+		case TILE_SEMISOLID_BOTH:
+			m_pTiles[i].m_Index = COLFLAG_SOLID;
 			break;
 		default:
 			m_pTiles[i].m_Index = 0;
@@ -64,8 +76,23 @@ bool CCollision::IsTileSolid(int x, int y)
 	return GetTile(x, y)&COLFLAG_SOLID;
 }
 
-// TODO: rewrite this smarter!
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
+{
+	return IntersectLine(Pos0, Pos1, pOutCollision, pOutBeforeCollision, +COLFLAG_SOLID);
+}
+
+int CCollision::IntersectLineHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
+{
+	return IntersectLine(Pos0, Pos1, pOutCollision, pOutBeforeCollision, +COLFLAG_SOLID_HOOK);
+}
+
+int CCollision::IntersectLineProj(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
+{
+	return IntersectLine(Pos0, Pos1, pOutCollision, pOutBeforeCollision, +COLFLAG_SOLID_PROJ);
+}
+
+// TODO: rewrite this smarter!
+int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int ColFlag)
 {
 	float Distance = distance(Pos0, Pos1);
 	int End(Distance+1);
@@ -75,7 +102,7 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	{
 		float a = i/Distance;
 		vec2 Pos = mix(Pos0, Pos1, a);
-		if(CheckPoint(Pos.x, Pos.y))
+		if(GetCollisionAt(Pos.x, Pos.y)&ColFlag)
 		{
 			if(pOutCollision)
 				*pOutCollision = Pos;

@@ -247,6 +247,7 @@ void CCharacter::HandleWeaponSwitch()
 
 void CCharacter::FireWeapon()
 {
+
 	if(m_ReloadTimer != 0)
 		return;
 
@@ -269,6 +270,10 @@ void CCharacter::FireWeapon()
 	if(!WillFire)
 		return;
 
+	// check for freeze
+	if(m_Core.m_FreezeTick > 0)
+		return;
+
 	// check for ammo
 	if(!m_aWeapons[m_ActiveWeapon].m_Ammo)
 	{
@@ -288,6 +293,9 @@ void CCharacter::FireWeapon()
 	{
 		case WEAPON_HAMMER:
 		{
+			// freeze test line
+			m_Core.m_FreezeTick = SERVER_TICK_SPEED * 3;
+
 			// reset objects Hit
 			m_NumObjectsHit = 0;
 			GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE);
@@ -845,7 +853,8 @@ void CCharacter::Snap(int SnappingClient)
 	pCharacter->m_Weapon = m_ActiveWeapon;
 	pCharacter->m_AttackTick = m_AttackTick;
 
-	pCharacter->m_Direction = m_Input.m_Direction;
+	// wadafag is this doing here?
+	// pCharacter->m_Direction = m_Input.m_Direction;
 
 	if(m_pPlayer->GetCID() == SnappingClient || SnappingClient == -1 ||
 		(!g_Config.m_SvStrictSpectateMode && m_pPlayer->GetCID() == GameServer()->m_apPlayers[SnappingClient]->GetSpectatorID()))

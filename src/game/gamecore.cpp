@@ -71,6 +71,7 @@ void CCharacterCore::Reset()
 	m_HookState = HOOK_IDLE;
 	m_HookedPlayer = -1;
 	m_Jumped = 0;
+	m_FreezeTick = 0;
 	m_TriggeredEvents = 0;
 }
 
@@ -97,7 +98,10 @@ void CCharacterCore::Tick(bool UseInput)
 	// handle input
 	if(UseInput)
 	{
-		m_Direction = m_Input.m_Direction;
+		if(m_FreezeTick == 0)
+			m_Direction = m_Input.m_Direction;
+		else
+			m_Direction = 0;
 
 		// setup angle
 		float a = 0;
@@ -114,7 +118,7 @@ void CCharacterCore::Tick(bool UseInput)
 		// handle jump
 		if(m_Input.m_Jump)
 		{
-			if(!(m_Jumped&1))
+			if(!(m_Jumped&1) && m_FreezeTick == 0)
 			{
 				if(Grounded)
 				{
@@ -134,7 +138,7 @@ void CCharacterCore::Tick(bool UseInput)
 			m_Jumped &= ~1;
 
 		// handle hook
-		if(m_Input.m_Hook)
+		if(m_Input.m_Hook && m_FreezeTick == 0)
 		{
 			if(m_HookState == HOOK_IDLE)
 			{
@@ -294,7 +298,7 @@ void CCharacterCore::Tick(bool UseInput)
 
 		}
 
-		// release hook (max hook time is 1.25
+		// release hook (max hook time is 1.2)
 		m_HookTick++;
 		if(m_HookedPlayer != -1 && (m_HookTick > SERVER_TICK_SPEED+SERVER_TICK_SPEED/5 || !m_pWorld->m_apCharacters[m_HookedPlayer]))
 		{
@@ -356,6 +360,9 @@ void CCharacterCore::Tick(bool UseInput)
 	// clamp the velocity to something sane
 	if(length(m_Vel) > 6000)
 		m_Vel = normalize(m_Vel) * 6000;
+
+	if(m_FreezeTick > 0)
+		m_FreezeTick--;
 }
 
 void CCharacterCore::Move()
@@ -414,6 +421,7 @@ void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
 	pObjCore->m_HookY = round(m_HookPos.y);
 	pObjCore->m_HookedPlayer = m_HookedPlayer;
 	pObjCore->m_Jumped = m_Jumped;
+	pObjCore->m_FreezeTick = m_FreezeTick;
 	pObjCore->m_Direction = m_Direction;
 	pObjCore->m_Angle = m_Angle;
 }
@@ -431,6 +439,7 @@ void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
 	m_HookDir = normalize(m_HookPos-m_Pos);
 	m_HookedPlayer = pObjCore->m_HookedPlayer;
 	m_Jumped = pObjCore->m_Jumped;
+	m_FreezeTick = pObjCore->m_FreezeTick;
 	m_Direction = pObjCore->m_Direction;
 	m_Angle = pObjCore->m_Angle;
 }

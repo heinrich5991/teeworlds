@@ -180,6 +180,8 @@ public:
 
 	int m_Jumped;
 
+	int m_FreezeTick;
+
 	int m_Direction;
 	int m_Angle;
 	CNetObj_PlayerInput m_Input;

@@ -308,6 +308,7 @@ void CPlayers::RenderPlayer(
 	}
 
 	// draw gun
+	if(Player.m_FreezeTick == 0)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();

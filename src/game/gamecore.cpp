@@ -406,6 +406,10 @@ void CCharacterCore::Move()
 	}
 
 	m_Pos = NewPos;
+
+	// handle freeze-tiles
+	if(m_pCollision->GetCollisionAt(m_Pos.x, m_Pos.y)&CCollision::COLFLAG_FREEZE)
+		m_FreezeTick = SERVER_TICK_SPEED * 3;
 }
 
 void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)

@@ -98,10 +98,7 @@ void CCharacterCore::Tick(bool UseInput)
 	// handle input
 	if(UseInput)
 	{
-		if(m_FreezeTick == 0)
-			m_Direction = m_Input.m_Direction;
-		else
-			m_Direction = 0;
+		m_Direction = m_Input.m_Direction;
 
 		// setup angle
 		float a = 0;
@@ -159,6 +156,9 @@ void CCharacterCore::Tick(bool UseInput)
 			m_HookTick = 0;
 		}
 	}
+
+	if(m_FreezeTick > 0)
+		m_Direction = 0;
 
 	// add the speed modification according to players wanted direction
 	if(m_Direction < 0)

@@ -278,7 +278,7 @@ void CCharacter::FireWeapon()
 	}
 	else if((m_LatestInput.m_Fire&1) && CountInput(m_LatestPrevInput.m_Fire, m_LatestInput.m_Fire).m_Presses)
 		m_UnfreezeFire = true;
-	else
+	else if(!(m_LatestInput.m_Fire&1))
 		m_UnfreezeFire = false;
 
 	if(!WillFire)

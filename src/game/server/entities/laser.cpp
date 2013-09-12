@@ -15,14 +15,16 @@ CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEner
 	m_Bounces = 0;
 	m_EvalTick = 0;
 	GameWorld()->InsertEntity(this);
-	DoBounce();
+	DoBounce(true);
 }
 
 
-bool CLaser::HitCharacter(vec2 From, vec2 To)
+bool CLaser::HitCharacter(vec2 From, vec2 To, bool Self)
 {
 	vec2 At;
-	CCharacter *pOwnerChar = GameServer()->GetPlayerChar(m_Owner);
+	CCharacter *pOwnerChar = 0;
+	if(Self)
+		pOwnerChar = GameServer()->GetPlayerChar(m_Owner);
 	CCharacter *pHit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar);
 	if(!pHit)
 		return false;
@@ -34,7 +36,7 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 	return true;
 }
 
-void CLaser::DoBounce()
+void CLaser::DoBounce(bool Self)
 {
 	m_EvalTick = Server()->Tick();
 
@@ -48,7 +50,7 @@ void CLaser::DoBounce()
 
 	if(GameServer()->Collision()->IntersectLine(m_Pos, To, 0x0, &To))
 	{
-		if(!HitCharacter(m_Pos, To))
+		if(!HitCharacter(m_Pos, To, Self))
 		{
 			// intersected
 			m_From = m_Pos;
@@ -72,7 +74,7 @@ void CLaser::DoBounce()
 	}
 	else
 	{
-		if(!HitCharacter(m_Pos, To))
+		if(!HitCharacter(m_Pos, To, Self))
 		{
 			m_From = m_Pos;
 			m_Pos = To;
@@ -89,7 +91,7 @@ void CLaser::Reset()
 void CLaser::Tick()
 {
 	if(Server()->Tick() > m_EvalTick+(Server()->TickSpeed()*GameServer()->Tuning()->m_LaserBounceDelay)/1000.0f)
-		DoBounce();
+		DoBounce(false);
 }
 
 void CLaser::TickPaused()

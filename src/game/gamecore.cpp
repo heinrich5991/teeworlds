@@ -158,7 +158,7 @@ void CCharacterCore::Tick(bool UseInput)
 	}
 
 	// add the speed modification according to players wanted direction
-	if(m_Direction == 0 || m_FreezeTick > 0)
+	if(m_Direction == 0 || m_FreezeTick != 0)
 		m_Vel.x *= Friction;
 	else if(m_Direction < 0)
 		m_Vel.x = SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, -Accel);
@@ -408,13 +408,43 @@ void CCharacterCore::Move()
 	int TileFlag = m_pCollision->GetCollisionAt(m_Pos.x, m_Pos.y);
 
 	if(TileFlag&CCollision::COLFLAG_FREEZE)
-	{
-		if(m_FreezeTick == 0)
-			m_TriggeredEvents |= COREEVENTFLAG_FREEZE;
-		m_FreezeTick = SERVER_TICK_SPEED * m_pWorld->m_Tuning.m_FreezeTime;
-	}
+		Freeze();
 	else if(TileFlag&CCollision::COLFLAG_UNFREEZE)
+		Unfreeze();
+
+	if(TileFlag&CCollision::COLFLAG_DEEP_FREEZE)
+		DeepFreeze();
+	else if(TileFlag&CCollision::COLFLAG_DEEP_UNFREEZE)
+		DeepUnfreeze();
+}
+
+void CCharacterCore::Freeze()
+{
+		if(m_FreezeTick >= 0)
+		{
+			if(m_FreezeTick == 0)
+				m_TriggeredEvents |= COREEVENTFLAG_FREEZE;
+			m_FreezeTick = SERVER_TICK_SPEED * m_pWorld->m_Tuning.m_FreezeTime;
+		}
+}
+
+void CCharacterCore::Unfreeze()
+{
+	if(m_FreezeTick > 0)
 		m_FreezeTick = 0;
+}
+
+void CCharacterCore::DeepFreeze()
+{
+	if(m_FreezeTick == 0)
+		m_TriggeredEvents |= COREEVENTFLAG_FREEZE;
+	m_FreezeTick = -1;
+}
+
+void CCharacterCore::DeepUnfreeze()
+{
+	if(m_FreezeTick == -1)
+		m_FreezeTick = SERVER_TICK_SPEED * m_pWorld->m_Tuning.m_FreezeTime;
 }
 
 void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)

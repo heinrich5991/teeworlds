@@ -193,6 +193,11 @@ public:
 	void Tick(bool UseInput);
 	void Move();
 
+	void Freeze();
+	void Unfreeze();
+	void DeepFreeze();
+	void DeepUnfreeze();
+
 	void Read(const CNetObj_CharacterCore *pObjCore);
 	void Write(CNetObj_CharacterCore *pObjCore);
 	void Quantize();

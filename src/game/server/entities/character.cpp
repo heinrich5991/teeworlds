@@ -271,7 +271,7 @@ void CCharacter::FireWeapon()
 		return;
 
 	// check for freeze
-	if(m_Core.m_FreezeTick > 0)
+	if(m_Core.m_FreezeTick != 0)
 		return;
 
 	// check for ammo
@@ -812,13 +812,24 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 
 void CCharacter::Freeze()
 {
-	m_Core.m_FreezeTick = Server()->TickSpeed() * GameServer()->Tuning()->m_FreezeTime;
+	m_Core.Freeze();
 }
 
 void CCharacter::Unfreeze()
 {
-	m_Core.m_FreezeTick = 0;
+	m_Core.Unfreeze();
 }
+
+void CCharacter::DeepFreeze()
+{
+	m_Core.DeepFreeze();
+}
+
+void CCharacter::DeepUnfreeze()
+{
+	m_Core.DeepUnfreeze();
+}
+
 
 void CCharacter::Snap(int SnappingClient)
 {

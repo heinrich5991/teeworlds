@@ -54,6 +54,8 @@ public:
 
 	void Freeze();
 	void Unfreeze();
+	void DeepFreeze();
+	void DeepUnfreeze();
 
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }

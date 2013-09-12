@@ -135,9 +135,9 @@ void CCharacterCore::Tick(bool UseInput)
 			m_Jumped &= ~1;
 
 		// handle hook
-		if(m_Input.m_Hook && m_FreezeTick == 0)
+		if(m_Input.m_Hook)
 		{
-			if(m_HookState == HOOK_IDLE)
+			if(m_HookState == HOOK_IDLE && m_FreezeTick == 0)
 			{
 				m_HookState = HOOK_FLYING;
 				m_HookPos = m_Pos+TargetDirection*PhysSize*1.5f;
@@ -253,51 +253,56 @@ void CCharacterCore::Tick(bool UseInput)
 
 	if(m_HookState == HOOK_GRABBED)
 	{
-		if(m_HookedPlayer != -1)
+		if(m_FreezeTick == 0)
 		{
-			CCharacterCore *pCharCore = m_pWorld->m_apCharacters[m_HookedPlayer];
-			if(pCharCore)
-				m_HookPos = pCharCore->m_Pos;
-			else
+			if(m_HookedPlayer != -1)
 			{
-				// release hook
-				m_HookedPlayer = -1;
-				m_HookState = HOOK_RETRACTED;
-				m_HookPos = m_Pos;
+				CCharacterCore *pCharCore = m_pWorld->m_apCharacters[m_HookedPlayer];
+				if(pCharCore)
+					m_HookPos = pCharCore->m_Pos;
+				else
+				{
+					// release hook
+					m_HookedPlayer = -1;
+					m_HookState = HOOK_RETRACTED;
+					m_HookPos = m_Pos;
+				}
+
+				// keep players hooked for a max of 1.5sec
+				//if(Server()->Tick() > hook_tick+(Server()->TickSpeed()*3)/2)
+					//release_hooked();
 			}
 
-			// keep players hooked for a max of 1.5sec
-			//if(Server()->Tick() > hook_tick+(Server()->TickSpeed()*3)/2)
-				//release_hooked();
-		}
+			// don't do this hook rutine when we are hook to a player
+			if(m_HookedPlayer == -1 && distance(m_HookPos, m_Pos) > 46.0f)
+			{
+				vec2 HookVel = normalize(m_HookPos-m_Pos)*m_pWorld->m_Tuning.m_HookDragAccel;
+				// the hook as more power to drag you up then down.
+				// this makes it easier to get on top of an platform
+				if(HookVel.y > 0)
+					HookVel.y *= 0.3f;
 
-		// don't do this hook rutine when we are hook to a player
-		if(m_HookedPlayer == -1 && distance(m_HookPos, m_Pos) > 46.0f)
-		{
-			vec2 HookVel = normalize(m_HookPos-m_Pos)*m_pWorld->m_Tuning.m_HookDragAccel;
-			// the hook as more power to drag you up then down.
-			// this makes it easier to get on top of an platform
-			if(HookVel.y > 0)
-				HookVel.y *= 0.3f;
+				// the hook will boost it's power if the player wants to move
+				// in that direction. otherwise it will dampen everything abit
+				if((HookVel.x < 0 && m_Direction < 0) || (HookVel.x > 0 && m_Direction > 0))
+					HookVel.x *= 0.95f;
+				else
+					HookVel.x *= 0.75f;
 
-			// the hook will boost it's power if the player wants to move
-			// in that direction. otherwise it will dampen everything abit
-			if((HookVel.x < 0 && m_Direction < 0) || (HookVel.x > 0 && m_Direction > 0))
-				HookVel.x *= 0.95f;
-			else
-				HookVel.x *= 0.75f;
+				vec2 NewVel = m_Vel+HookVel;
 
-			vec2 NewVel = m_Vel+HookVel;
+				// check if we are under the legal limit for the hook
+				if(length(NewVel) < m_pWorld->m_Tuning.m_HookDragSpeed || length(NewVel) < length(m_Vel))
+					m_Vel = NewVel; // no problem. apply
 
-			// check if we are under the legal limit for the hook
-			if(length(NewVel) < m_pWorld->m_Tuning.m_HookDragSpeed || length(NewVel) < length(m_Vel))
-				m_Vel = NewVel; // no problem. apply
-
+			}
 		}
 
 		// release hook (max hook time is 1.2)
 		m_HookTick++;
-		if(m_HookedPlayer != -1 && (m_HookTick > SERVER_TICK_SPEED+SERVER_TICK_SPEED/5 || !m_pWorld->m_apCharacters[m_HookedPlayer]))
+		if(m_FreezeTick != 0
+			|| (m_HookedPlayer != -1
+				&& (m_HookTick > SERVER_TICK_SPEED+SERVER_TICK_SPEED/5 || !m_pWorld->m_apCharacters[m_HookedPlayer])))
 		{
 			m_HookedPlayer = -1;
 			m_HookState = HOOK_RETRACTED;

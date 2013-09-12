@@ -78,17 +78,17 @@ bool CCollision::IsTileSolid(int x, int y)
 
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
 {
-	return IntersectLine(Pos0, Pos1, pOutCollision, pOutBeforeCollision, +COLFLAG_SOLID);
+	return IntersectLine(Pos0, Pos1, pOutCollision, pOutBeforeCollision, (int) COLFLAG_SOLID);
 }
 
 int CCollision::IntersectLineHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
 {
-	return IntersectLine(Pos0, Pos1, pOutCollision, pOutBeforeCollision, +COLFLAG_SOLID_HOOK);
+	return IntersectLine(Pos0, Pos1, pOutCollision, pOutBeforeCollision, (int) COLFLAG_SOLID_HOOK);
 }
 
 int CCollision::IntersectLineProj(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
 {
-	return IntersectLine(Pos0, Pos1, pOutCollision, pOutBeforeCollision, +COLFLAG_SOLID_PROJ);
+	return IntersectLine(Pos0, Pos1, pOutCollision, pOutBeforeCollision, (int) COLFLAG_SOLID_PROJ);
 }
 
 // TODO: rewrite this smarter!
@@ -119,18 +119,28 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	return 0;
 }
 
-// TODO: OPT: rewrite this smarter!
 void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces)
+{
+	MovePoint(pInoutPos, pInoutVel, Elasticity, pBounces, COLFLAG_SOLID);
+}
+
+void CCollision::MovePointProj(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces)
+{
+	MovePoint(pInoutPos, pInoutVel, Elasticity, pBounces, COLFLAG_SOLID_PROJ);
+}
+
+// TODO: OPT: rewrite this smarter!
+void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces, int ColFlag)
 {
 	if(pBounces)
 		*pBounces = 0;
 
 	vec2 Pos = *pInoutPos;
 	vec2 Vel = *pInoutVel;
-	if(CheckPoint(Pos + Vel))
+	if(GetCollisionAt(Pos + Vel)&ColFlag)
 	{
 		int Affected = 0;
-		if(CheckPoint(Pos.x + Vel.x, Pos.y))
+		if(GetCollisionAt(Pos.x + Vel.x, Pos.y)&ColFlag)
 		{
 			pInoutVel->x *= -Elasticity;
 			if(pBounces)
@@ -138,7 +148,7 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 			Affected++;
 		}
 
-		if(CheckPoint(Pos.x, Pos.y + Vel.y))
+		if(GetCollisionAt(Pos.x, Pos.y + Vel.y)&ColFlag)
 		{
 			pInoutVel->y *= -Elasticity;
 			if(pBounces)

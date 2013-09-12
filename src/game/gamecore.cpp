@@ -95,6 +95,11 @@ void CCharacterCore::Tick(bool UseInput)
 	float Accel = Grounded ? m_pWorld->m_Tuning.m_GroundControlAccel : m_pWorld->m_Tuning.m_AirControlAccel;
 	float Friction = Grounded ? m_pWorld->m_Tuning.m_GroundFriction : m_pWorld->m_Tuning.m_AirFriction;
 
+	// to guarantee that the tee is unfrozen in this tick
+	if(m_UnfreezeOnNextTick)
+		Unfreeze();
+	m_UnfreezeOnNextTick = false;
+
 	// handle input
 	if(UseInput)
 	{

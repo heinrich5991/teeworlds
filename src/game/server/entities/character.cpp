@@ -827,7 +827,7 @@ void CCharacter::Freeze()
 
 void CCharacter::Unfreeze()
 {
-	m_Core.Unfreeze();
+	m_Core.m_UnfreezeOnNextTick = true;
 }
 
 void CCharacter::DeepFreeze()

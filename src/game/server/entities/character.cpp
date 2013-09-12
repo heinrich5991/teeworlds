@@ -261,17 +261,25 @@ void CCharacter::FireWeapon()
 
 	// check if we gonna fire
 	bool WillFire = false;
-	if(CountInput(m_LatestPrevInput.m_Fire, m_LatestInput.m_Fire).m_Presses)
-		WillFire = true;
+	if(m_Core.m_FreezeTick == 0)
+	{
+		if(CountInput(m_LatestPrevInput.m_Fire, m_LatestInput.m_Fire).m_Presses)
+			WillFire = true;
 
-	if(FullAuto && (m_LatestInput.m_Fire&1) && m_aWeapons[m_ActiveWeapon].m_Ammo)
-		WillFire = true;
+		if(FullAuto && (m_LatestInput.m_Fire&1) && m_aWeapons[m_ActiveWeapon].m_Ammo)
+			WillFire = true;
+
+		if(m_UnfreezeFire)
+		{
+			WillFire = true;
+			m_UnfreezeFire = false;
+		}
+		
+	}
+	else if((m_LatestInput.m_Fire&1) && CountInput(m_LatestPrevInput.m_Fire, m_LatestInput.m_Fire).m_Presses)
+		m_UnfreezeFire = true;
 
 	if(!WillFire)
-		return;
-
-	// check for freeze
-	if(m_Core.m_FreezeTick != 0)
 		return;
 
 	// check for ammo

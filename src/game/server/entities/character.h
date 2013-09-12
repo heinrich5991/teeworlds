@@ -110,6 +110,8 @@ private:
 	int m_Health;
 	int m_Armor;
 
+	bool m_UnfreezeFire;
+
 	int m_TriggeredEvents;
 
 	// ninja

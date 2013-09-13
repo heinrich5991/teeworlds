@@ -26,6 +26,11 @@ void CCollision::Init(class CLayers *pLayers)
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
 	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
+	// this
+	m_pTeleTiles = static_cast<CTile *>(m_pLayers->Map()->GetData((reinterpret_cast<CMapItemLayerTilemap *>(m_pLayers->GetLayer(7)))->m_Data));
+	// should be replaced by this
+	//m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->TeleLayer()->m_Data));
+	// once we have a tele layer
 
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
@@ -48,6 +53,9 @@ void CCollision::Init(class CLayers *pLayers)
 		default:
 			m_pTiles[i].m_Index = 0;
 		}
+
+		if(m_pTeleTiles[i].m_Index > 0 && (m_pTeleTiles[i].m_Flags&TILEFLAG_TELE_DIR) == TELE_OUT)
+			m_aTeleTargets[m_pTeleTiles[i].m_Index] = vec2((i%m_Width+0.5f)*32, (i/m_Width+0.5f)*32);
 	}
 }
 
@@ -62,6 +70,32 @@ int CCollision::GetTile(int x, int y)
 bool CCollision::IsTileSolid(int x, int y)
 {
 	return GetTile(x, y)&COLFLAG_SOLID;
+}
+
+bool CCollision::Teleport(vec2 *pInoutPos, bool *pOutResetVel, bool *pOutCutOther, bool *pOutCutOwn)
+{
+	int x = round(pInoutPos->x);
+	int y = round(pInoutPos->y);
+
+	int Nx = clamp(x/32, 0, m_Width-1);
+	int Ny = clamp(y/32, 0, m_Height-1);
+
+	CTile *pTile = &m_pTeleTiles[Ny*m_Width+Nx];
+
+	if(pTile->m_Index > 0 && (pTile->m_Flags&TILEFLAG_TELE_DIR) == TELE_IN && pTile->m_Index != 192)
+	{
+		*pInoutPos = m_aTeleTargets[pTile->m_Index];
+		*pOutResetVel = false;
+		*pOutCutOther = false;
+		*pOutCutOwn = false;
+		if(pTile->m_Flags&TILEFLAG_TELE_RESET_VEL) *pOutResetVel = true;
+		if(pTile->m_Flags&TILEFLAG_TELE_CUT_OTHER) *pOutCutOther = true;
+		if(pTile->m_Flags&TILEFLAG_TELE_CUT_OWN) *pOutCutOwn = true;
+
+		return true;
+	}
+	else
+		return false;
 }
 
 // TODO: rewrite this smarter!

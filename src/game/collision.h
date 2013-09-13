@@ -8,6 +8,10 @@
 class CCollision
 {
 	class CTile *m_pTiles;
+	class CTile *m_pTeleTiles;
+
+	vec2 m_aTeleTargets[256];
+
 	int m_Width;
 	int m_Height;
 	class CLayers *m_pLayers;
@@ -28,6 +32,7 @@ public:
 	bool CheckPoint(float x, float y) { return IsTileSolid(round(x), round(y)); }
 	bool CheckPoint(vec2 Pos) { return CheckPoint(Pos.x, Pos.y); }
 	int GetCollisionAt(float x, float y) { return GetTile(round(x), round(y)); }
+	bool Teleport(vec2 *pInoutPos, bool *pOutResetVel, bool *pOutCutOther, bool *pOutCutOwn);
 	int GetWidth() { return m_Width; };
 	int GetHeight() { return m_Height; };
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);

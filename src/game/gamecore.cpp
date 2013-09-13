@@ -399,6 +399,56 @@ void CCharacterCore::Move()
 	}
 
 	m_Pos = NewPos;
+
+	// handle teleporters
+	bool ResetVel = false;
+	bool CutOther = false;
+	bool CutOwn = false;
+	m_pCollision->Teleport(&m_Pos, &ResetVel, &CutOther, &CutOwn);
+	if(ResetVel)
+		m_Vel = vec2(0.0f, 0.0f);
+
+	if(CutOther)
+	{
+		// this part is very dirty
+		int MyId;
+		for(int i = 0; i != MAX_CLIENTS; i++)
+		{
+			CCharacterCore *pCharCore = m_pWorld->m_apCharacters[i];
+
+			if(pCharCore == this)
+			{
+				// find out my own id
+				MyId = i;
+				break;
+			}
+		}
+
+		for(int i = 0; i != MAX_CLIENTS; i++)
+		{
+			CCharacterCore *pCharCore = m_pWorld->m_apCharacters[i];
+			if(!pCharCore)
+				continue;
+
+			if(pCharCore == this)
+				continue;
+
+			if(pCharCore->m_HookedPlayer == MyId)
+			{
+				// reject player's hook that hooks me
+				pCharCore->m_HookedPlayer = -1;
+				pCharCore->m_HookState = HOOK_RETRACTED;
+				pCharCore->m_HookPos = pCharCore->m_Pos;
+			}
+		}
+	}
+
+	if(CutOwn && m_HookState == HOOK_GRABBED)
+	{
+		m_HookedPlayer = -1;
+		m_HookState = HOOK_RETRACTED;
+		m_HookPos = m_Pos;
+	}
 }
 
 void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)

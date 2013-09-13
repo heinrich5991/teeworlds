@@ -67,7 +67,7 @@ void CPickup::Tick()
 				break;
 
 			case PICKUP_GRENADE:
-				if(pChr->GiveWeapon(WEAPON_GRENADE, 10))
+				if(pChr->GiveWeapon(WEAPON_GRENADE))
 				{
 					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE);
@@ -76,7 +76,7 @@ void CPickup::Tick()
 				}
 				break;
 			case PICKUP_SHOTGUN:
-				if(pChr->GiveWeapon(WEAPON_SHOTGUN, 10))
+				if(pChr->GiveWeapon(WEAPON_SHOTGUN))
 				{
 					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
@@ -85,7 +85,7 @@ void CPickup::Tick()
 				}
 				break;
 			case PICKUP_LASER:
-				if(pChr->GiveWeapon(WEAPON_LASER, 10))
+				if(pChr->GiveWeapon(WEAPON_LASER))
 				{
 					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);

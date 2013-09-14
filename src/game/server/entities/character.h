@@ -116,6 +116,8 @@ private:
 		int m_OldVelAmount;
 	} m_Ninja;
 
+	int m_LastNinjaSound;
+
 	// the player core for the physics
 	CCharacterCore m_Core;
 

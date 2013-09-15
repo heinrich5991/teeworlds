@@ -66,6 +66,8 @@ class CGameContext : public IGameServer
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
 
+	void ExtendEmoticon(int ClientID, int Emoticon);
+
 	bool m_Resetting;
 public:
 	IServer *Server() const { return m_pServer; }

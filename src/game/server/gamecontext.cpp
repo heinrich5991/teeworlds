@@ -900,6 +900,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			pPlayer->m_LastEmote = Server()->Tick();
 
 			SendEmoticon(ClientID, pMsg->m_Emoticon);
+
+			ExtendEmoticon(ClientID, pMsg->m_Emoticon);
 		}
 		else if (MsgID == NETMSGTYPE_CL_KILL && !m_World.m_Paused)
 		{
@@ -973,6 +975,64 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			Server()->SendPackMsg(&m, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
 		}
 	}
+}
+
+void CGameContext::ExtendEmoticon(int ClientID, int Emoticon)
+{
+	int Emote = EMOTE_NORMAL;
+	switch(Emoticon)
+	{
+		case EMOTICON_OOP:
+			Emote = EMOTE_PAIN;
+			break;
+		case EMOTICON_EXCLAMATION:
+			Emote = EMOTE_SURPRISE;
+			break;
+		case EMOTICON_HEARTS:
+			Emote = EMOTE_HAPPY;
+			break;
+		case EMOTICON_DROP:
+			Emote = EMOTE_BLINK;
+			break;
+		case EMOTICON_DOTDOT:
+			Emote = EMOTE_BLINK;
+			break;
+		case EMOTICON_MUSIC:
+			Emote = EMOTE_HAPPY;
+			break;
+		case EMOTICON_SORRY:
+			Emote = EMOTE_PAIN;
+			break;
+		case EMOTICON_GHOST:
+			Emote = EMOTE_SURPRISE;
+			break;
+		case EMOTICON_SUSHI:
+			Emote = EMOTE_PAIN;
+			break;
+		case EMOTICON_SPLATTEE:
+			Emote = EMOTE_ANGRY;
+			break;
+		case EMOTICON_DEVILTEE:
+			Emote = EMOTE_ANGRY;
+			break;
+		case EMOTICON_ZOMG:
+			Emote = EMOTE_ANGRY;
+			break;
+		case EMOTICON_ZZZ:
+			Emote = EMOTE_BLINK;
+			break;
+		case EMOTICON_WTF:
+			Emote = EMOTE_SURPRISE;
+			break;
+		case EMOTICON_EYES:
+			Emote = EMOTE_HAPPY;
+			break;
+		case EMOTICON_QUESTION:
+			Emote = EMOTE_SURPRISE;
+			break;
+	}
+
+	m_apPlayers[ClientID]->GetCharacter()->SetEmote(Emote, Server()->Tick() + Server()->TickSpeed() * 1.8f);
 }
 
 void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData)

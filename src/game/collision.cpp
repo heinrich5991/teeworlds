@@ -173,6 +173,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 	{
 		//vec2 old_pos = pos;
 		float Fraction = 1.0f/(float)(Max+1);
+		int OldPosIndex = -1;
 		for(int i = 0; i <= Max; i++)
 		{
 			//float amount = i/(float)max;
@@ -216,27 +217,31 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 			int PosIndex = Ny*m_Width+Nx;
 
-			HandleTriggerTiles(PosIndex, &TriggerFlags);
-
-			// handle teleporters
-			int TeleFlags = m_pTeleTiles[PosIndex].m_Flags;
-			if(TeleFlags&TELEFLAG_IN)
+			if(PosIndex != OldPosIndex)
 			{
-				Pos = m_aTeleTargets[m_pTeleTiles[PosIndex].m_Index];
+				OldPosIndex = PosIndex;
+				HandleTriggerTiles(PosIndex, &TriggerFlags);
 
-				if(TeleFlags&TELEFLAG_RESET_VEL)
-					Vel = vec2(0.0f, 0.0f);
-				if(TeleFlags&TELEFLAG_CUT_OTHER)
-					TriggerFlags |= TRIGGERFLAG_CUT_OTHER;
-				if(TeleFlags&TELEFLAG_CUT_OWN)
-					TriggerFlags |= TRIGGERFLAG_CUT_OWN;
+				// handle teleporters
+				int TeleFlags = m_pTeleTiles[PosIndex].m_Flags;
+				if(TeleFlags&TELEFLAG_IN)
+				{
+					Pos = m_aTeleTargets[m_pTeleTiles[PosIndex].m_Index];
+
+					if(TeleFlags&TELEFLAG_RESET_VEL)
+						Vel = vec2(0.0f, 0.0f);
+					if(TeleFlags&TELEFLAG_CUT_OTHER)
+						TriggerFlags |= TRIGGERFLAG_CUT_OTHER;
+					if(TeleFlags&TELEFLAG_CUT_OWN)
+						TriggerFlags |= TRIGGERFLAG_CUT_OWN;
+
+					Nx = clamp(round(Pos.x)/32, 0, m_Width-1);
+					Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
+					PosIndex = Ny*m_Width+Nx;
+
+					HandleTriggerTiles(PosIndex, &TriggerFlags);
+				}
 			}
-
-			Nx = clamp(round(Pos.x)/32, 0, m_Width-1);
-			Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
-			PosIndex = Ny*m_Width+Nx;
-
-			HandleTriggerTiles(PosIndex, &TriggerFlags);
 		}
 	}
 

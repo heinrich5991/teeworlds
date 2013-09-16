@@ -12,6 +12,8 @@ class CCollision
 	int m_Height;
 	class CLayers *m_pLayers;
 
+	int *m_pFreezeFlags;
+
 	bool IsTileSolid(int x, int y);
 	int GetTile(int x, int y);
 
@@ -21,10 +23,22 @@ public:
 		COLFLAG_SOLID=1,
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
-		COLFLAG_FREEZE=8,
-		COLFLAG_UNFREEZE=16,
-		COLFLAG_DEEP_FREEZE=32,
-		COLFLAG_DEEP_UNFREEZE=64,
+	};
+
+	enum
+	{
+		TILEFLAG_FREEZE=1,
+		TILEFLAG_UNFREEZE=2,
+		TILEFLAG_DEEP_FREEZE=4,
+		TILEFLAG_DEEP_UNFREEZE=8,
+	};
+	
+	enum
+	{
+		TRIGGERFLAG_FREEZE=1,
+		TRIGGERFLAG_UNFREEZE=2,
+		TRIGGERFLAG_DEEP_FREEZE=4,
+		TRIGGERFLAG_DEEP_UNFREEZE=8,
 	};
 
 	CCollision();
@@ -36,7 +50,7 @@ public:
 	int GetHeight() { return m_Height; };
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces);
-	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity);
+	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity);
 	bool TestBox(vec2 Pos, vec2 Size);
 };
 

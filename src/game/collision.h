@@ -23,18 +23,12 @@ public:
 		COLFLAG_SOLID=1,
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
-	};
 
-	enum
-	{
 		TILEFLAG_FREEZE=1,
 		TILEFLAG_UNFREEZE=2,
 		TILEFLAG_DEEP_FREEZE=4,
 		TILEFLAG_DEEP_UNFREEZE=8,
-	};
-	
-	enum
-	{
+
 		TRIGGERFLAG_FREEZE=1,
 		TRIGGERFLAG_UNFREEZE=2,
 		TRIGGERFLAG_DEEP_FREEZE=4,
@@ -42,6 +36,7 @@ public:
 	};
 
 	CCollision();
+	~CCollision();
 	void Init(class CLayers *pLayers);
 	bool CheckPoint(float x, float y) { return IsTileSolid(round(x), round(y)); }
 	bool CheckPoint(vec2 Pos) { return CheckPoint(Pos.x, Pos.y); }

@@ -23,23 +23,18 @@ public:
 		COLFLAG_SOLID=1,
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
-	};
 
-	enum
-	{
 		YOURTILEFLAG_ONE=1,
 		YOURTILEFLAG_TWO=2,
 		YOURTILEFLAG_THREE=4,
-	};
-	
-	enum
-	{
+
 		YOURTRIGGERFLAG_ONE=1,
 		YOURTRIGGERFLAG_TWO=2,
 		YOURTRIGGERFLAG_THREE=4,
 	};
 
 	CCollision();
+	~CCollision();
 	void Init(class CLayers *pLayers);
 	bool CheckPoint(float x, float y) { return IsTileSolid(round(x), round(y)); }
 	bool CheckPoint(vec2 Pos) { return CheckPoint(Pos.x, Pos.y); }

@@ -20,6 +20,11 @@ CCollision::CCollision()
 	m_pLayers = 0;
 }
 
+CCollision::~CCollision()
+{
+	delete []m_pYourTileFlags;
+}
+
 void CCollision::Init(class CLayers *pLayers)
 {
 	m_pLayers = pLayers;

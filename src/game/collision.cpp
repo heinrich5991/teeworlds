@@ -230,29 +230,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 			int PosIndex = Ny*m_Width+Nx;
 
-			if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_FREEZE)
-			{
-				TriggerFlags |= TRIGGERFLAG_FREEZE;
-				TriggerFlags &= ~TRIGGERFLAG_UNFREEZE;
-			}
-			else if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_UNFREEZE)
-			{
-				TriggerFlags &= ~TRIGGERFLAG_FREEZE;
-				if((TriggerFlags&TRIGGERFLAG_DEEP_FREEZE) == 0)
-					TriggerFlags |= TRIGGERFLAG_UNFREEZE;
-			}
-
-			if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_DEEP_FREEZE)
-			{
-				TriggerFlags |= TRIGGERFLAG_DEEP_FREEZE;
-				TriggerFlags &= ~TRIGGERFLAG_UNFREEZE;
-				TriggerFlags &= ~TRIGGERFLAG_DEEP_UNFREEZE;
-			}
-			else if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_DEEP_UNFREEZE)
-			{
-				TriggerFlags &= ~TRIGGERFLAG_DEEP_FREEZE;
-				TriggerFlags |= TRIGGERFLAG_DEEP_UNFREEZE;
-			}
+			HandleTriggerTiles(PosIndex, &TriggerFlags);
 		}
 	}
 
@@ -260,4 +238,31 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 	*pInoutVel = Vel;
 
 	return TriggerFlags;
+}
+
+void CCollision::HandleTriggerTiles(int Index, int *TriggerFlags)
+{
+	if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_FREEZE)
+	{
+		TriggerFlags |= TRIGGERFLAG_FREEZE;
+		TriggerFlags &= ~TRIGGERFLAG_UNFREEZE;
+	}
+	else if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_UNFREEZE)
+	{
+		TriggerFlags &= ~TRIGGERFLAG_FREEZE;
+		if((TriggerFlags&TRIGGERFLAG_DEEP_FREEZE) == 0)
+			TriggerFlags |= TRIGGERFLAG_UNFREEZE;
+	}
+
+	if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_DEEP_FREEZE)
+	{
+		TriggerFlags |= TRIGGERFLAG_DEEP_FREEZE;
+		TriggerFlags &= ~TRIGGERFLAG_UNFREEZE;
+		TriggerFlags &= ~TRIGGERFLAG_DEEP_UNFREEZE;
+	}
+	else if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_DEEP_UNFREEZE)
+	{
+		TriggerFlags &= ~TRIGGERFLAG_DEEP_FREEZE;
+		TriggerFlags |= TRIGGERFLAG_DEEP_UNFREEZE;
+	}
 }

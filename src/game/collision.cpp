@@ -187,6 +187,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 	{
 		//vec2 old_pos = pos;
 		float Fraction = 1.0f/(float)(Max+1);
+		int OldPosIndex = -1;
 		for(int i = 0; i <= Max; i++)
 		{
 			//float amount = i/(float)max;
@@ -230,7 +231,11 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 			int PosIndex = Ny*m_Width+Nx;
 
-			HandleTriggerTiles(PosIndex, &TriggerFlags);
+			if(PosIndex != OldPosIndex)
+			{
+				OldPosIndex = PosIndex;
+				HandleTriggerTiles(PosIndex, &TriggerFlags);
+			}
 		}
 	}
 

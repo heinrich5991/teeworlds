@@ -20,10 +20,6 @@ CCollision::CCollision()
 	m_pLayers = 0;
 }
 
-CCollision::~CCollision()
-{
-}
-
 void CCollision::Init(class CLayers *pLayers)
 {
 	m_pLayers = pLayers;

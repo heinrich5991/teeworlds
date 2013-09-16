@@ -33,10 +33,10 @@ public:
 
 		TRIGGERFLAG_CUT_OTHER=1,
 		TRIGGERFLAG_CUT_OWN=2,
+
 	};
 
 	CCollision();
-	~CCollision();
 	void Init(class CLayers *pLayers);
 	bool CheckPoint(float x, float y) { return IsTileSolid(round(x), round(y)); }
 	bool CheckPoint(vec2 Pos) { return CheckPoint(Pos.x, Pos.y); }

@@ -20,19 +20,12 @@ CCollision::CCollision()
 	m_pLayers = 0;
 }
 
-CCollision::~CCollision()
-{
-	delete []m_pYourTileFlags;
-}
-
 void CCollision::Init(class CLayers *pLayers)
 {
 	m_pLayers = pLayers;
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
 	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
-	delete []m_pYourTileFlags;
-	m_pYourTileFlags = new int[m_Width*m_Height];
 
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
@@ -45,23 +38,15 @@ void CCollision::Init(class CLayers *pLayers)
 		{
 		case TILE_DEATH:
 			m_pTiles[i].m_Index = COLFLAG_DEATH;
-			m_pYourTileFlags[i] = 0;
 			break;
 		case TILE_SOLID:
 			m_pTiles[i].m_Index = COLFLAG_SOLID;
-			m_pYourTileFlags[i] = 0;
 			break;
 		case TILE_NOHOOK:
 			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
-			m_pYourTileFlags[i] = 0;
-			break;
-		case YOUR_TILE:
-			m_pTiles[i].m_Index = 0;
-			m_pYourTileFlags[i] = YOURTILEFLAG_ONE|YOURTILEFLAG_TWO;
 			break;
 		default:
 			m_pTiles[i].m_Index = 0;
-			m_pYourTileFlags[i] = 0;
 		}
 	}
 }
@@ -218,7 +203,9 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 			int PosIndex = Ny*m_Width+Nx;
 
-			if(m_pYourTileFlags[PosIndex]&YOURTILEFLAG_THREE)
+			// use PosIndex to check your condition
+			bool YourCondition = false;
+			if(YourCondition)
 				TriggerFlags |= YOURTRIGGERFLAG_ONE|YOURTRIGGERFLAG_TWO;
 		}
 	}

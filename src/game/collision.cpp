@@ -216,6 +216,8 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 			int PosIndex = Ny*m_Width+Nx;
 
+			HandleTriggerTiles(PosIndex, &TriggerFlags);
+
 			// handle teleporters
 			int TeleFlags = m_pTeleTiles[PosIndex].m_Flags;
 			if(TeleFlags&TELEFLAG_IN)
@@ -229,6 +231,12 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 				if(TeleFlags&TELEFLAG_CUT_OWN)
 					TriggerFlags |= TRIGGERFLAG_CUT_OWN;
 			}
+
+			Nx = clamp(round(Pos.x)/32, 0, m_Width-1);
+			Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
+			PosIndex = Ny*m_Width+Nx;
+
+			HandleTriggerTiles(PosIndex, &TriggerFlags);
 		}
 	}
 
@@ -236,4 +244,9 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 	*pInoutVel = Vel;
 
 	return TriggerFlags;
+}
+
+void CCollision::HandleTriggerTiles(int Index, int *TriggerFlags)
+{
+
 }

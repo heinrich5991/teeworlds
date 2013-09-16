@@ -358,14 +358,15 @@ void CCharacterCore::Tick(bool UseInput)
 		m_Vel = normalize(m_Vel) * 6000;
 }
 
-void CCharacterCore::Move()
+int CCharacterCore::Move()
 {
 	float RampValue = VelocityRamp(length(m_Vel)*50, m_pWorld->m_Tuning.m_VelrampStart, m_pWorld->m_Tuning.m_VelrampRange, m_pWorld->m_Tuning.m_VelrampCurvature);
 
 	m_Vel.x = m_Vel.x*RampValue;
 
 	vec2 NewPos = m_Pos;
-	m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(28.0f, 28.0f), 0);
+	int TriggerFlags = m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(28.0f, 28.0f), 0);
+	HandleTriggers(TriggerFlags);
 
 	m_Vel.x = m_Vel.x*(1.0f/RampValue);
 
@@ -391,7 +392,8 @@ void CCharacterCore::Move()
 						m_Pos = LastPos;
 					else if(distance(NewPos, pCharCore->m_Pos) > D)
 						m_Pos = NewPos;
-					return;
+					// this might cause problems in rare cases
+					return TriggerFlags;
 				}
 			}
 			LastPos = Pos;
@@ -400,15 +402,13 @@ void CCharacterCore::Move()
 
 	m_Pos = NewPos;
 
-	// handle teleporters
-	bool ResetVel = false;
-	bool CutOther = false;
-	bool CutOwn = false;
-	m_pCollision->Teleport(&m_Pos, &ResetVel, &CutOther, &CutOwn);
-	if(ResetVel)
-		m_Vel = vec2(0.0f, 0.0f);
+	return TriggerFlags;
+}
 
-	if(CutOther)
+void CCharacterCore::HandleTriggers(int TriggerFlags)
+{
+	// handle teleporters
+	if(TriggerFlags&CCollision::TRIGGERFLAG_CUT_OTHER)
 	{
 		// this part is very dirty
 		int MyId;
@@ -443,11 +443,10 @@ void CCharacterCore::Move()
 		}
 	}
 
-	if(CutOwn && m_HookState == HOOK_GRABBED)
+	if(TriggerFlags&CCollision::TRIGGERFLAG_CUT_OWN && m_HookState != HOOK_IDLE)
 	{
 		m_HookedPlayer = -1;
-		m_HookState = HOOK_RETRACTED;
-		m_HookPos = m_Pos;
+		m_HookState = HOOK_RETRACT_START;
 	}
 }
 

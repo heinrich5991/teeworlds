@@ -145,7 +145,10 @@ void CCharacter::HandleNinja()
 		// Set velocity
 		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
 		vec2 OldPos = m_Pos;
-		GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
+
+		int TriggerFlags = GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
+		m_Core.HandleTriggers(TriggerFlags);
+		HandleTriggers(TriggerFlags);
 
 		// reset velocity so the client doesn't predict stuff
 		m_Core.m_Vel = vec2(0.f, 0.f);
@@ -589,7 +592,9 @@ void CCharacter::TickDefered()
 	vec2 StartVel = m_Core.m_Vel;
 	bool StuckBefore = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 
-	m_Core.Move();
+	int TriggerFlags = m_Core.Move();
+	HandleTriggers(TriggerFlags);
+
 	bool StuckAfterMove = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Core.Quantize();
 	bool StuckAfterQuant = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
@@ -646,6 +651,11 @@ void CCharacter::TickDefered()
 			m_ReckoningCore = m_Core;
 		}
 	}
+}
+
+void CCharacter::HandleTriggers(int TriggerFlags)
+{
+	// Handle your triggers here and in CCharacterCore::HandleTriggers
 }
 
 void CCharacter::TickPaused()

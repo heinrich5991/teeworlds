@@ -57,19 +57,19 @@ void CCollision::Init(class CLayers *pLayers)
 			break;
 		case TILE_FREEZE:
 			m_pTiles[i].m_Index = 0;
-			m_pFreezeFlags[i] = TILEFLAG_FREEZE;
+			m_pFreezeFlags[i] = FREEZEFLAG_FREEZE;
 			break;
 		case TILE_UNFREEZE:
 			m_pTiles[i].m_Index = 0;
-			m_pFreezeFlags[i] = TILEFLAG_UNFREEZE;
+			m_pFreezeFlags[i] = FREEZEFLAG_UNFREEZE;
 			break;
 		case TILE_DEEP_FREEZE:
 			m_pTiles[i].m_Index = 0;
-			m_pFreezeFlags[i] = TILEFLAG_DEEP_FREEZE;
+			m_pFreezeFlags[i] = FREEZEFLAG_DEEP_FREEZE;
 			break;
 		case TILE_DEEP_UNFREEZE:
 			m_pTiles[i].m_Index = 0;
-			m_pFreezeFlags[i] = TILEFLAG_DEEP_UNFREEZE;
+			m_pFreezeFlags[i] = FREEZEFLAG_DEEP_UNFREEZE;
 			break;
 		default:
 			m_pTiles[i].m_Index = 0;
@@ -230,25 +230,25 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 			int PosIndex = Ny*m_Width+Nx;
 
-			if(m_pFreezeFlags[PosIndex]&TILEFLAG_FREEZE)
+			if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_FREEZE)
 			{
 				TriggerFlags |= TRIGGERFLAG_FREEZE;
 				TriggerFlags &= ~TRIGGERFLAG_UNFREEZE;
 			}
-			else if(m_pFreezeFlags[PosIndex]&TILEFLAG_UNFREEZE)
+			else if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_UNFREEZE)
 			{
 				TriggerFlags &= ~TRIGGERFLAG_FREEZE;
 				if((TriggerFlags&TRIGGERFLAG_DEEP_FREEZE) == 0)
 					TriggerFlags |= TRIGGERFLAG_UNFREEZE;
 			}
 
-			if(m_pFreezeFlags[PosIndex]&TILEFLAG_DEEP_FREEZE)
+			if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_DEEP_FREEZE)
 			{
 				TriggerFlags |= TRIGGERFLAG_DEEP_FREEZE;
 				TriggerFlags &= ~TRIGGERFLAG_UNFREEZE;
 				TriggerFlags &= ~TRIGGERFLAG_DEEP_UNFREEZE;
 			}
-			else if(m_pFreezeFlags[PosIndex]&TILEFLAG_DEEP_UNFREEZE)
+			else if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_DEEP_UNFREEZE)
 			{
 				TriggerFlags &= ~TRIGGERFLAG_DEEP_FREEZE;
 				TriggerFlags |= TRIGGERFLAG_DEEP_UNFREEZE;

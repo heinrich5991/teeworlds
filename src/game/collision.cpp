@@ -203,10 +203,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 			int PosIndex = Ny*m_Width+Nx;
 
-			// use PosIndex to check your condition
-			bool YourCondition = false;
-			if(YourCondition)
-				TriggerFlags |= YOURTRIGGERFLAG_ONE|YOURTRIGGERFLAG_TWO;
+			HandleTriggerTiles(PosIndex, &TriggerFlags);
 		}
 	}
 
@@ -214,4 +211,12 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 	*pInoutVel = Vel;
 
 	return TriggerFlags;
+}
+
+void CCollision::HandleTriggerTiles(int Index, int *TriggerFlags)
+{
+	// use Index to check your condition
+	bool YourCondition = false;
+	if(YourCondition)
+		*TriggerFlags |= YOURTRIGGERFLAG_ONE|YOURTRIGGERFLAG_TWO;
 }

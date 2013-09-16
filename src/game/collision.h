@@ -12,6 +12,8 @@ class CCollision
 	int m_Height;
 	class CLayers *m_pLayers;
 
+	int *m_pYourTileFlags;
+
 	bool IsTileSolid(int x, int y);
 	int GetTile(int x, int y);
 
@@ -23,6 +25,20 @@ public:
 		COLFLAG_NOHOOK=4,
 	};
 
+	enum
+	{
+		YOURTILEFLAG_ONE=1,
+		YOURTILEFLAG_TWO=2,
+		YOURTILEFLAG_THREE=4,
+	};
+	
+	enum
+	{
+		YOURTRIGGERFLAG_ONE=1,
+		YOURTRIGGERFLAG_TWO=2,
+		YOURTRIGGERFLAG_THREE=4,
+	};
+
 	CCollision();
 	void Init(class CLayers *pLayers);
 	bool CheckPoint(float x, float y) { return IsTileSolid(round(x), round(y)); }
@@ -32,7 +48,7 @@ public:
 	int GetHeight() { return m_Height; };
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces);
-	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity);
+	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity);
 	bool TestBox(vec2 Pos, vec2 Size);
 };
 

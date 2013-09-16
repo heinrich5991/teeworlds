@@ -358,14 +358,15 @@ void CCharacterCore::Tick(bool UseInput)
 		m_Vel = normalize(m_Vel) * 6000;
 }
 
-void CCharacterCore::Move()
+int CCharacterCore::Move()
 {
 	float RampValue = VelocityRamp(length(m_Vel)*50, m_pWorld->m_Tuning.m_VelrampStart, m_pWorld->m_Tuning.m_VelrampRange, m_pWorld->m_Tuning.m_VelrampCurvature);
 
 	m_Vel.x = m_Vel.x*RampValue;
 
 	vec2 NewPos = m_Pos;
-	m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(28.0f, 28.0f), 0);
+	int TriggerFlags = m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(28.0f, 28.0f), 0);
+	HandleTriggers(TriggerFlags);
 
 	m_Vel.x = m_Vel.x*(1.0f/RampValue);
 
@@ -391,7 +392,8 @@ void CCharacterCore::Move()
 						m_Pos = LastPos;
 					else if(distance(NewPos, pCharCore->m_Pos) > D)
 						m_Pos = NewPos;
-					return;
+					// this might cause problems in rare cases
+					return TriggerFlags;
 				}
 			}
 			LastPos = Pos;
@@ -399,6 +401,13 @@ void CCharacterCore::Move()
 	}
 
 	m_Pos = NewPos;
+
+	return TriggerFlags;
+}
+
+void CCharacterCore::HandleTriggers(int TriggerFlags)
+{
+	// Handle your triggers here and in CCharacter::HandleTriggers
 }
 
 void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)

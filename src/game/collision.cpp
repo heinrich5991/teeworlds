@@ -215,13 +215,14 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutTriggerFlags,
 	*pInoutPos = Pos;
 	*pInoutVel = Vel;
 
+
 	return NumTiles;
 }
 
-void CCollision::HandleTriggerTiles(int Index, int *TriggerFlags)
+void CCollision::HandleTriggerTiles(int Index, int *pTriggerFlags)
 {
 	// use Index to check your condition
 	bool YourCondition = false;
 	if(YourCondition)
-		*TriggerFlags |= YOURTRIGGERFLAG_ONE|YOURTRIGGERFLAG_TWO;
+		*pTriggerFlags |= YOURTRIGGERFLAG_ONE|YOURTRIGGERFLAG_TWO;
 }

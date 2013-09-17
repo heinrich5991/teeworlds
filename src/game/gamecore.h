@@ -190,7 +190,7 @@ public:
 	void Reset();
 	void Tick(bool UseInput);
 	int Move(int *pOutTriggerFlags);
-	void HandleTriggers(int *pTriggerFlags, int Size);
+	void HandleTriggers(int TriggerFlags);
 
 	void Read(const CNetObj_CharacterCore *pObjCore);
 	void Write(CNetObj_CharacterCore *pObjCore);

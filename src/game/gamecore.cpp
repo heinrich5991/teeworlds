@@ -367,7 +367,8 @@ int CCharacterCore::Move(int *pOutTriggerFlags)
 	vec2 NewPos = m_Pos;
 	
 	int Size = m_pCollision->MoveBox(&NewPos, &m_Vel, pOutTriggerFlags, vec2(28.0f, 28.0f), 0);
-	HandleTriggers(pOutTriggerFlags, Size);
+	for(int i = 0; i < Size; i++)
+		HandleTriggers(pOutTriggerFlags[i]);
 
 	m_Vel.x = m_Vel.x*(1.0f/RampValue);
 
@@ -406,7 +407,7 @@ int CCharacterCore::Move(int *pOutTriggerFlags)
 	return Size;
 }
 
-void CCharacterCore::HandleTriggers(int *pTriggerFlags, int Size)
+void CCharacterCore::HandleTriggers(int TriggerFlags)
 {
 	// Handle your triggers here and in CCharacter::HandleTriggers
 }

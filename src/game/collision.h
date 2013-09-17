@@ -40,8 +40,8 @@ public:
 	int GetHeight() { return m_Height; };
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces);
-	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutRaceTileIndex, vec2 Size, float Elasticity);
-	void HandleTriggerTiles(int Index, int *pOutTriggerFlags, int *pOutCheckpointIndex);
+	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutTriggerFlags, int *pOutCheckpoints, vec2 Size, float Elasticity);
+	void HandleTriggerTiles(int Index, int *TriggerFlags, int *pCheckpoints);
 	bool TestBox(vec2 Pos, vec2 Size);
 };
 

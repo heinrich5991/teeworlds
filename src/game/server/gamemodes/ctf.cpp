@@ -255,7 +255,7 @@ void CGameControllerCTF::Tick()
 				else
 				{
 					F->m_Vel.y += GameServer()->m_World.m_Core.m_Tuning.m_Gravity;
-					GameServer()->Collision()->MoveBox(&F->m_Pos, &F->m_Vel, 0, vec2(F->ms_PhysSize, F->ms_PhysSize), 0.5f);
+					GameServer()->Collision()->MoveBox(&F->m_Pos, &F->m_Vel, 0, 0, vec2(F->ms_PhysSize, F->ms_PhysSize), 0.5f);
 				}
 			}
 		}

@@ -32,10 +32,10 @@ public:
 
 	void HandleWeapons();
 	void HandleNinja();
-	void HandleTriggers(int Triggerflags, int CheckpointIndex);
+	void HandleTriggers(int Triggerflags, int Checkpoint);
 
-	void Finish();
-	void Checkpoint();
+	void OnFinish();
+	void OnCheckpoint();
 
 	void OnPredictedInput(CNetObj_PlayerInput *pNewInput);
 	void OnDirectInput(CNetObj_PlayerInput *pNewInput);

@@ -358,15 +358,17 @@ void CCharacterCore::Tick(bool UseInput)
 		m_Vel = normalize(m_Vel) * 6000;
 }
 
-int CCharacterCore::Move(int *pOutCheckpointIndex)
+int CCharacterCore::Move(int *pOutTriggerFlags, int *pOutCheckpoints)
 {
 	float RampValue = VelocityRamp(length(m_Vel)*50, m_pWorld->m_Tuning.m_VelrampStart, m_pWorld->m_Tuning.m_VelrampRange, m_pWorld->m_Tuning.m_VelrampCurvature);
 
 	m_Vel.x = m_Vel.x*RampValue;
 
 	vec2 NewPos = m_Pos;
-	int TriggerFlags = m_pCollision->MoveBox(&NewPos, &m_Vel, pOutCheckpointIndex, vec2(28.0f, 28.0f), 0);
-	HandleTriggers(TriggerFlags);
+	
+	int Size = m_pCollision->MoveBox(&NewPos, &m_Vel, pOutTriggerFlags, pOutCheckpoints, vec2(28.0f, 28.0f), 0);
+	for(int i = 0; i < Size; i++)
+		HandleTriggers(pOutTriggerFlags[i]);
 
 	m_Vel.x = m_Vel.x*(1.0f/RampValue);
 
@@ -393,7 +395,7 @@ int CCharacterCore::Move(int *pOutCheckpointIndex)
 					else if(distance(NewPos, pCharCore->m_Pos) > D)
 						m_Pos = NewPos;
 					// this might cause problems in rare cases
-					return TriggerFlags;
+					return Size;
 				}
 			}
 			LastPos = Pos;
@@ -402,7 +404,7 @@ int CCharacterCore::Move(int *pOutCheckpointIndex)
 
 	m_Pos = NewPos;
 
-	return TriggerFlags;
+	return Size;
 }
 
 void CCharacterCore::HandleTriggers(int TriggerFlags)

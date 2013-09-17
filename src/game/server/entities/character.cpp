@@ -149,12 +149,16 @@ void CCharacter::HandleNinja()
 		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
 		vec2 OldPos = m_Pos;
 
-		int CheckpointIndex = 0;
-		int TriggerFlags = GameServer()->Collision()
-			->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, &CheckpointIndex, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
-		m_Core.HandleTriggers(TriggerFlags);
-		HandleTriggers(TriggerFlags, CheckpointIndex);
-
+		int *TriggerFlags = new int[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
+		int *Checkpoints = new int[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
+		int Size = GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, TriggerFlags, Checkpoints, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
+		for(int i = 0; i < Size; i++)
+		{
+			m_Core.HandleTriggers(TriggerFlags[i]);
+			HandleTriggers(TriggerFlags[i], Checkpoints[i]);
+		}
+		delete [] TriggerFlags;
+		delete [] Checkpoints;
 		// reset velocity so the client doesn't predict stuff
 		m_Core.m_Vel = vec2(0.f, 0.f);
 
@@ -588,7 +592,7 @@ void CCharacter::TickDefered()
 		CWorldCore TempWorld;
 		m_ReckoningCore.Init(&TempWorld, GameServer()->Collision());
 		m_ReckoningCore.Tick(false);
-		m_ReckoningCore.Move(0);
+		m_ReckoningCore.Move(0, 0);
 		m_ReckoningCore.Quantize();
 	}
 
@@ -597,9 +601,13 @@ void CCharacter::TickDefered()
 	vec2 StartVel = m_Core.m_Vel;
 	bool StuckBefore = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 
-	int CheckpointIndex = 0;
-	int TriggerFlags = m_Core.Move(&CheckpointIndex);
-	HandleTriggers(TriggerFlags, CheckpointIndex);
+	int *TriggerFlags = new int[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
+	int *Checkpoints = new int[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
+	int Size = m_Core.Move(TriggerFlags, Checkpoints);
+	for(int i = 0; i < Size; i++)
+		HandleTriggers(TriggerFlags[i], Checkpoints[i]);
+	delete []TriggerFlags;
+	delete []Checkpoints;
 
 	bool StuckAfterMove = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Core.Quantize();
@@ -659,7 +667,7 @@ void CCharacter::TickDefered()
 	}
 }
 
-void CCharacter::HandleTriggers(int TriggerFlags, int CheckpointIndex)
+void CCharacter::HandleTriggers(int TriggerFlags, int Checkpoint)
 {
 	if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_START)
 	{
@@ -668,14 +676,14 @@ void CCharacter::HandleTriggers(int TriggerFlags, int CheckpointIndex)
 	}
 	else if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_FINISH && m_RaceStartTick >= 0
 			&& m_LastCheckpoint == GameServer()->Collision()->GetNumCheckpoints() - 1)
-		Finish();
-	else if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_CHECKPOINT && m_RaceStartTick >= 0 && CheckpointIndex - 1 == m_LastCheckpoint)
+		OnFinish();
+	else if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_CHECKPOINT && m_RaceStartTick >= 0 && Checkpoint - 1 == m_LastCheckpoint)
 	{
-		Checkpoint();
+		OnCheckpoint();
 	}
 }
 
-void CCharacter::Finish()
+void CCharacter::OnFinish()
 {
 	float Time =  (Server()->Tick() - m_RaceStartTick) / (float) Server()->TickSpeed();
 	char aBuf[256];
@@ -687,7 +695,7 @@ void CCharacter::Finish()
 	m_RaceStartTick = -1;
 }
 
-void CCharacter::Checkpoint()
+void CCharacter::OnCheckpoint()
 {
 	m_LastCheckpoint++;
 

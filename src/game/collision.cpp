@@ -172,16 +172,15 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size)
 	return false;
 }
 
-int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity)
+int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutTriggerFlags, vec2 Size, float Elasticity)
 {
-	int TriggerFlags = 0;
-
 	// do the move
 	vec2 Pos = *pInoutPos;
 	vec2 Vel = *pInoutVel;
 
 	float Distance = length(Vel);
 	int Max = (int)Distance;
+	int NumTiles = 0;
 
 	if(Distance > 0.00001f)
 	{
@@ -231,10 +230,11 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 			int PosIndex = Ny*m_Width+Nx;
 
-			if(PosIndex != OldPosIndex)
+			if(pOutTriggerFlags && PosIndex != OldPosIndex)
 			{
 				OldPosIndex = PosIndex;
-				HandleTriggerTiles(PosIndex, &TriggerFlags);
+				HandleTriggerTiles(PosIndex, pOutTriggerFlags + NumTiles);
+				NumTiles++;
 			}
 		}
 	}
@@ -242,32 +242,33 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 	*pInoutPos = Pos;
 	*pInoutVel = Vel;
 
-	return TriggerFlags;
+
+	return NumTiles;
 }
 
-void CCollision::HandleTriggerTiles(int Index, int *TriggerFlags)
+void CCollision::HandleTriggerTiles(int Index, int *pTriggerFlags)
 {
-	if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_FREEZE)
+	*pTriggerFlags = 0;
+
+	if(m_pFreezeFlags[Index]&FREEZEFLAG_FREEZE)
 	{
-		TriggerFlags |= TRIGGERFLAG_FREEZE;
-		TriggerFlags &= ~TRIGGERFLAG_UNFREEZE;
+		*pTriggerFlags |= TRIGGERFLAG_FREEZE;
+		*pTriggerFlags &= ~TRIGGERFLAG_UNFREEZE;
 	}
-	else if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_UNFREEZE)
+	else if(m_pFreezeFlags[Index]&FREEZEFLAG_UNFREEZE)
 	{
-		TriggerFlags &= ~TRIGGERFLAG_FREEZE;
-		if((TriggerFlags&TRIGGERFLAG_DEEP_FREEZE) == 0)
-			TriggerFlags |= TRIGGERFLAG_UNFREEZE;
+		*pTriggerFlags &= ~TRIGGERFLAG_FREEZE;
+		*pTriggerFlags |= TRIGGERFLAG_UNFREEZE;
 	}
 
-	if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_DEEP_FREEZE)
+	if(m_pFreezeFlags[Index]&FREEZEFLAG_DEEP_FREEZE)
 	{
-		TriggerFlags |= TRIGGERFLAG_DEEP_FREEZE;
-		TriggerFlags &= ~TRIGGERFLAG_UNFREEZE;
-		TriggerFlags &= ~TRIGGERFLAG_DEEP_UNFREEZE;
+		*pTriggerFlags |= TRIGGERFLAG_DEEP_FREEZE;
+		*pTriggerFlags &= ~TRIGGERFLAG_DEEP_UNFREEZE;
 	}
-	else if(m_pFreezeFlags[PosIndex]&FREEZEFLAG_DEEP_UNFREEZE)
+	else if(m_pFreezeFlags[Index]&FREEZEFLAG_DEEP_UNFREEZE)
 	{
-		TriggerFlags &= ~TRIGGERFLAG_DEEP_FREEZE;
-		TriggerFlags |= TRIGGERFLAG_DEEP_UNFREEZE;
+		*pTriggerFlags &= ~TRIGGERFLAG_DEEP_FREEZE;
+		*pTriggerFlags |= TRIGGERFLAG_DEEP_UNFREEZE;
 	}
 }

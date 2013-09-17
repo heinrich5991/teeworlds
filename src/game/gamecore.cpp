@@ -372,15 +372,17 @@ void CCharacterCore::Tick(bool UseInput)
 		m_FreezeTick--;
 }
 
-int CCharacterCore::Move()
+int CCharacterCore::Move(int *pOutTriggerFlags)
 {
 	float RampValue = VelocityRamp(length(m_Vel)*50, m_pWorld->m_Tuning.m_VelrampStart, m_pWorld->m_Tuning.m_VelrampRange, m_pWorld->m_Tuning.m_VelrampCurvature);
 
 	m_Vel.x = m_Vel.x*RampValue;
 
 	vec2 NewPos = m_Pos;
-	int TriggerFlags = m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(28.0f, 28.0f), 0);
-	HandleTriggers(TriggerFlags);
+	
+	int Size = m_pCollision->MoveBox(&NewPos, &m_Vel, pOutTriggerFlags, vec2(28.0f, 28.0f), 0);
+	for(int i = 0; i < Size; i++)
+		HandleTriggers(pOutTriggerFlags[i]);
 
 	m_Vel.x = m_Vel.x*(1.0f/RampValue);
 
@@ -407,7 +409,7 @@ int CCharacterCore::Move()
 					else if(distance(NewPos, pCharCore->m_Pos) > D)
 						m_Pos = NewPos;
 					// this might cause problems in rare cases
-					return TriggerFlags;
+					return Size;
 				}
 			}
 			LastPos = Pos;
@@ -416,7 +418,7 @@ int CCharacterCore::Move()
 
 	m_Pos = NewPos;
 
-	return TriggerFlags;
+	return Size;
 }
 
 void CCharacterCore::HandleTriggers(int TriggerFlags)
@@ -435,12 +437,12 @@ void CCharacterCore::HandleTriggers(int TriggerFlags)
 
 void CCharacterCore::Freeze()
 {
-		if(m_FreezeTick >= 0)
-		{
-			if(m_FreezeTick == 0)
-				m_TriggeredEvents |= COREEVENTFLAG_FREEZE;
-			m_FreezeTick = SERVER_TICK_SPEED * m_pWorld->m_Tuning.m_FreezeTime;
-		}
+	if(m_FreezeTick >= 0)
+	{
+		if(m_FreezeTick == 0)
+			m_TriggeredEvents |= COREEVENTFLAG_FREEZE;
+		m_FreezeTick = SERVER_TICK_SPEED * m_pWorld->m_Tuning.m_FreezeTime;
+	}
 }
 
 void CCharacterCore::Unfreeze()

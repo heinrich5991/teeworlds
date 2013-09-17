@@ -192,7 +192,7 @@ public:
 	void Init(CWorldCore *pWorld, CCollision *pCollision);
 	void Reset();
 	void Tick(bool UseInput);
-	int Move();
+	int Move(int *pOutTriggerFlags);
 	void HandleTriggers(int TriggerFlags);
 
 	void Freeze();

@@ -158,16 +158,15 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size)
 	return false;
 }
 
-int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity)
+int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutTriggerFlags, vec2 Size, float Elasticity)
 {
-	int TriggerFlags = 0;
-
 	// do the move
 	vec2 Pos = *pInoutPos;
 	vec2 Vel = *pInoutVel;
 
 	float Distance = length(Vel);
 	int Max = (int)Distance;
+	int NumTiles = 0;
 
 	if(Distance > 0.00001f)
 	{
@@ -217,10 +216,10 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 			int PosIndex = Ny*m_Width+Nx;
 
-			if(PosIndex != OldPosIndex)
+			if(pOutTriggerFlags && PosIndex != OldPosIndex)
 			{
 				OldPosIndex = PosIndex;
-				HandleTriggerTiles(PosIndex, &TriggerFlags);
+				HandleTriggerTiles(PosIndex, pOutTriggerFlags + NumTiles);
 
 				// handle teleporters
 				int TeleFlags = m_pTeleTiles[PosIndex].m_Flags;
@@ -229,17 +228,24 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 					Pos = m_aTeleTargets[m_pTeleTiles[PosIndex].m_Index];
 
 					if(TeleFlags&TELEFLAG_RESET_VEL)
+					{
 						Vel = vec2(0.0f, 0.0f);
+						pOutTriggerFlags[NumTiles] |= TRIGGERFLAG_STOP_NINJA;
+					}
 					if(TeleFlags&TELEFLAG_CUT_OTHER)
-						TriggerFlags |= TRIGGERFLAG_CUT_OTHER;
+						pOutTriggerFlags[NumTiles] |= TRIGGERFLAG_CUT_OTHER;
 					if(TeleFlags&TELEFLAG_CUT_OWN)
-						TriggerFlags |= TRIGGERFLAG_CUT_OWN;
+						pOutTriggerFlags[NumTiles] |= TRIGGERFLAG_CUT_OWN;
+
+					NumTiles++;
 
 					Nx = clamp(round(Pos.x)/32, 0, m_Width-1);
 					Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 					PosIndex = Ny*m_Width+Nx;
+					OldPosIndex = PosIndex;
 
-					HandleTriggerTiles(PosIndex, &TriggerFlags);
+					HandleTriggerTiles(PosIndex, pOutTriggerFlags + NumTiles);
+					NumTiles++;
 				}
 			}
 		}
@@ -248,10 +254,10 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 	*pInoutPos = Pos;
 	*pInoutVel = Vel;
 
-	return TriggerFlags;
+	return NumTiles;
 }
 
-void CCollision::HandleTriggerTiles(int Index, int *TriggerFlags)
+void CCollision::HandleTriggerTiles(int Index, int *pTriggerFlags)
 {
 
 }

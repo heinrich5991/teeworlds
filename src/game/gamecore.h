@@ -189,7 +189,7 @@ public:
 	void Init(CWorldCore *pWorld, CCollision *pCollision);
 	void Reset();
 	void Tick(bool UseInput);
-	int Move();
+	int Move(int *pOutCheckpointIndex);
 	void HandleTriggers(int TriggerFlags);
 
 	void Read(const CNetObj_CharacterCore *pObjCore);

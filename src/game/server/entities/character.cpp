@@ -64,6 +64,9 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_LastWeapon = WEAPON_HAMMER;
 	m_QueuedWeapon = -1;
 
+	m_RaceStartTick = -1;
+	m_LastCheckpoint = -1;
+
 	m_pPlayer = pPlayer;
 	m_Pos = Pos;
 
@@ -146,9 +149,11 @@ void CCharacter::HandleNinja()
 		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
 		vec2 OldPos = m_Pos;
 
-		int TriggerFlags = GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
+		int CheckpointIndex = 0;
+		int TriggerFlags = GameServer()->Collision()
+			->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, &CheckpointIndex, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
 		m_Core.HandleTriggers(TriggerFlags);
-		HandleTriggers(TriggerFlags);
+		HandleTriggers(TriggerFlags, CheckpointIndex);
 
 		// reset velocity so the client doesn't predict stuff
 		m_Core.m_Vel = vec2(0.f, 0.f);
@@ -583,7 +588,7 @@ void CCharacter::TickDefered()
 		CWorldCore TempWorld;
 		m_ReckoningCore.Init(&TempWorld, GameServer()->Collision());
 		m_ReckoningCore.Tick(false);
-		m_ReckoningCore.Move();
+		m_ReckoningCore.Move(0);
 		m_ReckoningCore.Quantize();
 	}
 
@@ -592,8 +597,9 @@ void CCharacter::TickDefered()
 	vec2 StartVel = m_Core.m_Vel;
 	bool StuckBefore = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 
-	int TriggerFlags = m_Core.Move();
-	HandleTriggers(TriggerFlags);
+	int CheckpointIndex = 0;
+	int TriggerFlags = m_Core.Move(&CheckpointIndex);
+	HandleTriggers(TriggerFlags, CheckpointIndex);
 
 	bool StuckAfterMove = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Core.Quantize();
@@ -653,9 +659,42 @@ void CCharacter::TickDefered()
 	}
 }
 
-void CCharacter::HandleTriggers(int TriggerFlags)
+void CCharacter::HandleTriggers(int TriggerFlags, int CheckpointIndex)
 {
-	// Handle your triggers here and in CCharacterCore::HandleTriggers
+	if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_START)
+	{
+		m_RaceStartTick = Server()->Tick();
+		m_LastCheckpoint = -1;
+	}
+	else if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_FINISH && m_RaceStartTick >= 0
+			&& m_LastCheckpoint == GameServer()->Collision()->GetNumCheckpoints() - 1)
+		Finish();
+	else if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_CHECKPOINT && m_RaceStartTick >= 0 && CheckpointIndex - 1 == m_LastCheckpoint)
+	{
+		Checkpoint();
+	}
+}
+
+void CCharacter::Finish()
+{
+	float Time =  (Server()->Tick() - m_RaceStartTick) / (float) Server()->TickSpeed();
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "Finished in %.2f seconds", Time);
+	GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
+
+	// TODO store finish time and honor run
+	m_LastCheckpoint = -1;
+	m_RaceStartTick = -1;
+}
+
+void CCharacter::Checkpoint()
+{
+	m_LastCheckpoint++;
+
+	float Time =  (Server()->Tick() - m_RaceStartTick) / (float) Server()->TickSpeed();
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "Checkpoint %d in %.2f seconds", m_LastCheckpoint, Time);
+	GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
 }
 
 void CCharacter::TickPaused()

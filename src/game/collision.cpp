@@ -18,6 +18,7 @@ CCollision::CCollision()
 	m_Width = 0;
 	m_Height = 0;
 	m_pLayers = 0;
+	m_NumCheckpoints = 0;
 }
 
 void CCollision::Init(class CLayers *pLayers)
@@ -26,6 +27,12 @@ void CCollision::Init(class CLayers *pLayers)
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
 	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
+	// TODO this
+	m_pRaceTiles = static_cast<CTile *>(m_pLayers->Map()->GetData((reinterpret_cast<CMapItemLayerTilemap *>(m_pLayers->GetLayer(7)))->m_Data));
+	// should be replaced by something like this
+	//m_pRaceTiles = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->TeleLayer()->m_Data));
+	// once we have a tele layer
+	m_NumCheckpoints = 0;
 
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
@@ -48,7 +55,14 @@ void CCollision::Init(class CLayers *pLayers)
 		default:
 			m_pTiles[i].m_Index = 0;
 		}
+
+		m_NumCheckpoints = max(m_pRaceTiles[i].m_Index - 2, m_NumCheckpoints);
 	}
+}
+
+int CCollision::GetNumCheckpoints()
+{
+	return m_NumCheckpoints;
 }
 
 int CCollision::GetTile(int x, int y)
@@ -145,7 +159,7 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size)
 	return false;
 }
 
-int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity)
+int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutCheckpointIndex, vec2 Size, float Elasticity)
 {
 	int TriggerFlags = 0;
 
@@ -207,7 +221,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 			if(PosIndex != OldPosIndex)
 			{
 				OldPosIndex = PosIndex;
-				HandleTriggerTiles(PosIndex, &TriggerFlags);
+				HandleTriggerTiles(PosIndex, &TriggerFlags, pOutCheckpointIndex);
 			}
 		}
 	}
@@ -218,10 +232,19 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elast
 	return TriggerFlags;
 }
 
-void CCollision::HandleTriggerTiles(int Index, int *TriggerFlags)
+void CCollision::HandleTriggerTiles(int Index, int *pOutTriggerFlags, int *pOutCheckpointIndex)
 {
-	// use Index to check your condition
-	bool YourCondition = false;
-	if(YourCondition)
-		*TriggerFlags |= YOURTRIGGERFLAG_ONE|YOURTRIGGERFLAG_TWO;
+	if(m_pRaceTiles[Index].m_Index > 0)
+	{
+		if(m_pRaceTiles[Index].m_Index == 1)
+			*pOutTriggerFlags |= TRIGGERFLAG_RACE_START;
+		else if(m_pRaceTiles[Index].m_Index == 2)
+			*pOutTriggerFlags |= TRIGGERFLAG_RACE_FINISH;
+		else
+		{
+			*pOutTriggerFlags |= TRIGGERFLAG_RACE_CHECKPOINT;
+			if(pOutCheckpointIndex)
+				*pOutCheckpointIndex = m_pRaceTiles[Index].m_Index - 3;
+		}
+	}
 }

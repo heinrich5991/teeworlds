@@ -32,7 +32,10 @@ public:
 
 	void HandleWeapons();
 	void HandleNinja();
-	void HandleTriggers(int Triggerflags);
+	void HandleTriggers(int Triggerflags, int CheckpointIndex);
+
+	void Finish();
+	void Checkpoint();
 
 	void OnPredictedInput(CNetObj_PlayerInput *pNewInput);
 	void OnDirectInput(CNetObj_PlayerInput *pNewInput);
@@ -102,6 +105,9 @@ private:
 	int m_Jumped;
 
 	int m_DamageTakenTick;
+
+	int m_RaceStartTick;
+	int m_LastCheckpoint;
 
 	int m_Health;
 	int m_Armor;

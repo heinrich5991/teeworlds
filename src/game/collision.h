@@ -8,9 +8,12 @@
 class CCollision
 {
 	class CTile *m_pTiles;
+	class CTile *m_pRaceTiles;
 	int m_Width;
 	int m_Height;
 	class CLayers *m_pLayers;
+
+	int m_NumCheckpoints;
 
 	bool IsTileSolid(int x, int y);
 	int GetTile(int x, int y);
@@ -22,13 +25,14 @@ public:
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
 
-		YOURTRIGGERFLAG_ONE=1,
-		YOURTRIGGERFLAG_TWO=2,
-		YOURTRIGGERFLAG_THREE=4,
+		TRIGGERFLAG_RACE_START=1,
+		TRIGGERFLAG_RACE_FINISH=2,
+		TRIGGERFLAG_RACE_CHECKPOINT=4,
 	};
 
 	CCollision();
 	void Init(class CLayers *pLayers);
+	int GetNumCheckpoints();
 	bool CheckPoint(float x, float y) { return IsTileSolid(round(x), round(y)); }
 	bool CheckPoint(vec2 Pos) { return CheckPoint(Pos.x, Pos.y); }
 	int GetCollisionAt(float x, float y) { return GetTile(round(x), round(y)); }
@@ -36,8 +40,8 @@ public:
 	int GetHeight() { return m_Height; };
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces);
-	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity);
-	void HandleTriggerTiles(int Index, int *TriggerFlags);
+	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutRaceTileIndex, vec2 Size, float Elasticity);
+	void HandleTriggerTiles(int Index, int *pOutTriggerFlags, int *pOutCheckpointIndex);
 	bool TestBox(vec2 Pos, vec2 Size);
 };
 

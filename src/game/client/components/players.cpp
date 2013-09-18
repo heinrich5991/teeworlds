@@ -476,7 +476,53 @@ void CPlayers::RenderPlayer(
 		RenderTools()->RenderTee(&State, &Ghost, Player.m_Emote, Direction, GhostPosition); // render ghost
 	}
 
+	// freeze fading
+	{
+		float FadeSpeed = 0.01f;
+		float FadeTarget;
+		if(Player.m_FreezeTick == 0)
+			FadeTarget = 0.0f;
+		else if(Player.m_FreezeTick > 0)
+			FadeTarget = ((float) Player.m_FreezeTick) / (m_pClient->m_Tuning.m_FreezeTime * SERVER_TICK_SPEED) ;
+		else
+			FadeTarget = 1.0f;
+
+		FadeTarget = ceil(FadeTarget * 3) / 3.0f;
+
+		if(m_aFreezeFadeState[ClientID] - FadeSpeed > FadeTarget)
+			m_aFreezeFadeState[ClientID] -= FadeSpeed;
+		else if(m_aFreezeFadeState[ClientID] + FadeSpeed < FadeTarget)
+			m_aFreezeFadeState[ClientID] += FadeSpeed;
+	}
+
+	// color tee
+	if(m_aFreezeFadeState[ClientID] > 0.0f)
+	{
+		float Factor = m_aFreezeFadeState[ClientID];
+		for(int p = 0; p < CSkins::NUM_SKINPARTS; p++)
+		{
+			RenderInfo.m_aColors[p].r *= 1.0f - Factor;
+			RenderInfo.m_aColors[p].r += 0.75f * Factor;
+			RenderInfo.m_aColors[p].g *= 1.0f - Factor;
+			RenderInfo.m_aColors[p].g += 0.85f * Factor;
+			RenderInfo.m_aColors[p].b *= 1.0f - Factor;
+			RenderInfo.m_aColors[p].b += 1.0f * Factor;
+		}
+	}
+
 	RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, Position);
+
+	// draw ice block
+	if(m_aFreezeFadeState[ClientID] > 0.0f)
+	{
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_FREEZE].m_Id);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, m_aFreezeFadeState[ClientID]);
+
+		RenderTools()->SelectSprite(SPRITE_FROZEN);
+		RenderTools()->DrawSprite(Position.x, Position.y - 5, 70.0f);
+		Graphics()->QuadsEnd();
+	}
 
 	if(pInfo.m_PlayerFlags&PLAYERFLAG_CHATTING)
 	{
@@ -518,17 +564,6 @@ void CPlayers::RenderPlayer(
 		RenderTools()->SelectSprite(SPRITE_OOP + m_pClient->m_aClients[ClientID].m_Emoticon);
 		IGraphics::CQuadItem QuadItem(Position.x, Position.y - 23 - 32*h, 64, 64*h);
 		Graphics()->QuadsDraw(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-	}
-
-	// draw ice block
-	if(Player.m_FreezeTick != 0)
-	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_FREEZE].m_Id);
-		Graphics()->QuadsBegin();
-
-		RenderTools()->SelectSprite(SPRITE_FROZEN);
-		RenderTools()->DrawSprite(Position.x, Position.y-5, 70.0f);
 		Graphics()->QuadsEnd();
 	}
 }
@@ -577,7 +612,10 @@ void CPlayers::OnRender()
 		{
 			// only render active characters
 			if(!m_pClient->m_Snap.m_aCharacters[i].m_Active)
+			{
+				m_aFreezeFadeState[i] = 0;
 				continue;
+			}
 
 			const void *pPrevInfo = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_PLAYERINFO, i);
 			const void *pInfo = Client()->SnapFindItem(IClient::SNAP_CURRENT, NETOBJTYPE_PLAYERINFO, i);

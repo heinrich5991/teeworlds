@@ -39,7 +39,10 @@ void CCollision::Init(class CLayers *pLayers)
 		int Index = m_pTiles[i].m_Index;
 
 		if(Index > 128)
+		{
+			m_pFreezeFlags[i] = 0;
 			continue;
+		}
 
 		switch(Index)
 		{

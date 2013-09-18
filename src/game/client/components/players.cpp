@@ -478,16 +478,14 @@ void CPlayers::RenderPlayer(
 
 	// freeze fading
 	{
-		float FadeSpeed = 0.01f;
+		float FadeSpeed = 0.005f;
 		float FadeTarget;
 		if(Player.m_FreezeTick == 0)
 			FadeTarget = 0.0f;
 		else if(Player.m_FreezeTick > 0)
-			FadeTarget = ((float) Player.m_FreezeTick) / (m_pClient->m_Tuning.m_FreezeTime * SERVER_TICK_SPEED) ;
+			FadeTarget = ((float) Player.m_FreezeTick) / (m_pClient->m_Tuning.m_FreezeTime * SERVER_TICK_SPEED);
 		else
 			FadeTarget = 1.0f;
-
-		FadeTarget = ceil(FadeTarget * 3) / 3.0f;
 
 		if(m_aFreezeFadeState[ClientID] - FadeSpeed > FadeTarget)
 			m_aFreezeFadeState[ClientID] -= FadeSpeed;
@@ -517,10 +515,10 @@ void CPlayers::RenderPlayer(
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_FREEZE].m_Id);
 		Graphics()->QuadsBegin();
-		Graphics()->SetColor(1.0f, 1.0f, 1.0f, m_aFreezeFadeState[ClientID]);
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.8f * m_aFreezeFadeState[ClientID]);
 
 		RenderTools()->SelectSprite(SPRITE_FROZEN);
-		RenderTools()->DrawSprite(Position.x, Position.y - 5, 70.0f);
+		RenderTools()->DrawSprite(Position.x, Position.y - 5, 72.0f);
 		Graphics()->QuadsEnd();
 	}
 

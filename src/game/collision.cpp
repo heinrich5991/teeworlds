@@ -145,7 +145,7 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size)
 	return false;
 }
 
-int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutTriggerFlags, vec2 Size, float Elasticity)
+int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTriggers, vec2 Size, float Elasticity)
 {
 	// do the move
 	vec2 Pos = *pInoutPos;
@@ -203,10 +203,10 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutTriggerFlags,
 			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 			int PosIndex = Ny*m_Width+Nx;
 
-			if(pOutTriggerFlags && PosIndex != OldPosIndex)
+			if(pOutTriggers && PosIndex != OldPosIndex)
 			{
 				OldPosIndex = PosIndex;
-				HandleTriggerTiles(PosIndex, pOutTriggerFlags + NumTiles);
+				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
 				NumTiles++;
 			}
 		}
@@ -219,12 +219,8 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutTriggerFlags,
 	return NumTiles;
 }
 
-void CCollision::HandleTriggerTiles(int Index, int *pTriggerFlags)
+void CCollision::HandleTriggerTiles(int Index, CTriggers *pOutTriggers)
 {
-	*pTriggerFlags = 0;
-
-	// use Index to check your condition
-	bool YourCondition = false;
-	if(YourCondition)
-		*pTriggerFlags |= YOURTRIGGERFLAG_ONE|YOURTRIGGERFLAG_TWO;
+	// set the values of *pOutTrigger's members here
+	// pOutTriggers->m_MyTrigger = Index;
 }

@@ -358,7 +358,7 @@ void CCharacterCore::Tick(bool UseInput)
 		m_Vel = normalize(m_Vel) * 6000;
 }
 
-int CCharacterCore::Move(int *pOutTriggerFlags)
+int CCharacterCore::Move(CCollision::CTriggers *pOutTriggers)
 {
 	float RampValue = VelocityRamp(length(m_Vel)*50, m_pWorld->m_Tuning.m_VelrampStart, m_pWorld->m_Tuning.m_VelrampRange, m_pWorld->m_Tuning.m_VelrampCurvature);
 
@@ -366,9 +366,9 @@ int CCharacterCore::Move(int *pOutTriggerFlags)
 
 	vec2 NewPos = m_Pos;
 	
-	int Size = m_pCollision->MoveBox(&NewPos, &m_Vel, pOutTriggerFlags, vec2(28.0f, 28.0f), 0);
+	int Size = m_pCollision->MoveBox(&NewPos, &m_Vel, pOutTriggers, vec2(28.0f, 28.0f), 0);
 	for(int i = 0; i < Size; i++)
-		HandleTriggers(pOutTriggerFlags[i]);
+		HandleTriggers(pOutTriggers[i]);
 
 	m_Vel.x = m_Vel.x*(1.0f/RampValue);
 
@@ -407,7 +407,7 @@ int CCharacterCore::Move(int *pOutTriggerFlags)
 	return Size;
 }
 
-void CCharacterCore::HandleTriggers(int TriggerFlags)
+void CCharacterCore::HandleTriggers(CCollision::CTriggers Triggers)
 {
 	// Handle your triggers here and in CCharacter::HandleTriggers
 }

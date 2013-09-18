@@ -146,14 +146,14 @@ void CCharacter::HandleNinja()
 		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
 		vec2 OldPos = m_Pos;
 
-		int *TriggerFlags = new int[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
-		int Size = GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, TriggerFlags, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
+		CCollision::CTriggers *Triggers = new CCollision::CTriggers[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
+		int Size = GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, Triggers, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
 		for(int i = 0; i < Size; i++)
 		{
-			m_Core.HandleTriggers(TriggerFlags[i]);
-			HandleTriggers(TriggerFlags[i]);
+			m_Core.HandleTriggers(Triggers[i]);
+			HandleTriggers(Triggers[i]);
 		}
-		delete [] TriggerFlags;
+		delete [] Triggers;
 		// reset velocity so the client doesn't predict stuff
 		m_Core.m_Vel = vec2(0.f, 0.f);
 
@@ -596,11 +596,11 @@ void CCharacter::TickDefered()
 	vec2 StartVel = m_Core.m_Vel;
 	bool StuckBefore = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 
-	int *TriggerFlags = new int[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
-	int Size = m_Core.Move(TriggerFlags);
+	CCollision::CTriggers *Triggers = new CCollision::CTriggers[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
+	int Size = m_Core.Move(Triggers);
 	for(int i = 0; i < Size; i++)
-		HandleTriggers(TriggerFlags[i]);
-	delete []TriggerFlags;
+		HandleTriggers(Triggers[i]);
+	delete []Triggers;
 
 	bool StuckAfterMove = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Core.Quantize();
@@ -660,9 +660,12 @@ void CCharacter::TickDefered()
 	}
 }
 
-void CCharacter::HandleTriggers(int TriggerFlags)
+void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 {
 	// Handle your triggers here and in CCharacterCore::HandleTriggers
+	// char aBuf[256];
+	// str_format(aBuf, sizeof(aBuf), "%d", Triggers.m_MyTrigger);
+	// GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 }
 
 void CCharacter::TickPaused()

@@ -259,5 +259,5 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutTriggerFlags,
 
 void CCollision::HandleTriggerTiles(int Index, int *pTriggerFlags)
 {
-
+	*pTriggerFlags = 0;
 }

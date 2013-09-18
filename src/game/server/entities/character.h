@@ -108,6 +108,7 @@ private:
 
 	int m_RaceStartTick;
 	int m_LastCheckpoint;
+	int m_LastCorrectCheckpoint;
 
 	int m_Health;
 	int m_Armor;

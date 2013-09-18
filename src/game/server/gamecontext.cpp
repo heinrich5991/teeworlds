@@ -239,6 +239,19 @@ void CGameContext::SendChat(int ChatterClientID, int Team, const char *pText)
 	}
 }
 
+void CGameContext::SendChatOthers(const char *pText, int NotMeID)
+{
+	CNetMsg_Sv_Chat Msg;
+	Msg.m_Team = 0;
+	Msg.m_ClientID = -1;
+	Msg.m_pMessage = pText;
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(m_apPlayers[i] && i != NotMeID)
+			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
+	}
+}
+
 void CGameContext::SendEmoticon(int ClientID, int Emoticon)
 {
 	CNetMsg_Sv_Emoticon Msg;

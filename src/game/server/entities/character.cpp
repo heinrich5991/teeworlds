@@ -66,6 +66,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 
 	m_RaceStartTick = -1;
 	m_LastCheckpoint = -1;
+	m_LastCorrectCheckpoint = -1;
 
 	m_pPlayer = pPlayer;
 	m_Pos = Pos;
@@ -669,17 +670,42 @@ void CCharacter::TickDefered()
 
 void CCharacter::HandleTriggers(int TriggerFlags, int Checkpoint)
 {
+	int Finish = GameServer()->Collision()->GetNumCheckpoints();
 	if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_START)
 	{
 		m_RaceStartTick = Server()->Tick();
 		m_LastCheckpoint = -1;
+		m_LastCorrectCheckpoint = -1;
 	}
-	else if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_FINISH && m_RaceStartTick >= 0
-			&& m_LastCheckpoint == GameServer()->Collision()->GetNumCheckpoints() - 1)
-		OnFinish();
-	else if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_CHECKPOINT && m_RaceStartTick >= 0 && Checkpoint - 1 == m_LastCheckpoint)
+	else if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_FINISH && m_RaceStartTick >= 0)
 	{
-		OnCheckpoint();
+		if(m_LastCorrectCheckpoint == Finish - 1)
+			OnFinish();
+		else if(m_LastCheckpoint != Finish)
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "You missed checkpoint %d", m_LastCorrectCheckpoint + 1);
+			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
+		}
+		m_LastCheckpoint = Finish;
+	}
+	else if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_CHECKPOINT && m_RaceStartTick >= 0 && Checkpoint != m_LastCheckpoint)
+	{
+		m_LastCheckpoint = Checkpoint;
+		if(Checkpoint - 1 == m_LastCorrectCheckpoint)
+			OnCheckpoint();
+		else if(Checkpoint - 1 > m_LastCorrectCheckpoint)
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "You missed checkpoint %d", m_LastCorrectCheckpoint + 1);
+			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+		}
+		else if(Checkpoint < m_LastCorrectCheckpoint)
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "Wrong direction!");
+			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+		}
 	}
 }
 
@@ -687,22 +713,27 @@ void CCharacter::OnFinish()
 {
 	float Time =  (Server()->Tick() - m_RaceStartTick) / (float) Server()->TickSpeed();
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "Finished in %.2f seconds", Time);
-	GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
+	str_format(aBuf, sizeof(aBuf), "%s finished in %.2f seconds!", Server()->ClientName(m_pPlayer->GetCID()), Time);
+	GameServer()->SendChatOthers(aBuf, m_pPlayer->GetCID());
+	str_format(aBuf, sizeof(aBuf), "You finished in %.2f seconds!", Time);
+	GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
 
-	// TODO store finish time and honor run
+	// TODO store finish time
 	m_LastCheckpoint = -1;
+	m_LastCorrectCheckpoint = -1;
 	m_RaceStartTick = -1;
 }
 
 void CCharacter::OnCheckpoint()
 {
-	m_LastCheckpoint++;
+	m_LastCorrectCheckpoint++;
 
 	float Time =  (Server()->Tick() - m_RaceStartTick) / (float) Server()->TickSpeed();
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "Checkpoint %d in %.2f seconds", m_LastCheckpoint, Time);
-	GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
+	str_format(aBuf, sizeof(aBuf), "You reached Checkpoint %d in %.2f seconds.", m_LastCheckpoint, Time);
+	GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+
+	// TODO store checkpoint time
 }
 
 void CCharacter::TickPaused()

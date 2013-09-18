@@ -140,6 +140,7 @@ public:
 	// network
 	void SendChatTarget(int To, const char *pText);
 	void SendChat(int ClientID, int Team, const char *pText);
+	void SendChatOthers(const char *pText, int NotMeID);
 	void SendEmoticon(int ClientID, int Emoticon);
 	void SendWeaponPickup(int ClientID, int Weapon);
 	void SendMotd(int ClientID);

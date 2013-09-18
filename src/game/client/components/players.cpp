@@ -463,6 +463,7 @@ void CPlayers::RenderPlayer(
 
 	}
 
+
 	// render the "shadow" tee
 	if(m_pClient->m_LocalClientID == ClientID && g_Config.m_Debug)
 	{
@@ -515,6 +516,17 @@ void CPlayers::RenderPlayer(
 		RenderTools()->SelectSprite(SPRITE_OOP + m_pClient->m_aClients[ClientID].m_Emoticon);
 		IGraphics::CQuadItem QuadItem(Position.x, Position.y - 23 - 32*h, 64, 64*h);
 		Graphics()->QuadsDraw(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+	}
+
+	// draw ice block
+	if(Player.m_FreezeTick != 0)
+	{
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_FREEZE].m_Id);
+		Graphics()->QuadsBegin();
+
+		RenderTools()->SelectSprite(SPRITE_FROZEN);
+		RenderTools()->DrawSprite(Position.x, Position.y-5, 70.0f);
 		Graphics()->QuadsEnd();
 	}
 }

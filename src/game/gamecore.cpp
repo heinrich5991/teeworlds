@@ -407,6 +407,13 @@ int CCharacterCore::Move(CCollision::CTriggers *pOutTriggers)
 	return Size;
 }
 
+void CCharacterCore::Move()
+{
+	CCollision::CTriggers *Triggers = new CCollision::CTriggers[(int)ceil(fabs(m_Vel.x/32)) + (int)ceil(fabs(m_Vel.y/32)) + 1];
+	Move(Triggers);
+	delete []Triggers;
+}
+
 void CCharacterCore::HandleTriggers(CCollision::CTriggers Triggers)
 {
 	// Handle your triggers here and in CCharacter::HandleTriggers

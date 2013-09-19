@@ -220,6 +220,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 			if(pOutTriggers && PosIndex != OldPosIndex)
 			{
 				OldPosIndex = PosIndex;
+				pOutTriggers[NumTiles] = CTriggers();
 				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
 				NumTiles++;
 			}

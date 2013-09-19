@@ -662,7 +662,12 @@ void CCharacter::TickDefered()
 
 void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 {
-	if(Triggers.m_Tele&CCollision::TRIGGERFLAG_STOP_NINJA)
+	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_TELEPORT)
+	{
+		GameServer()->CreatePlayerTeleport(Triggers.m_TeleInPos);
+		GameServer()->CreatePlayerTeleport(Triggers.m_TeleOutPos);
+	}
+	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_STOP_NINJA)
 		m_Ninja.m_CurrentMoveTime = -1;
 }
 

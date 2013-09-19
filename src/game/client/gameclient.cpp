@@ -865,6 +865,11 @@ void CGameClient::ProcessEvents()
 			CNetEvent_SoundWorld *ev = (CNetEvent_SoundWorld *)pData;
 			m_pSounds->PlayAt(CSounds::CHN_WORLD, ev->m_SoundID, 1.0f, vec2(ev->m_X, ev->m_Y));
 		}
+		else if(Item.m_Type == NETEVENTTYPE_TELEPORT)
+		{
+			CNetEvent_Teleport *ev = (CNetEvent_Teleport *)pData;
+			m_pEffects->PlayerTeleport(vec2(ev->m_X, ev->m_Y));
+		}
 	}
 }
 

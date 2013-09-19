@@ -31,15 +31,19 @@ public:
 		TELEFLAG_CUT_OTHER=4,
 		TELEFLAG_CUT_OWN=8,
 
-		TRIGGERFLAG_CUT_OTHER=1,
-		TRIGGERFLAG_CUT_OWN=2,
-		TRIGGERFLAG_STOP_NINJA=4,
+		TRIGGERFLAG_TELEPORT=1,
+		TRIGGERFLAG_CUT_OTHER=2,
+		TRIGGERFLAG_CUT_OWN=4,
+		TRIGGERFLAG_STOP_NINJA=8,
 	};
 
 	struct CTriggers
 	{
-		int m_Tele;
-		CTriggers() : m_Tele() {}
+		int m_TeleFlags;
+
+		vec2 m_TeleInPos;
+		vec2 m_TeleOutPos;
+		CTriggers() : m_TeleFlags(), m_TeleInPos(vec2(0.0f, 0.0f)), m_TeleOutPos(vec2(0.0f, 0.0f)) {}
 	};
 
 	CCollision();

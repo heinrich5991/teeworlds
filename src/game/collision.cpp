@@ -223,21 +223,25 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 
 				// handle teleporters
 				int TeleFlags = m_pTeleTiles[PosIndex].m_Flags;
-				pOutTriggers[NumTiles].m_Tele = 0;
+				pOutTriggers[NumTiles].m_TeleFlags = 0;
 
 				if(TeleFlags&TELEFLAG_IN)
 				{
+					pOutTriggers[NumTiles].m_TeleFlags |= TRIGGERFLAG_TELEPORT;
+					pOutTriggers[NumTiles].m_TeleInPos = Pos;
+
 					Pos = m_aTeleTargets[m_pTeleTiles[PosIndex].m_Index];
 
+					pOutTriggers[NumTiles].m_TeleOutPos = Pos;
 					if(TeleFlags&TELEFLAG_RESET_VEL)
 					{
 						Vel = vec2(0.0f, 0.0f);
-						pOutTriggers[NumTiles].m_Tele |= TRIGGERFLAG_STOP_NINJA;
+						pOutTriggers[NumTiles].m_TeleFlags |= TRIGGERFLAG_STOP_NINJA;
 					}
 					if(TeleFlags&TELEFLAG_CUT_OTHER)
-						pOutTriggers[NumTiles].m_Tele |= TRIGGERFLAG_CUT_OTHER;
+						pOutTriggers[NumTiles].m_TeleFlags |= TRIGGERFLAG_CUT_OTHER;
 					if(TeleFlags&TELEFLAG_CUT_OWN)
-						pOutTriggers[NumTiles].m_Tele |= TRIGGERFLAG_CUT_OWN;
+						pOutTriggers[NumTiles].m_TeleFlags |= TRIGGERFLAG_CUT_OWN;
 
 					NumTiles++;
 

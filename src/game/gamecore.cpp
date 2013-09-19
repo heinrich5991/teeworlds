@@ -417,7 +417,7 @@ void CCharacterCore::Move()
 void CCharacterCore::HandleTriggers(CCollision::CTriggers Triggers)
 {
 	// handle teleporters
-	if(Triggers.m_Tele&CCollision::TRIGGERFLAG_CUT_OTHER)
+	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_CUT_OTHER)
 	{
 		// this part is very dirty
 		int MyId;
@@ -452,7 +452,7 @@ void CCharacterCore::HandleTriggers(CCollision::CTriggers Triggers)
 		}
 	}
 
-	if(Triggers.m_Tele&CCollision::TRIGGERFLAG_CUT_OWN && m_HookState != HOOK_IDLE)
+	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_CUT_OWN && m_HookState != HOOK_IDLE)
 	{
 		m_HookedPlayer = -1;
 		m_HookState = HOOK_RETRACT_START;

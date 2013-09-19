@@ -21,6 +21,7 @@ public:
 	void AirJump(vec2 Pos);
 	void DamageIndicator(vec2 Pos, vec2 Dir);
 	void PlayerSpawn(vec2 Pos);
+	void PlayerTeleport(vec2 Pos);
 	void PlayerDeath(vec2 Pos, int ClientID);
 	void PowerupShine(vec2 Pos, vec2 Size);
 

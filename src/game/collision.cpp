@@ -219,11 +219,11 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 			if(pOutTriggers && PosIndex != OldPosIndex)
 			{
 				OldPosIndex = PosIndex;
+				pOutTriggers[NumTiles] = CTriggers();
 				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
 
 				// handle teleporters
 				int TeleFlags = m_pTeleTiles[PosIndex].m_Flags;
-				pOutTriggers[NumTiles].m_TeleFlags = 0;
 
 				if(TeleFlags&TELEFLAG_IN)
 				{
@@ -250,6 +250,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 					PosIndex = Ny*m_Width+Nx;
 					OldPosIndex = PosIndex;
 
+					pOutTriggers[NumTiles] = CTriggers();
 					HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
 					NumTiles++;
 				}

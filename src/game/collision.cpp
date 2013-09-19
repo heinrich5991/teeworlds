@@ -251,6 +251,8 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 
 void CCollision::HandleTriggerTiles(int Index, CTriggers *pOutTriggers)
 {
+	pOutTriggers->m_Freeze = 0;
+
 	if(m_pFreezeFlags[Index]&FREEZEFLAG_FREEZE)
 	{
 		pOutTriggers->m_Freeze |= TRIGGERFLAG_FREEZE;

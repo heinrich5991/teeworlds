@@ -167,7 +167,10 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	{
 		//vec2 old_pos = pos;
 		float Fraction = 1.0f/(float)(Max+1);
-		int OldPosIndex = -1;
+		int Nx = clamp(round(Pos.x)/32, 0, m_Width-1);
+		int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
+		int OldPosIndex = Ny*m_Width+Nx;
+		bool First = true;
 		for(int i = 0; i <= Max; i++)
 		{
 			//float amount = i/(float)max;
@@ -232,17 +235,19 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 					SpeedupVel.y -= Accel;
 			}
 
-			if(pOutTriggers && PosIndex != OldPosIndex)
+			if(pOutTriggers && (PosIndex != OldPosIndex || First))
 			{
-				OldPosIndex = PosIndex;
-
 				pOutTriggers[NumTiles] = CTriggers();
 
-				if(Speedup)
+				if(Speedup && PosIndex != OldPosIndex)
 					pOutTriggers[NumTiles].m_SpeedupFlags |= TRIGGERFLAG_SPEEDUP;
 				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
 				NumTiles++;
+
+				OldPosIndex = PosIndex;
 			}
+
+			First = false;
 		}
 	}
 

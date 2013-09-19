@@ -236,9 +236,10 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 			{
 				OldPosIndex = PosIndex;
 
+				pOutTriggers[NumTiles] = CTriggers();
+
 				if(Speedup)
 					pOutTriggers[NumTiles].m_SpeedupFlags |= TRIGGERFLAG_SPEEDUP;
-
 				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
 				NumTiles++;
 			}

@@ -192,8 +192,8 @@ public:
 	void Init(CWorldCore *pWorld, CCollision *pCollision);
 	void Reset();
 	void Tick(bool UseInput);
-	int Move(int *pOutTriggerFlags);
-	void HandleTriggers(int TriggerFlags);
+	int Move(CCollision::CTriggers *pOutTriggers);
+	void HandleTriggers(CCollision::CTriggers Triggers);
 
 	void Freeze();
 	void Unfreeze();

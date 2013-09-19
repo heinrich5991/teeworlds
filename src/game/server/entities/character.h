@@ -32,7 +32,7 @@ public:
 
 	void HandleWeapons();
 	void HandleNinja();
-	void HandleTriggers(int Triggerflags);
+	void HandleTriggers(CCollision::CTriggers Triggers);
 
 	void OnPredictedInput(CNetObj_PlayerInput *pNewInput);
 	void OnDirectInput(CNetObj_PlayerInput *pNewInput);

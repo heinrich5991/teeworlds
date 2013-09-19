@@ -26,6 +26,13 @@ void CCollision::Init(class CLayers *pLayers)
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
 	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
+	// TODO this
+	m_pHSpeedupTiles = static_cast<CTile *>(m_pLayers->Map()->GetData((reinterpret_cast<CMapItemLayerTilemap *>(m_pLayers->GetLayer(7)))->m_Data));
+	m_pVSpeedupTiles = static_cast<CTile *>(m_pLayers->Map()->GetData((reinterpret_cast<CMapItemLayerTilemap *>(m_pLayers->GetLayer(8)))->m_Data));
+	// should be replaced by something like this
+	//m_pHSpeedupTiles = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->HSpeedupLayer()->m_Data));
+	//m_pVSpeedupTiles = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->VSpeedupLayer()->m_Data));
+	// once we have a speedup layer
 
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
@@ -150,6 +157,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	// do the move
 	vec2 Pos = *pInoutPos;
 	vec2 Vel = *pInoutVel;
+	vec2 SpeedupVel = vec2(0.0f, 0.0f);
 
 	float Distance = length(Vel);
 	int Max = (int)Distance;
@@ -209,11 +217,29 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
 				NumTiles++;
 			}
+
+			// speedups
+			if(m_pHSpeedupTiles[PosIndex].m_Index > 0)
+			{
+				float Accel = m_pHSpeedupTiles[PosIndex].m_Index * Fraction;
+				if(m_pHSpeedupTiles[PosIndex].m_Flags&SPEEDUPFLAG_FLIP)
+					SpeedupVel.x += Accel;
+				else
+					SpeedupVel.x -= Accel;
+			}
+			if(m_pVSpeedupTiles[PosIndex].m_Index > 0)
+			{
+				float Accel = m_pVSpeedupTiles[PosIndex].m_Index * Fraction;
+				if(m_pVSpeedupTiles[PosIndex].m_Flags&SPEEDUPFLAG_FLIP)
+					SpeedupVel.y += Accel;
+				else
+					SpeedupVel.y -= Accel;
+			}
 		}
 	}
 
 	*pInoutPos = Pos;
-	*pInoutVel = Vel;
+	*pInoutVel = Vel + SpeedupVel;
 
 
 	return NumTiles;
@@ -221,6 +247,5 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 
 void CCollision::HandleTriggerTiles(int Index, CTriggers *pOutTriggers)
 {
-	// set the values of *pOutTrigger's members here
-	// pOutTriggers->m_MyTrigger = Index;
+
 }

@@ -8,6 +8,8 @@
 class CCollision
 {
 	class CTile *m_pTiles;
+	class CTile *m_pHSpeedupTiles;
+	class CTile *m_pVSpeedupTiles;
 	int m_Width;
 	int m_Height;
 	class CLayers *m_pLayers;
@@ -21,13 +23,13 @@ public:
 		COLFLAG_SOLID=1,
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
+
+		SPEEDUPFLAG_FLIP=1,
 	};
 
 	struct CTriggers
 	{
-		// put your trigger members here
-		// int m_MyTrigger;
-		// CTriggers() : m_MyTrigger() {}
+
 	};
 
 	CCollision();

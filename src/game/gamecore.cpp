@@ -416,7 +416,8 @@ void CCharacterCore::Move()
 
 void CCharacterCore::HandleTriggers(CCollision::CTriggers Triggers)
 {
-	// Handle your triggers here and in CCharacter::HandleTriggers
+	if(Triggers.m_SpeedupFlags&CCollision::TRIGGERFLAG_SPEEDUP)
+		m_TriggeredEvents |= COREEVENTFLAG_SPEEDUP;
 }
 
 void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)

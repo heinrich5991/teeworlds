@@ -211,17 +211,12 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 			int PosIndex = Ny*m_Width+Nx;
 
-			if(pOutTriggers && PosIndex != OldPosIndex)
-			{
-				OldPosIndex = PosIndex;
-				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
-				NumTiles++;
-			}
-
 			// speedups
+			bool Speedup = false;
 			if(m_pHSpeedupTiles[PosIndex].m_Index > 0)
 			{
 				float Accel = m_pHSpeedupTiles[PosIndex].m_Index * Fraction;
+				Speedup = true;
 				if(m_pHSpeedupTiles[PosIndex].m_Flags&SPEEDUPFLAG_FLIP)
 					SpeedupVel.x += Accel;
 				else
@@ -230,10 +225,22 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 			if(m_pVSpeedupTiles[PosIndex].m_Index > 0)
 			{
 				float Accel = m_pVSpeedupTiles[PosIndex].m_Index * Fraction;
+				Speedup = true;
 				if(m_pVSpeedupTiles[PosIndex].m_Flags&SPEEDUPFLAG_FLIP)
 					SpeedupVel.y += Accel;
 				else
 					SpeedupVel.y -= Accel;
+			}
+
+			if(pOutTriggers && PosIndex != OldPosIndex)
+			{
+				OldPosIndex = PosIndex;
+
+				if(Speedup)
+					pOutTriggers[NumTiles].m_SpeedupFlags |= TRIGGERFLAG_SPEEDUP;
+
+				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
+				NumTiles++;
 			}
 		}
 	}

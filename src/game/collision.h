@@ -24,12 +24,13 @@ public:
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
 
-		SPEEDUPFLAG_FLIP=1,
+		TRIGGERFLAG_SPEEDUP=1,
 	};
 
 	struct CTriggers
 	{
-
+		int m_SpeedupFlags;
+		CTriggers(): m_SpeedupFlags() {}
 	};
 
 	CCollision();

@@ -19,6 +19,7 @@ public:
 	void Explosion(vec2 Pos);
 	void HammerHit(vec2 Pos);
 	void AirJump(vec2 Pos);
+	void Speedup(vec2 Pos);
 	void DamageIndicator(vec2 Pos, vec2 Dir);
 	void PlayerSpawn(vec2 Pos);
 	void PlayerDeath(vec2 Pos, int ClientID);

@@ -662,10 +662,7 @@ void CCharacter::TickDefered()
 
 void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 {
-	// Handle your triggers here and in CCharacterCore::HandleTriggers
-	// char aBuf[256];
-	// str_format(aBuf, sizeof(aBuf), "%d", Triggers.m_MyTrigger);
-	// GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+
 }
 
 void CCharacter::TickPaused()

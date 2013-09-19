@@ -47,6 +47,27 @@ void CEffects::AirJump(vec2 Pos)
 	m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, Pos);
 }
 
+void CEffects::Speedup(vec2 Pos)
+{
+	CParticle p;
+	p.SetDefault();
+	p.m_Spr = SPRITE_PART_AIRJUMP;
+	p.m_Pos = Pos + vec2(-6.0f, 16.0f);
+	p.m_Vel = vec2(0, -200);
+	p.m_LifeSpan = 0.5f;
+	p.m_StartSize = 48.0f;
+	p.m_EndSize = 0;
+	p.m_Rot = frandom()*pi*2;
+	p.m_Rotspeed = pi*2;
+	p.m_Gravity = 500;
+	p.m_Friction = 0.7f;
+	p.m_FlowAffected = 0.0f;
+	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
+
+	p.m_Pos = Pos + vec2(6.0f, 16.0f);
+	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
+}
+
 void CEffects::DamageIndicator(vec2 Pos, vec2 Dir)
 {
 	m_pClient->m_pDamageind->Create(Pos, Dir);

@@ -680,15 +680,15 @@ void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 		{
 			if(Checkpoint == GameServer()->Collision()->GetNumCheckpoints() + 1)
 			{
+				OnFinish();
 				m_LastCheckpoint = -1;
 				m_LastCorrectCheckpoint = -1;
 				m_RaceStartTick = -1;
-				OnFinish();
 			}
 			else
 			{
-				m_LastCorrectCheckpoint++;
 				OnCheckpoint();
+				m_LastCorrectCheckpoint++;
 			}
 		}
 		else if(Checkpoint - 2 > m_LastCorrectCheckpoint)

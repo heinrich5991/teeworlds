@@ -36,22 +36,22 @@ void CCollision::Init(class CLayers *pLayers)
 	{
 		int Index = m_pTiles[i].m_Index;
 
-		if(Index > 128)
-			continue;
-
-		switch(Index)
+		if(Index <= 128)
 		{
-		case TILE_DEATH:
-			m_pTiles[i].m_Index = COLFLAG_DEATH;
-			break;
-		case TILE_SOLID:
-			m_pTiles[i].m_Index = COLFLAG_SOLID;
-			break;
-		case TILE_NOHOOK:
-			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
-			break;
-		default:
-			m_pTiles[i].m_Index = 0;
+			switch(Index)
+			{
+			case TILE_DEATH:
+				m_pTiles[i].m_Index = COLFLAG_DEATH;
+				break;
+			case TILE_SOLID:
+				m_pTiles[i].m_Index = COLFLAG_SOLID;
+				break;
+			case TILE_NOHOOK:
+				m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
+				break;
+			default:
+				m_pTiles[i].m_Index = 0;
+			}
 		}
 
 		// TODO m_pTeleTiles[i].m_Index might also have to be changed later

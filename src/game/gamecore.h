@@ -190,6 +190,7 @@ public:
 	void Reset();
 	void Tick(bool UseInput);
 	int Move(CCollision::CTriggers *pOutTriggers);
+	void Move();
 	void HandleTriggers(CCollision::CTriggers Triggers);
 
 	void Read(const CNetObj_CharacterCore *pObjCore);

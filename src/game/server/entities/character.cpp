@@ -150,16 +150,14 @@ void CCharacter::HandleNinja()
 		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
 		vec2 OldPos = m_Pos;
 
-		int *TriggerFlags = new int[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
-		int *Checkpoints = new int[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
-		int Size = GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, TriggerFlags, Checkpoints, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
+		CCollision::CTriggers *Triggers = new CCollision::CTriggers[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
+		int Size = GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, Triggers, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
 		for(int i = 0; i < Size; i++)
 		{
-			m_Core.HandleTriggers(TriggerFlags[i]);
-			HandleTriggers(TriggerFlags[i], Checkpoints[i]);
+			m_Core.HandleTriggers(Triggers[i]);
+			HandleTriggers(Triggers[i]);
 		}
-		delete [] TriggerFlags;
-		delete [] Checkpoints;
+		delete [] Triggers;
 		// reset velocity so the client doesn't predict stuff
 		m_Core.m_Vel = vec2(0.f, 0.f);
 
@@ -593,7 +591,7 @@ void CCharacter::TickDefered()
 		CWorldCore TempWorld;
 		m_ReckoningCore.Init(&TempWorld, GameServer()->Collision());
 		m_ReckoningCore.Tick(false);
-		m_ReckoningCore.Move(0, 0);
+		m_ReckoningCore.Move(0);
 		m_ReckoningCore.Quantize();
 	}
 
@@ -602,13 +600,11 @@ void CCharacter::TickDefered()
 	vec2 StartVel = m_Core.m_Vel;
 	bool StuckBefore = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 
-	int *TriggerFlags = new int[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
-	int *Checkpoints = new int[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
-	int Size = m_Core.Move(TriggerFlags, Checkpoints);
+	CCollision::CTriggers *Triggers = new CCollision::CTriggers[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
+	int Size = m_Core.Move(Triggers);
 	for(int i = 0; i < Size; i++)
-		HandleTriggers(TriggerFlags[i], Checkpoints[i]);
-	delete []TriggerFlags;
-	delete []Checkpoints;
+		HandleTriggers(Triggers[i]);
+	delete []Triggers;
 
 	bool StuckAfterMove = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Core.Quantize();
@@ -668,39 +664,40 @@ void CCharacter::TickDefered()
 	}
 }
 
-void CCharacter::HandleTriggers(int TriggerFlags, int Checkpoint)
+void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 {
-	int Finish = GameServer()->Collision()->GetNumCheckpoints();
-	if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_START)
+	int Checkpoint = Triggers.m_Checkpoint;
+	if(Checkpoint == 0)
 	{
 		m_RaceStartTick = Server()->Tick();
 		m_LastCheckpoint = -1;
 		m_LastCorrectCheckpoint = -1;
 	}
-	else if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_FINISH && m_RaceStartTick >= 0)
+	else if(Checkpoint >= 0 && Checkpoint - 1 != m_LastCheckpoint && m_RaceStartTick >= 0)
 	{
-		if(m_LastCorrectCheckpoint == Finish - 1)
-			OnFinish();
-		else if(m_LastCheckpoint != Finish)
+		m_LastCheckpoint = Checkpoint - 1;
+		if(Checkpoint - 2 == m_LastCorrectCheckpoint)
 		{
-			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "You missed checkpoint %d", m_LastCorrectCheckpoint + 1);
-			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
+			if(Checkpoint == GameServer()->Collision()->GetNumCheckpoints() + 1)
+			{
+				m_LastCheckpoint = -1;
+				m_LastCorrectCheckpoint = -1;
+				m_RaceStartTick = -1;
+				OnFinish();
+			}
+			else
+			{
+				m_LastCorrectCheckpoint++;
+				OnCheckpoint();
+			}
 		}
-		m_LastCheckpoint = Finish;
-	}
-	else if(TriggerFlags&CCollision::TRIGGERFLAG_RACE_CHECKPOINT && m_RaceStartTick >= 0 && Checkpoint != m_LastCheckpoint)
-	{
-		m_LastCheckpoint = Checkpoint;
-		if(Checkpoint - 1 == m_LastCorrectCheckpoint)
-			OnCheckpoint();
-		else if(Checkpoint - 1 > m_LastCorrectCheckpoint)
+		else if(Checkpoint - 2 > m_LastCorrectCheckpoint)
 		{
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "You missed checkpoint %d", m_LastCorrectCheckpoint + 1);
 			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
 		}
-		else if(Checkpoint < m_LastCorrectCheckpoint)
+		else if(Checkpoint - 1 < m_LastCorrectCheckpoint)
 		{
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "Wrong direction!");
@@ -719,15 +716,10 @@ void CCharacter::OnFinish()
 	GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
 
 	// TODO store finish time
-	m_LastCheckpoint = -1;
-	m_LastCorrectCheckpoint = -1;
-	m_RaceStartTick = -1;
 }
 
 void CCharacter::OnCheckpoint()
 {
-	m_LastCorrectCheckpoint++;
-
 	float Time =  (Server()->Tick() - m_RaceStartTick) / (float) Server()->TickSpeed();
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "You reached Checkpoint %d in %.2f seconds.", m_LastCheckpoint, Time);

@@ -32,7 +32,7 @@ public:
 
 	void HandleWeapons();
 	void HandleNinja();
-	void HandleTriggers(int Triggerflags, int Checkpoint);
+	void HandleTriggers(CCollision::CTriggers Triggers);
 
 	void OnFinish();
 	void OnCheckpoint();

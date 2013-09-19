@@ -159,7 +159,7 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size)
 	return false;
 }
 
-int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutTriggerFlags, int *pOutCheckpoints, vec2 Size, float Elasticity)
+int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTriggers, vec2 Size, float Elasticity)
 {
 	// do the move
 	vec2 Pos = *pInoutPos;
@@ -217,10 +217,10 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutTriggerFlags,
 			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
 			int PosIndex = Ny*m_Width+Nx;
 
-			if(pOutCheckpoints && pOutTriggerFlags && PosIndex != OldPosIndex)
+			if(pOutTriggers && PosIndex != OldPosIndex)
 			{
 				OldPosIndex = PosIndex;
-				HandleTriggerTiles(PosIndex, pOutTriggerFlags + NumTiles, pOutCheckpoints + NumTiles);
+				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
 				NumTiles++;
 			}
 		}
@@ -232,21 +232,17 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutTriggerFlags,
 	return NumTiles;
 }
 
-void CCollision::HandleTriggerTiles(int Index, int *pTriggerFlags, int *pOutCheckpoint)
+void CCollision::HandleTriggerTiles(int Index, CTriggers *pOutTriggers)
 {
-	*pTriggerFlags = 0;
-	*pOutCheckpoint = 0;
-
 	if(m_pRaceTiles[Index].m_Index > 0)
 	{
 		if(m_pRaceTiles[Index].m_Index == 1)
-			*pTriggerFlags |= TRIGGERFLAG_RACE_START;
+			pOutTriggers->m_Checkpoint = 0;
 		else if(m_pRaceTiles[Index].m_Index == 2)
-			*pTriggerFlags |= TRIGGERFLAG_RACE_FINISH;
+			pOutTriggers->m_Checkpoint = m_NumCheckpoints + 1;
 		else
-		{
-			*pTriggerFlags |= TRIGGERFLAG_RACE_CHECKPOINT;
-			*pOutCheckpoint = m_pRaceTiles[Index].m_Index - 3;
-		}
+			pOutTriggers->m_Checkpoint = m_pRaceTiles[Index].m_Index - 2;
 	}
+	else
+		pOutTriggers->m_Checkpoint = -1;
 }

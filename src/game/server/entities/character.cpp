@@ -693,12 +693,14 @@ void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 		}
 		else if(Checkpoint - 2 > m_LastCorrectCheckpoint)
 		{
+			// TODO this should be only for vanilla
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "You missed checkpoint %d", m_LastCorrectCheckpoint + 1);
 			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
 		}
 		else if(Checkpoint - 1 < m_LastCorrectCheckpoint)
 		{
+			// TODO this should be only for vanilla
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "Wrong direction!");
 			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
@@ -709,8 +711,10 @@ void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 void CCharacter::OnFinish()
 {
 	float Time =  (Server()->Tick() - m_RaceStartTick) / (float) Server()->TickSpeed();
+
+	// TODO this should be only for vanilla
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "%s finished in %.2f seconds!", Server()->ClientName(m_pPlayer->GetCID()), Time);
+	str_format(aBuf, sizeof(aBuf), "'%s' finished in %.2f seconds!", Server()->ClientName(m_pPlayer->GetCID()), Time);
 	GameServer()->SendChatOthers(aBuf, m_pPlayer->GetCID());
 	str_format(aBuf, sizeof(aBuf), "You finished in %.2f seconds!", Time);
 	GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
@@ -721,6 +725,8 @@ void CCharacter::OnFinish()
 void CCharacter::OnCheckpoint()
 {
 	float Time =  (Server()->Tick() - m_RaceStartTick) / (float) Server()->TickSpeed();
+
+	// TODO this should be only for vanilla
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "You reached Checkpoint %d in %.2f seconds.", m_LastCheckpoint, Time);
 	GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);

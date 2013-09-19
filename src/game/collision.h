@@ -34,7 +34,12 @@ public:
 		TRIGGERFLAG_CUT_OTHER=1,
 		TRIGGERFLAG_CUT_OWN=2,
 		TRIGGERFLAG_STOP_NINJA=4,
+	};
 
+	struct CTriggers
+	{
+		int m_Tele;
+		CTriggers() : m_Tele() {}
 	};
 
 	CCollision();
@@ -47,8 +52,8 @@ public:
 	int GetHeight() { return m_Height; };
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces);
-	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, int *pOutTriggerFlags, vec2 Size, float Elasticity);
-	void HandleTriggerTiles(int Index, int *TriggerFlags);
+	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTriggers, vec2 Size, float Elasticity);
+	void HandleTriggerTiles(int Index, CTriggers *pOutTriggers);
 	bool TestBox(vec2 Pos, vec2 Size);
 };
 

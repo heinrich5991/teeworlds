@@ -141,7 +141,7 @@ inline T SaturatedAdd(T Min, T Max, T Current, T Modifier)
 
 float VelocityRamp(float Value, float Start, float Range, float Curvature);
 
-const float MAX_SPEED = 118.881;
+#define MAX_SPEED 118.881f
 
 // hooking stuff
 enum

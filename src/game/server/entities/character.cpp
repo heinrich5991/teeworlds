@@ -146,14 +146,13 @@ void CCharacter::HandleNinja()
 		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
 		vec2 OldPos = m_Pos;
 
-		CCollision::CTriggers *Triggers = new CCollision::CTriggers[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
-		int Size = GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, Triggers, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
+		CCollision::CTriggers aTriggers[2 * (int)((MAX_SPEED + 31) / 32) + 1];
+		int Size = GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, aTriggers, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
 		for(int i = 0; i < Size; i++)
 		{
-			m_Core.HandleTriggers(Triggers[i]);
-			HandleTriggers(Triggers[i]);
+			m_Core.HandleTriggers(aTriggers[i]);
+			HandleTriggers(aTriggers[i]);
 		}
-		delete [] Triggers;
 		// reset velocity so the client doesn't predict stuff
 		m_Core.m_Vel = vec2(0.f, 0.f);
 
@@ -596,11 +595,10 @@ void CCharacter::TickDefered()
 	vec2 StartVel = m_Core.m_Vel;
 	bool StuckBefore = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 
-	CCollision::CTriggers *Triggers = new CCollision::CTriggers[(int)ceil(fabs(m_Core.m_Vel.x/32)) + (int)ceil(fabs(m_Core.m_Vel.y/32)) + 1];
-	int Size = m_Core.Move(Triggers);
+	CCollision::CTriggers aTriggers[2 * (int)((MAX_SPEED + 31) / 32) + 1];
+	int Size = m_Core.Move(aTriggers);
 	for(int i = 0; i < Size; i++)
-		HandleTriggers(Triggers[i]);
-	delete []Triggers;
+		HandleTriggers(aTriggers[i]);
 
 	bool StuckAfterMove = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Core.Quantize();

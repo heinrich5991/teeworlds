@@ -360,9 +360,8 @@ void CCharacterCore::Tick(bool UseInput)
 
 int CCharacterCore::Move(CCollision::CTriggers *pOutTriggers)
 {
-	// 118 is the magical limit for the x velocity after which it decreases again
-	if(length(m_Vel) > 118)
-		m_Vel = normalize(m_Vel) * 118;
+	if(length(m_Vel) > MAX_SPEED)
+		m_Vel = normalize(m_Vel) * MAX_SPEED;
 
 	float RampValue = VelocityRamp(length(m_Vel)*50, m_pWorld->m_Tuning.m_VelrampStart, m_pWorld->m_Tuning.m_VelrampRange, m_pWorld->m_Tuning.m_VelrampCurvature);
 
@@ -413,9 +412,8 @@ int CCharacterCore::Move(CCollision::CTriggers *pOutTriggers)
 
 void CCharacterCore::Move()
 {
-	CCollision::CTriggers *Triggers = new CCollision::CTriggers[(int)ceil(fabs(m_Vel.x/32)) + (int)ceil(fabs(m_Vel.y/32)) + 1];
-	Move(Triggers);
-	delete []Triggers;
+	CCollision::CTriggers aTriggers[2 * (int)((MAX_SPEED + 31) / 32) + 1];
+	Move(aTriggers);
 }
 
 void CCharacterCore::HandleTriggers(CCollision::CTriggers Triggers)

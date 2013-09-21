@@ -221,18 +221,18 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 				float Accel = m_pHSpeedupTiles[PosIndex].m_Index * Fraction;
 				Speedup = true;
 				if(m_pHSpeedupTiles[PosIndex].m_Flags&SPEEDUPFLAG_FLIP)
-					SpeedupVel.x += Accel;
-				else
 					SpeedupVel.x -= Accel;
+				else
+					SpeedupVel.x += Accel;
 			}
 			if(m_pVSpeedupTiles[PosIndex].m_Index > 0)
 			{
 				float Accel = m_pVSpeedupTiles[PosIndex].m_Index * Fraction;
 				Speedup = true;
 				if(m_pVSpeedupTiles[PosIndex].m_Flags&SPEEDUPFLAG_FLIP)
-					SpeedupVel.y += Accel;
-				else
 					SpeedupVel.y -= Accel;
+				else
+					SpeedupVel.y += Accel;
 			}
 
 			if(pOutTriggers && (PosIndex != OldPosIndex || First))

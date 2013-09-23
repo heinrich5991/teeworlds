@@ -8,12 +8,16 @@
 class CCollision
 {
 	class CTile *m_pTiles;
+	class CTile *m_pSwitchTiles;
 	int m_Width;
 	int m_Height;
 	class CLayers *m_pLayers;
+	bool *m_pSwitchStates;
 
 	bool IsTileSolid(int x, int y);
-	int GetTile(int x, int y);
+	int GetPosIndex(int x, int y);
+	int GetTile(int PosIndex);
+	int GetSwitchGroup(int PosIndex);
 
 public:
 	enum
@@ -21,20 +25,24 @@ public:
 		COLFLAG_SOLID=1,
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
+
+		TRIGGERFLAG_SWITCH=1,
 	};
 
 	struct CTriggers
 	{
-		// put your trigger members here
-		// int m_MyTrigger;
-		// CTriggers() : m_MyTrigger() {}
+		int m_Flags;
+		bool m_SwitchState;
+		int m_SwitchGroup;
+		int m_SwitchDuration;
+		CTriggers() : m_Flags(), m_SwitchState(), m_SwitchGroup(), m_SwitchDuration() {}
 	};
 
 	CCollision();
-	void Init(class CLayers *pLayers);
+	void Init(class CLayers *pLayers, bool *pSwitchStates);
 	bool CheckPoint(float x, float y) { return IsTileSolid(round(x), round(y)); }
 	bool CheckPoint(vec2 Pos) { return CheckPoint(Pos.x, Pos.y); }
-	int GetCollisionAt(float x, float y) { return GetTile(round(x), round(y)); }
+	int GetCollisionAt(float x, float y) { return GetTile(GetPosIndex(round(x), round(y))); }
 	int GetWidth() { return m_Width; };
 	int GetHeight() { return m_Height; };
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);

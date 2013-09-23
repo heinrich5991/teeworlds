@@ -20,48 +20,65 @@ CCollision::CCollision()
 	m_pLayers = 0;
 }
 
-void CCollision::Init(class CLayers *pLayers)
+void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 {
+	m_pSwitchStates = pSwitchStates;
 	m_pLayers = pLayers;
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
 	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
+	// TODO this
+	m_pSwitchTiles = static_cast<CTile *>(m_pLayers->Map()->GetData((reinterpret_cast<CMapItemLayerTilemap *>(m_pLayers->GetLayer(7)))->m_Data));
+	// should be replaced by something like this
+	//m_pSwitchTiles = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->SwitchLayer()->m_Data));
+	// once we have a switch layer
 
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
 		int Index = m_pTiles[i].m_Index;
 
-		if(Index > 128)
-			continue;
-
-		switch(Index)
+		if(Index <= 128)
 		{
-		case TILE_DEATH:
-			m_pTiles[i].m_Index = COLFLAG_DEATH;
-			break;
-		case TILE_SOLID:
-			m_pTiles[i].m_Index = COLFLAG_SOLID;
-			break;
-		case TILE_NOHOOK:
-			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
-			break;
-		default:
-			m_pTiles[i].m_Index = 0;
+			switch(Index)
+			{
+			case TILE_DEATH:
+				m_pTiles[i].m_Index = COLFLAG_DEATH;
+				break;
+			case TILE_SOLID:
+				m_pTiles[i].m_Index = COLFLAG_SOLID;
+				break;
+			case TILE_NOHOOK:
+				m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
+				break;
+			default:
+				m_pTiles[i].m_Index = 0;
+			}
 		}
 	}
 }
 
-int CCollision::GetTile(int x, int y)
+int CCollision::GetTile(int PosIndex)
+{
+	return m_pTiles[PosIndex].m_Index > 128 ? 0 : m_pTiles[PosIndex].m_Index;
+}
+
+int CCollision::GetSwitchGroup(int PosIndex)
+{
+	return m_pTiles[PosIndex].m_Reserved;
+}
+
+int CCollision::GetPosIndex(int x, int y)
 {
 	int Nx = clamp(x/32, 0, m_Width-1);
 	int Ny = clamp(y/32, 0, m_Height-1);
 
-	return m_pTiles[Ny*m_Width+Nx].m_Index > 128 ? 0 : m_pTiles[Ny*m_Width+Nx].m_Index;
+	return Ny*m_Width+Nx;
 }
 
 bool CCollision::IsTileSolid(int x, int y)
 {
-	return GetTile(x, y)&COLFLAG_SOLID;
+	int PosIndex = GetPosIndex(x, y);
+	return (GetTile(PosIndex)&COLFLAG_SOLID) && m_pSwitchStates[GetSwitchGroup(PosIndex)];
 }
 
 // TODO: rewrite this smarter!
@@ -222,6 +239,11 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 
 void CCollision::HandleTriggerTiles(int Index, CTriggers *pOutTriggers)
 {
-	// set the values of *pOutTrigger's members here
-	// pOutTriggers->m_MyTrigger = Index;
+	if(m_pSwitchTiles[Index].m_Index > 0)
+	{
+		pOutTriggers->m_Flags |= TRIGGERFLAG_SWITCH;
+		pOutTriggers->m_SwitchState = m_pSwitchTiles[Index].m_Flags&TILEFLAG_SWITCH_ON;
+		pOutTriggers->m_SwitchGroup = m_pSwitchTiles[Index].m_Index - 1;
+		pOutTriggers->m_SwitchDuration = m_pSwitchTiles[Index].m_Reserved;
+	}
 }

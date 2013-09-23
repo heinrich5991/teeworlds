@@ -192,7 +192,6 @@ void CGameContext::CreateSound(vec2 Pos, int Sound, int Mask)
 	}
 }
 
-
 void CGameContext::SendChatTarget(int To, const char *pText)
 {
 	CNetMsg_Sv_Chat Msg;
@@ -1354,7 +1353,7 @@ void CGameContext::OnInit()
 		Server()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
 
 	m_Layers.Init(Kernel());
-	m_Collision.Init(&m_Layers);
+	m_Collision.Init(&m_Layers, m_World.m_aSwitchStates);
 
 	// select gametype
 	if(str_comp_nocase(g_Config.m_SvGametype, "mod") == 0)

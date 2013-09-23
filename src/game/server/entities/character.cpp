@@ -660,10 +660,8 @@ void CCharacter::TickDefered()
 
 void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 {
-	// Handle your triggers here and in CCharacterCore::HandleTriggers
-	// char aBuf[256];
-	// str_format(aBuf, sizeof(aBuf), "%d", Triggers.m_MyTrigger);
-	// GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+	if(Triggers.m_Flags&CCollision::TRIGGERFLAG_SWITCH)
+		GameServer()->m_World.SetSwitchState(Triggers.m_SwitchState, Triggers.m_SwitchGroup, Triggers.m_SwitchDuration);
 }
 
 void CCharacter::TickPaused()

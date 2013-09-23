@@ -78,7 +78,9 @@ int CCollision::GetPosIndex(int x, int y)
 bool CCollision::IsTileSolid(int x, int y)
 {
 	int PosIndex = GetPosIndex(x, y);
-	return (GetTile(PosIndex)&COLFLAG_SOLID) && m_pSwitchStates[GetSwitchGroup(PosIndex)];
+	bool Switch = m_pSwitchStates[GetSwitchGroup(PosIndex)];
+	bool Invert = m_pTiles[PosIndex].m_Flags&TILEFLAG_INVERT_SWITCH;
+	return (GetTile(PosIndex)&COLFLAG_SOLID) && ((Switch && Invert) || (!Switch && !Invert));
 }
 
 // TODO: rewrite this smarter!

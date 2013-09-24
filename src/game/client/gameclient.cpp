@@ -1071,6 +1071,12 @@ void CGameClient::OnNewSnapshot()
 			}
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;
+			else if(Item.m_Type == NETOBJTYPE_SWITCHSTATES)
+			{
+				const CNetObj_SwitchStates *pStates = ((const CNetObj_SwitchStates *)pData);
+				for(int i = 0; i < 255; i++)
+					m_aSwitchStates[i] = pStates->m_aStates[i/8] & (1 << (i % 8));
+			}
 		}
 	}
 

@@ -10,7 +10,7 @@ const int PickupPhysSize = 14;
 class CPickup : public CEntity
 {
 public:
-	CPickup(CGameWorld *pGameWorld, int Type);
+	CPickup(CGameWorld *pGameWorld, int Type, int SwitchGroup);
 
 	virtual void Reset();
 	virtual void Tick();

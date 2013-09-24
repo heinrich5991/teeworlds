@@ -1377,11 +1377,12 @@ void CGameContext::OnInit()
 		for(int x = 0; x < pTileMap->m_Width; x++)
 		{
 			int Index = pTiles[y*pTileMap->m_Width+x].m_Index;
+			int SwitchGroup = pTiles[y*pTileMap->m_Width+x].m_Reserved;
 
 			if(Index >= ENTITY_OFFSET)
 			{
 				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos);
+				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos, SwitchGroup);
 			}
 		}
 	}

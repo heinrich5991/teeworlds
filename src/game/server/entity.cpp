@@ -8,7 +8,7 @@
 //////////////////////////////////////////////////
 // Entity
 //////////////////////////////////////////////////
-CEntity::CEntity(CGameWorld *pGameWorld, int ObjType)
+CEntity::CEntity(CGameWorld *pGameWorld, int ObjType, int SwitchGroup)
 {
 	m_pGameWorld = pGameWorld;
 
@@ -21,6 +21,8 @@ CEntity::CEntity(CGameWorld *pGameWorld, int ObjType)
 
 	m_pPrevTypeEntity = 0;
 	m_pNextTypeEntity = 0;
+
+	m_SwitchGroup = SwitchGroup;
 }
 
 CEntity::~CEntity()

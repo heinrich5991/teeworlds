@@ -22,12 +22,14 @@ class CEntity
 	CEntity *m_pNextTypeEntity;
 
 	class CGameWorld *m_pGameWorld;
+
 protected:
 	bool m_MarkedForDestroy;
 	int m_ID;
 	int m_ObjType;
+	int m_SwitchGroup;
 public:
-	CEntity(CGameWorld *pGameWorld, int Objtype);
+	CEntity(CGameWorld *pGameWorld, int Objtype, int SwitchGroup);
 	virtual ~CEntity();
 
 	class CGameWorld *GameWorld() { return m_pGameWorld; }

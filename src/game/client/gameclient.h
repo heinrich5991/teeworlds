@@ -127,6 +127,7 @@ public:
 		const CNetObj_GameData *m_pGameData;
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
+		const CNetObj_SwitchStates *m_pSwitchStates;
 		int m_GameDataFlagSnapID;
 		
 		int m_NotReadyCount;

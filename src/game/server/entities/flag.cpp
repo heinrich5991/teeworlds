@@ -6,7 +6,7 @@
 #include "flag.h"
 
 CFlag::CFlag(CGameWorld *pGameWorld, int Team)
-: CEntity(pGameWorld, CGameWorld::ENTTYPE_FLAG)
+: CEntity(pGameWorld, CGameWorld::ENTTYPE_FLAG, 0)
 {
 	m_Team = Team;
 	m_ProximityRadius = ms_PhysSize;

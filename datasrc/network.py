@@ -79,6 +79,10 @@ Objects = [
 		NetIntAny("m_PrevWeapon"),
 	]),
 
+	NetObject("SwitchStates", [
+		NetArray(NetIntAny("m_aStates"), 8),
+	]),
+
 	NetObject("Projectile", [
 		NetIntAny("m_X"),
 		NetIntAny("m_Y"),

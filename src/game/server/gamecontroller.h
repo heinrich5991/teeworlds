@@ -150,11 +150,12 @@ public:
 		Arguments:
 			index - Entity index.
 			pos - Where the entity is located in the world.
+			SwitchGroup - The switch group ID the entity shall have.
 
 		Returns:
 			bool?
 	*/
-	virtual bool OnEntity(int Index, vec2 Pos);
+	virtual bool OnEntity(int Index, vec2 Pos, int SwitchGroup);
 
 	void OnPlayerConnect(class CPlayer *pPlayer);
 	void OnPlayerDisconnect(class CPlayer *pPlayer);

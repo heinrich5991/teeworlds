@@ -479,7 +479,7 @@ void CPlayers::RenderPlayer(
 	// freeze fading
 	{
 		float IntraTick = Client()->GameTick() + Client()->IntraGameTick();
-		float FadeSpeed = 0.15f * (IntraTick - m_aFreezeFadeTick[ClientID]);
+		float FadeSpeed = 0.1f * (IntraTick - m_aFreezeFadeTick[ClientID]);
 		m_aFreezeFadeTick[ClientID] = IntraTick;
 		float FadeTarget;
 		if(Player.m_FreezeTick == 0)
@@ -489,9 +489,11 @@ void CPlayers::RenderPlayer(
 		else
 			FadeTarget = 1.0f;
 
-		if(m_aFreezeFadeState[ClientID] - FadeSpeed > FadeTarget)
+		FadeSpeed = fmin(fabs(m_aFreezeFadeState[ClientID] - FadeTarget), FadeSpeed);
+
+		if(m_aFreezeFadeState[ClientID] > FadeTarget)
 			m_aFreezeFadeState[ClientID] -= FadeSpeed;
-		else if(m_aFreezeFadeState[ClientID] + FadeSpeed < FadeTarget)
+		else if(m_aFreezeFadeState[ClientID] < FadeTarget)
 			m_aFreezeFadeState[ClientID] += FadeSpeed;
 	}
 

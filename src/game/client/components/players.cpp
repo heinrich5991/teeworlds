@@ -478,7 +478,9 @@ void CPlayers::RenderPlayer(
 
 	// freeze fading
 	{
-		float FadeSpeed = 0.005f;
+		float IntraTick = Client()->GameTick() + Client()->IntraGameTick();
+		float FadeSpeed = 0.15f * (IntraTick - m_aFreezeFadeTick[ClientID]);
+		m_aFreezeFadeTick[ClientID] = IntraTick;
 		float FadeTarget;
 		if(Player.m_FreezeTick == 0)
 			FadeTarget = 0.0f;
@@ -611,7 +613,8 @@ void CPlayers::OnRender()
 			// only render active characters
 			if(!m_pClient->m_Snap.m_aCharacters[i].m_Active)
 			{
-				m_aFreezeFadeState[i] = 0;
+				m_aFreezeFadeState[i] = 0.0f;
+				m_aFreezeFadeTick[i] =  0.0f;
 				continue;
 			}
 

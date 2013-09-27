@@ -8,7 +8,8 @@ class CPlayers : public CComponent
 {
 	CTeeRenderInfo m_aRenderInfo[MAX_CLIENTS];
 	float m_aFreezeFadeState[MAX_CLIENTS];
-	float m_aFreezeFadeTick[MAX_CLIENTS];
+	int m_aFreezeFadeTick[MAX_CLIENTS];
+	float m_aFreezeFadeIntraTick[MAX_CLIENTS];
 
 	void RenderHand(class CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset);
 	void RenderPlayer(

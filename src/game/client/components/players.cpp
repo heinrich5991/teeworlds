@@ -478,9 +478,11 @@ void CPlayers::RenderPlayer(
 
 	// freeze fading
 	{
-		float IntraTick = Client()->GameTick() + Client()->IntraGameTick();
-		float FadeSpeed = 0.1f * (IntraTick - m_aFreezeFadeTick[ClientID]);
-		m_aFreezeFadeTick[ClientID] = IntraTick;
+		float Tick = Client()->GameTick();
+		float IntraTick = Client()->IntraGameTick();
+		float FadeSpeed = 0.1f * (Tick - m_aFreezeFadeTick[ClientID] + IntraTick - m_aFreezeFadeIntraTick[ClientID]);
+		m_aFreezeFadeTick[ClientID] = Tick;
+		m_aFreezeFadeIntraTick[ClientID] = IntraTick;
 		float FadeTarget;
 		if(Player.m_FreezeTick == 0)
 			FadeTarget = 0.0f;
@@ -489,12 +491,15 @@ void CPlayers::RenderPlayer(
 		else
 			FadeTarget = 1.0f;
 
-		FadeSpeed = fmin(fabs(m_aFreezeFadeState[ClientID] - FadeTarget), FadeSpeed);
-
-		if(m_aFreezeFadeState[ClientID] > FadeTarget)
-			m_aFreezeFadeState[ClientID] -= FadeSpeed;
-		else if(m_aFreezeFadeState[ClientID] < FadeTarget)
-			m_aFreezeFadeState[ClientID] += FadeSpeed;
+		if(FadeSpeed < fabs(m_aFreezeFadeState[ClientID] - FadeTarget))
+		{
+			if(m_aFreezeFadeState[ClientID] > FadeTarget)
+				m_aFreezeFadeState[ClientID] -= FadeSpeed;
+			else if(m_aFreezeFadeState[ClientID] < FadeTarget)
+				m_aFreezeFadeState[ClientID] += FadeSpeed;
+		}
+		else
+			m_aFreezeFadeState[ClientID] = FadeTarget;
 	}
 
 	// color tee

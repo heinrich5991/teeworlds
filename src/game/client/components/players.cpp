@@ -478,7 +478,7 @@ void CPlayers::RenderPlayer(
 
 	// freeze fading
 	{
-		float Tick = Client()->GameTick();
+		int Tick = Client()->GameTick();
 		float IntraTick = Client()->IntraGameTick();
 		float FadeSpeed = 0.1f * (Tick - m_aFreezeFadeTick[ClientID] + IntraTick - m_aFreezeFadeIntraTick[ClientID]);
 		m_aFreezeFadeTick[ClientID] = Tick;

@@ -55,6 +55,22 @@ enum
 	LAYERFLAG_DETAIL=1,
 	TILESLAYERFLAG_GAME=1,
 
+	// to add more GAMELAYERTYPEs, check the following places:
+	// 1) this enum (src/game/mapitems.h)
+	//      add a new enum item
+	//      make sure that NUM_GAMELAYERTYPES <= GAMELAYERMASK_TYPE
+	// 2) s_apGameLayerTypeNames (src/game/editor/layer_game.cpp)
+	//      add the name of the new game layer
+	//      make sure to add the same amount of game layer names there
+	// 3) CEditor::Init() (src/game/editor/editor.cpp)
+	//      add a tileset for each new game layer
+
+	GAMELAYERMASK_TYPE=0xF,
+	GAMELAYERMASK_TYPE_SHIFT=1,
+	GAMELAYERTYPE_VANILLA=0,
+	//GAMELAYERTYPE_NEW,
+	NUM_GAMELAYERTYPES,
+
 	ENTITY_OFFSET=255-16*4,
 };
 

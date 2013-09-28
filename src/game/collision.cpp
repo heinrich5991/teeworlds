@@ -23,9 +23,9 @@ CCollision::CCollision()
 void CCollision::Init(class CLayers *pLayers)
 {
 	m_pLayers = pLayers;
-	m_Width = m_pLayers->GameLayer()->m_Width;
-	m_Height = m_pLayers->GameLayer()->m_Height;
-	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
+	m_Width = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Width;
+	m_Height = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Height;
+	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Data));
 
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{

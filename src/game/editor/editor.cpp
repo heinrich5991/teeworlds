@@ -116,7 +116,7 @@ void CLayerGroup::Render()
 
 	for(int i = 0; i < m_lLayers.size(); i++)
 	{
-		if(m_lLayers[i]->m_Visible && m_lLayers[i] != m_pMap->m_pGameLayer)
+		if(m_lLayers[i]->m_Visible && !m_pMap->IsGameLayer(m_lLayers[i]))
 		{
 			if(m_pMap->m_pEditor->m_ShowDetail || !(m_lLayers[i]->m_Flags&LAYERFLAG_DETAIL))
 				m_lLayers[i]->Render();
@@ -1727,11 +1727,17 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			//UI()->ClipEnable(&view);
 		}
 
-		// render the game above everything else
-		if(m_Map.m_pGameGroup->m_Visible && m_Map.m_pGameLayer->m_Visible)
+		if(m_Map.m_pGameGroup->m_Visible)
 		{
-			m_Map.m_pGameGroup->MapScreen();
-			m_Map.m_pGameLayer->Render();
+			for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
+			{
+				// render the game above everything else
+				if(m_Map.m_apGameLayers[t]->m_Visible)
+				{
+					m_Map.m_pGameGroup->MapScreen();
+					m_Map.m_apGameLayers[t]->Render();
+				}
+			}
 		}
 
 		CLayerTiles *pT = static_cast<CLayerTiles *>(GetSelectedLayerType(0, LAYERTYPE_TILES));
@@ -2461,7 +2467,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 
 				Button.VSplitRight(12.0f, &Button, &SaveCheck);
 				if(DoButton_Ex(&m_Map.m_lGroups[g]->m_lLayers[i]->m_SaveToMap, "S", m_Map.m_lGroups[g]->m_lLayers[i]->m_SaveToMap, &SaveCheck, 0, "Enable/disable layer for saving", CUI::CORNER_R))
-					if(m_Map.m_lGroups[g]->m_lLayers[i] != m_Map.m_pGameLayer)
+					if(!m_Map.IsGameLayer(m_Map.m_lGroups[g]->m_lLayers[i]))
 						m_Map.m_lGroups[g]->m_lLayers[i]->m_SaveToMap = !m_Map.m_lGroups[g]->m_lLayers[i]->m_SaveToMap;
 
 				if(m_Map.m_lGroups[g]->m_lLayers[i]->m_aName[0])
@@ -3901,7 +3907,7 @@ void CEditor::Reset(bool CreateDefault)
 
 	// create default layers
 	if(CreateDefault)
-		m_Map.CreateDefault(m_EntitiesTexture);
+		m_Map.CreateDefault();
 
 	/*
 	{
@@ -3987,11 +3993,14 @@ void CEditorMap::DeleteEnvelope(int Index)
 	m_lEnvelopes.remove_index(Index);
 }
 
-void CEditorMap::MakeGameLayer(CLayer *pLayer)
+void CEditorMap::MakeGameLayers(CLayerGame *apLayers[NUM_GAMELAYERTYPES])
 {
-	m_pGameLayer = (CLayerGame *)pLayer;
-	m_pGameLayer->m_pEditor = m_pEditor;
-	m_pGameLayer->m_Texture = m_pEditor->m_EntitiesTexture;
+	for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
+	{
+		m_apGameLayers[t] = apLayers[t];
+		m_apGameLayers[t]->m_pEditor = m_pEditor;
+		m_apGameLayers[t]->m_Texture = m_pEditor->m_aEntitiesTexture[t];
+	}
 }
 
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
@@ -4011,13 +4020,13 @@ void CEditorMap::Clean()
 
 	m_MapInfo.Reset();
 
-	m_pGameLayer = 0x0;
+	mem_zero(m_apGameLayers, sizeof(m_apGameLayers));
 	m_pGameGroup = 0x0;
 
 	m_Modified = false;
 }
 
-void CEditorMap::CreateDefault(IGraphics::CTextureHandle EntitiesTexture)
+void CEditorMap::CreateDefault()
 {
 	// add background
 	CLayerGroup *pGroup = NewGroup();
@@ -4043,8 +4052,13 @@ void CEditorMap::CreateDefault(IGraphics::CTextureHandle EntitiesTexture)
 
 	// add game layer
 	MakeGameGroup(NewGroup());
-	MakeGameLayer(new CLayerGame(50, 50));
-	m_pGameGroup->AddLayer(m_pGameLayer);
+	CLayerGame *apGameLayers[NUM_GAMELAYERTYPES];
+	for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
+	{
+		apGameLayers[t] = new CLayerGame(50, 50, t);
+		m_pGameGroup->AddLayer(apGameLayers[t]);
+	}
+	MakeGameLayers(apGameLayers);
 }
 
 void CEditor::Init()
@@ -4063,7 +4077,10 @@ void CEditor::Init()
 	m_CheckerTexture = Graphics()->LoadTexture("editor/checker.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_BackgroundTexture = Graphics()->LoadTexture("editor/background.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_CursorTexture = Graphics()->LoadTexture("editor/cursor.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
-	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+
+	mem_zero(m_aEntitiesTexture, sizeof(m_aEntitiesTexture));
+	m_aEntitiesTexture[GAMELAYERTYPE_VANILLA] = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+	//m_aEntitiesTexture[GAMELAYERTYPE_NEW] = Graphics()->LoadTexture("editor/new.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
 	m_TilesetPicker.m_pEditor = this;
 	m_TilesetPicker.MakePalette();

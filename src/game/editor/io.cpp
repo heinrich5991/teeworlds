@@ -321,7 +321,12 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 
 				Item.m_Width = pLayer->m_Width;
 				Item.m_Height = pLayer->m_Height;
-				Item.m_Flags = pLayer->m_Game ? TILESLAYERFLAG_GAME : 0;
+				Item.m_Flags = 0;
+				if(pLayer->m_Game)
+				{
+					CLayerGame *pLayerGame = (CLayerGame *)pLayer;
+					Item.m_Flags = TILESLAYERFLAG_GAME | ((pLayerGame->m_Type&GAMELAYERMASK_TYPE)<<GAMELAYERMASK_TYPE_SHIFT);
+				}
 				Item.m_Image = pLayer->m_Image;
 				Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);
 
@@ -433,15 +438,9 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 	// check version
 	CMapItemVersion *pItem = (CMapItemVersion *)DataFile.FindItem(MAPITEMTYPE_VERSION, 0);
 	if(!pItem)
-	{
-		// import old map
-		/*MAP old_mapstuff;
-		editor->reset();
-		editor_load_old(df, this);
-		*/
 		return 0;
-	}
-	else if(pItem->m_Version == CMapItemVersion::CURRENT_VERSION)
+
+	if(pItem->m_Version == CMapItemVersion::CURRENT_VERSION)
 	{
 		//editor.reset(false);
 
@@ -520,6 +519,10 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 		// load groups
 		{
+			// save gamelayers
+			CLayerGame *apGameLayers[NUM_GAMELAYERTYPES] = { 0 };
+			CLayerGroup *pGameGroup = 0;
+
 			int LayersStart, LayersNum;
 			DataFile.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
 
@@ -528,6 +531,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 			for(int g = 0; g < Num; g++)
 			{
 				CMapItemGroup *pGItem = (CMapItemGroup *)DataFile.GetItem(Start+g, 0, 0);
+				int IsGameGroup = 0;
 
 				if(pGItem->m_Version < 1 || pGItem->m_Version > CMapItemGroup::CURRENT_VERSION)
 					continue;
@@ -565,18 +569,30 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 						if(pTilemapItem->m_Flags&TILESLAYERFLAG_GAME)
 						{
-							pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height);
-							MakeGameLayer(pTiles);
-							MakeGameGroup(pGroup);
+							// determine the game layer type
+							int Type = (pTilemapItem->m_Flags>>GAMELAYERMASK_TYPE_SHIFT)&GAMELAYERMASK_TYPE;
+							dbg_msg("dbg", "type=%d", Type);
+							if(!pGameGroup)
+							{
+								pGameGroup = pGroup;
+								IsGameGroup = 1;
+							}
+							if(!(0 <= Type && Type < NUM_GAMELAYERTYPES))
+								continue;
+							pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height, Type);
+							if(!apGameLayers[Type])
+								apGameLayers[Type] = (CLayerGame *)pTiles;
+
 						}
 						else
 						{
 							pTiles = new CLayerTiles(pTilemapItem->m_Width, pTilemapItem->m_Height);
-							pTiles->m_pEditor = m_pEditor;
 							pTiles->m_Color = pTilemapItem->m_Color;
 							pTiles->m_ColorEnv = pTilemapItem->m_ColorEnv;
 							pTiles->m_ColorEnvOffset = pTilemapItem->m_ColorEnvOffset;
 						}
+
+						pTiles->m_pEditor = m_pEditor;
 
 						pLayer = pTiles;
 
@@ -626,7 +642,23 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					if(pLayer)
 						pLayer->m_Flags = pLayerItem->m_Flags;
 				}
+
+				// if this is the game group, add missing game layers
+				if(IsGameGroup)
+				{
+					for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
+					{
+						if(!apGameLayers[t])
+						{
+							apGameLayers[t] = new CLayerGame(50, 50, t);
+							pGroup->AddLayer(apGameLayers[t]);
+						}
+					}
+				}
 			}
+
+			MakeGameLayers(apGameLayers);
+			MakeGameGroup(pGameGroup);
 		}
 
 		// load envelopes

@@ -20,6 +20,7 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_Height = h;
 	m_Image = -1;
 	m_Game = 0;
+	m_GameLayerType = 0;
 	m_Color.r = 255;
 	m_Color.g = 255;
 	m_Color.b = 255;
@@ -283,6 +284,32 @@ void CLayerTiles::BrushRotate(float Amount)
 		BrushFlipX();
 		BrushFlipY();
 	}
+}
+
+int CLayerGame::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
+{
+	RECTi r;
+	Convert(Rect, &r);
+	Clamp(&r);
+
+	if(!r.w || !r.h)
+		return 0;
+
+	// create new layers
+	CLayerTiles *pGrabbed = new CLayerTiles(r.w, r.h);
+	pGrabbed->m_pEditor = m_pEditor;
+	pGrabbed->m_Texture = m_Texture;
+	pGrabbed->m_Image = m_Image;
+	pGrabbed->m_Game = m_Game;
+	pGrabbed->m_GameLayerType = m_GameLayerType;
+	pBrush->AddLayer(pGrabbed);
+
+	// copy the tiles
+	for(int y = 0; y < r.h; y++)
+		for(int x = 0; x < r.w; x++)
+			pGrabbed->m_pTiles[y*pGrabbed->m_Width+x] = m_pTiles[(r.y+y)*m_Width+(r.x+x)];
+
+	return 1;
 }
 
 void CLayerTiles::Resize(int NewW, int NewH)

@@ -153,6 +153,7 @@ public:
 	virtual void BrushToggleTeleIO() {}
 	virtual void BrushToggleTeleCutOwn() {}
 	virtual void BrushToggleTeleCutOther() {}
+	virtual void BrushToggleTeleResetVel() {}
 
 	virtual void Render() {}
 	virtual int RenderProperties(CUIRect *pToolbox) { return 0; }
@@ -427,6 +428,7 @@ public:
 	virtual void BrushToggleTeleIO();
 	virtual void BrushToggleTeleCutOwn();
 	virtual void BrushToggleTeleCutOther();
+	virtual void BrushToggleTeleResetVel();
 
 	virtual void ShowInfo();
 	virtual int RenderProperties(CUIRect *pToolbox);
@@ -470,6 +472,7 @@ public:
 	virtual void BrushToggleTeleIO();
 	virtual void BrushToggleTeleCutOwn();
 	virtual void BrushToggleTeleCutOther();
+	virtual void BrushToggleTeleResetVel();
 
 	virtual int RenderProperties(CUIRect *pToolbox);
 

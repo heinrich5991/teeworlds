@@ -350,6 +350,27 @@ void CLayerTiles::BrushToggleTeleCutOther()
 	}
 }
 
+void CLayerTiles::BrushToggleTeleResetVel()
+{
+	if(m_GameLayerType == GAMELAYERTYPE_TELE)
+	{
+		CTile *pTempData = new CTile[m_Width*m_Height];
+		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
+		CTile *pDst = m_pTiles;
+		for(int x = 0; x < m_Width; ++x)
+			for(int y = m_Height-1; y >= 0; --y, ++pDst)
+			{
+				*pDst = pTempData[y*m_Width+x];
+				pDst->m_Flags ^= TELEFLAG_RESET_VEL;
+			}
+
+		int Temp = m_Width;
+		m_Width = m_Height;
+		m_Height = Temp;
+		delete[] pTempData;
+	}
+}
+
 void CLayerTiles::Resize(int NewW, int NewH)
 {
 	CTile *pNewData = new CTile[NewW*NewH];

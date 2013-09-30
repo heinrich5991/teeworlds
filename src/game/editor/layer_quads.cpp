@@ -200,6 +200,11 @@ void CLayerQuads::BrushToggleTeleCutOther()
 
 }
 
+void CLayerQuads::BrushToggleTeleResetVel()
+{
+
+}
+
 void CLayerQuads::GetSize(float *w, float *h)
 {
 	*w = 0; *h = 0;

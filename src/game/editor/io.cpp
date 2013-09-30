@@ -325,7 +325,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				if(pLayer->m_Game)
 				{
 					CLayerGame *pLayerGame = (CLayerGame *)pLayer;
-					Item.m_Flags = TILESLAYERFLAG_GAME | ((pLayerGame->m_Type&GAMELAYERMASK_TYPE)<<GAMELAYERMASK_TYPE_SHIFT);
+					Item.m_Flags = TILESLAYERFLAG_GAME | ((pLayerGame->m_GameLayerType&GAMELAYERMASK_TYPE)<<GAMELAYERMASK_TYPE_SHIFT);
 				}
 				Item.m_Image = pLayer->m_Image;
 				Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);

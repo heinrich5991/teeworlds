@@ -475,7 +475,7 @@ public:
 class CLayerGame : public CLayerTiles
 {
 public:
-	int m_Type;
+	int m_GameLayerType;
 	CLayerGame(int w, int h, int Type);
 	~CLayerGame();
 

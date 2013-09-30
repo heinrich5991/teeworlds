@@ -14,7 +14,7 @@ CLayerGame::CLayerGame(int w, int h, int Type)
 	dbg_assert(sizeof(s_apGameLayerTypeNames) / sizeof(s_apGameLayerTypeNames[0]) == NUM_GAMELAYERTYPES, "missing game layer type name");
 	str_copy(m_aName, s_apGameLayerTypeNames[Type], sizeof(m_aName));
 	m_Game = 1;
-	m_Type = Type;
+	m_GameLayerType = Type;
 }
 
 CLayerGame::~CLayerGame()

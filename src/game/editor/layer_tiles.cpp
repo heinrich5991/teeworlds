@@ -20,6 +20,7 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_Height = h;
 	m_Image = -1;
 	m_Game = 0;
+	m_GameLayerType = 0;
 	m_Color.r = 255;
 	m_Color.g = 255;
 	m_Color.b = 255;
@@ -150,6 +151,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 	pGrabbed->m_Texture = m_Texture;
 	pGrabbed->m_Image = m_Image;
 	pGrabbed->m_Game = m_Game;
+	pGrabbed->m_GameLayerType = m_GameLayerType;
 	pBrush->AddLayer(pGrabbed);
 
 	// copy the tiles
@@ -287,7 +289,25 @@ void CLayerTiles::BrushRotate(float Amount)
 
 void CLayerTiles::BrushToggleTeleIO()
 {
-	dbg_msg("dbg", "%s", typeid(this).name());
+	dbg_msg("dbg", "bla1");
+	if(m_GameLayerType == GAMELAYERTYPE_TELE)
+	{
+		dbg_msg("dbg", "bla2");
+		CTile *pTempData = new CTile[m_Width*m_Height];
+		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
+		CTile *pDst = m_pTiles;
+		for(int x = 0; x < m_Width; ++x)
+			for(int y = m_Height-1; y >= 0; --y, ++pDst)
+			{
+				*pDst = pTempData[y*m_Width+x];
+				pDst->m_Flags ^= TELEFLAG_IN;
+			}
+
+		int Temp = m_Width;
+		m_Width = m_Height;
+		m_Height = Temp;
+		delete[] pTempData;
+	}
 }
 
 void CLayerTiles::Resize(int NewW, int NewH)

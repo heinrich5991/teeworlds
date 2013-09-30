@@ -479,7 +479,6 @@ public:
 	CLayerGame(int w, int h, int Type);
 	~CLayerGame();
 
-	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect);
 	virtual int RenderProperties(CUIRect *pToolbox);
 };
 

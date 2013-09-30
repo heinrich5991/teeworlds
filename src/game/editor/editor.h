@@ -116,6 +116,7 @@ public:
 
 class CLayer;
 class CLayerGroup;
+class CLayerGame;
 class CEditorMap;
 
 class CLayer
@@ -149,6 +150,7 @@ public:
 	virtual void BrushFlipX() {}
 	virtual void BrushFlipY() {}
 	virtual void BrushRotate(float Amount) {}
+	virtual void BrushToggleTeleIO() {}
 
 	virtual void Render() {}
 	virtual int RenderProperties(CUIRect *pToolbox) { return 0; }
@@ -262,7 +264,7 @@ public:
 class CEditorMap
 {
 	void MakeGameGroup(CLayerGroup *pGroup);
-	void MakeGameLayer(CLayer *pLayer);
+	void MakeGameLayers(CLayerGame *apGameLayers[NUM_GAMELAYERTYPES]);
 public:
 	CEditor *m_pEditor;
 	bool m_Modified;
@@ -304,7 +306,8 @@ public:
 	};
 	CMapInfo m_MapInfo;
 
-	class CLayerGame *m_pGameLayer;
+	bool IsGameLayer(CLayer *pLayer) const { for(int t = 0; t < NUM_GAMELAYERTYPES; t++) if(pLayer == (CLayer *)m_apGameLayers[t]) return true; return false; }
+	class CLayerGame *m_apGameLayers[NUM_GAMELAYERTYPES];
 	CLayerGroup *m_pGameGroup;
 
 	CEnvelope *NewEnvelope(int Channels)
@@ -359,7 +362,7 @@ public:
 	}
 
 	void Clean();
-	void CreateDefault(IGraphics::CTextureHandle EntitiesTexture);
+	void CreateDefault();
 
 	// io
 	int Save(class IStorage *pStorage, const char *pFilename);
@@ -419,6 +422,7 @@ public:
 	virtual void BrushFlipX();
 	virtual void BrushFlipY();
 	virtual void BrushRotate(float Amount);
+	virtual void BrushToggleTeleIO();
 
 	virtual void ShowInfo();
 	virtual int RenderProperties(CUIRect *pToolbox);
@@ -458,6 +462,7 @@ public:
 	virtual void BrushFlipX();
 	virtual void BrushFlipY();
 	virtual void BrushRotate(float Amount);
+	virtual void BrushToggleTeleIO();
 
 	virtual int RenderProperties(CUIRect *pToolbox);
 
@@ -473,9 +478,12 @@ public:
 class CLayerGame : public CLayerTiles
 {
 public:
-	CLayerGame(int w, int h);
+	int m_GameLayerType;
+	CLayerGame(int w, int h, int Type);
 	~CLayerGame();
 
+	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect);
+	virtual void BrushToggleTeleIO();
 	virtual int RenderProperties(CUIRect *pToolbox);
 };
 
@@ -694,7 +702,7 @@ public:
 	IGraphics::CTextureHandle m_CheckerTexture;
 	IGraphics::CTextureHandle m_BackgroundTexture;
 	IGraphics::CTextureHandle m_CursorTexture;
-	IGraphics::CTextureHandle m_EntitiesTexture;
+	IGraphics::CTextureHandle m_aEntitiesTexture[NUM_GAMELAYERTYPES];
 
 	CLayerGroup m_Brush;
 	CLayerTiles m_TilesetPicker;

@@ -14,62 +14,67 @@
 
 CCollision::CCollision()
 {
-	m_pTiles = 0;
-	m_Width = 0;
-	m_Height = 0;
+	for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
+	{
+		m_apTiles[t] = 0;
+		m_aWidth[t] = 0;
+		m_aHeight[t] = 0;
+	}
 	m_pLayers = 0;
 }
 
 void CCollision::Init(class CLayers *pLayers)
 {
 	m_pLayers = pLayers;
-	m_Width = m_pLayers->GameLayer()->m_Width;
-	m_Height = m_pLayers->GameLayer()->m_Height;
-	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
-	// TODO this
-	m_pTeleTiles = static_cast<CTile *>(m_pLayers->Map()->GetData((reinterpret_cast<CMapItemLayerTilemap *>(m_pLayers->GetLayer(7)))->m_Data));
-	// should be replaced by something like this
-	//m_pTeleTiles = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->TeleLayer()->m_Data));
-	// once we have a tele layer
+	m_aWidth[GAMELAYERTYPE_VANILLA] = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Width;
+	m_aHeight[GAMELAYERTYPE_VANILLA] = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Height;
+	m_apTiles[GAMELAYERTYPE_VANILLA] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Data));
+	m_aWidth[GAMELAYERTYPE_TELE] = m_pLayers->GameLayer(GAMELAYERTYPE_TELE)->m_Width;
+	m_aHeight[GAMELAYERTYPE_TELE] = m_pLayers->GameLayer(GAMELAYERTYPE_TELE)->m_Height;
+	m_apTiles[GAMELAYERTYPE_TELE] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_TELE)->m_Data));
 
-	for(int i = 0; i < m_Width*m_Height; i++)
+	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_VANILLA]*m_aHeight[GAMELAYERTYPE_VANILLA]; i++)
 	{
-		int Index = m_pTiles[i].m_Index;
+		int Index = m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index;
 
-		if(Index <= 128)
-		{
-			switch(Index)
-			{
-			case TILE_DEATH:
-				m_pTiles[i].m_Index = COLFLAG_DEATH;
-				break;
-			case TILE_SOLID:
-				m_pTiles[i].m_Index = COLFLAG_SOLID;
-				break;
-			case TILE_NOHOOK:
-				m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
-				break;
-			default:
-				m_pTiles[i].m_Index = 0;
-			}
-		}
+		if(Index > 128)
+			continue;
 
-		// TODO m_pTeleTiles[i].m_Index might also have to be changed later
-		if(m_pTeleTiles[i].m_Index > 0)
+		switch(Index)
 		{
-			// TODO m_pTeleTiles[i].m_Flags might also have to be changed later
-			if(!(m_pTeleTiles[i].m_Flags&TELEFLAG_IN))
-				m_aTeleTargets[m_pTeleTiles[i].m_Index] = vec2((i%m_Width+0.5f)*32, (i/m_Width+0.5f)*32);	
+		case TILE_DEATH:
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_DEATH;
+			break;
+		case TILE_SOLID:
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID;
+			break;
+		case TILE_NOHOOK:
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
+			break;
+		default:
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = 0;
 		}
 	}
+
+	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_TELE]*m_aHeight[GAMELAYERTYPE_TELE]; i++)
+		if(m_apTiles[GAMELAYERTYPE_TELE][i].m_Index > 0)
+			if(!(m_apTiles[GAMELAYERTYPE_TELE][i].m_Flags&TELEFLAG_IN))
+				m_aTeleTargets[m_apTiles[GAMELAYERTYPE_TELE][i].m_Index] = vec2((i%m_aWidth[GAMELAYERTYPE_TELE]+0.5f)*32, (i/m_aWidth[GAMELAYERTYPE_TELE]+0.5f)*32);
 }
 
 int CCollision::GetTile(int x, int y)
 {
-	int Nx = clamp(x/32, 0, m_Width-1);
-	int Ny = clamp(y/32, 0, m_Height-1);
+	int Index = GetTilePosIndex(x, y, GAMELAYERTYPE_VANILLA);
 
-	return m_pTiles[Ny*m_Width+Nx].m_Index > 128 ? 0 : m_pTiles[Ny*m_Width+Nx].m_Index;
+	return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
+}
+
+int CCollision::GetTilePosIndex(int x, int y, int Layer)
+{
+	int Nx = clamp(x/32, 0, m_aWidth[Layer]-1);
+	int Ny = clamp(y/32, 0, m_aHeight[Layer]-1);
+
+	return Ny*m_aWidth[Layer]+Nx;
 }
 
 bool CCollision::IsTileSolid(int x, int y)
@@ -172,7 +177,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	{
 		//vec2 old_pos = pos;
 		float Fraction = 1.0f/(float)(Max+1);
-		int OldPosIndex = -1;
+		ivec2 OldPos = ivec2(-1, -1);
 		for(int i = 0; i <= Max; i++)
 		{
 			//float amount = i/(float)max;
@@ -211,26 +216,23 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 			}
 
 			Pos = NewPos;
-
-			int Nx = clamp(round(Pos.x)/32, 0, m_Width-1);
-			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
-			int PosIndex = Ny*m_Width+Nx;
-
-			if(pOutTriggers && PosIndex != OldPosIndex)
+			ivec2 iPos = ivec2(Pos.x, Pos.y);
+			if(pOutTriggers && iPos != OldPos)
 			{
-				OldPosIndex = PosIndex;
+				OldPos = iPos;
 				pOutTriggers[NumTiles] = CTriggers();
-				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
+				HandleTriggerTiles(iPos.x, iPos.y, pOutTriggers + NumTiles);
 
 				// handle teleporters
-				int TeleFlags = m_pTeleTiles[PosIndex].m_Flags;
+				int PosIndex = GetTilePosIndex(Pos.x, Pos.y, GAMELAYERTYPE_TELE);
+				int TeleFlags = m_apTiles[GAMELAYERTYPE_TELE][PosIndex].m_Flags;
 
 				if(TeleFlags&TELEFLAG_IN)
 				{
 					pOutTriggers[NumTiles].m_TeleFlags |= TRIGGERFLAG_TELEPORT;
 					pOutTriggers[NumTiles].m_TeleInPos = Pos;
 
-					Pos = m_aTeleTargets[m_pTeleTiles[PosIndex].m_Index];
+					Pos = m_aTeleTargets[m_apTiles[GAMELAYERTYPE_TELE][PosIndex].m_Index];
 
 					pOutTriggers[NumTiles].m_TeleOutPos = Pos;
 					if(TeleFlags&TELEFLAG_RESET_VEL)
@@ -245,13 +247,11 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 
 					NumTiles++;
 
-					Nx = clamp(round(Pos.x)/32, 0, m_Width-1);
-					Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
-					PosIndex = Ny*m_Width+Nx;
-					OldPosIndex = PosIndex;
+					ivec2 iPos = ivec2(Pos.x, Pos.y);
+					OldPos = iPos;
 
 					pOutTriggers[NumTiles] = CTriggers();
-					HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
+					HandleTriggerTiles(iPos.x, iPos.y, pOutTriggers + NumTiles);
 					NumTiles++;
 				}
 			}
@@ -264,7 +264,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	return NumTiles;
 }
 
-void CCollision::HandleTriggerTiles(int Index, CTriggers *pOutTriggers)
+void CCollision::HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers)
 {
 
 }

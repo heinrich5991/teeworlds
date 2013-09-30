@@ -434,6 +434,7 @@ public:
 
 	IGraphics::CTextureHandle m_Texture;
 	int m_Game;
+	int m_GameLayerType;
 	int m_Image;
 	int m_Width;
 	int m_Height;
@@ -475,10 +476,10 @@ public:
 class CLayerGame : public CLayerTiles
 {
 public:
-	int m_GameLayerType;
 	CLayerGame(int w, int h, int Type);
 	~CLayerGame();
 
+	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect);
 	virtual int RenderProperties(CUIRect *pToolbox);
 };
 

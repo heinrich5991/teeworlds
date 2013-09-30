@@ -1000,10 +1000,26 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		TB_Top.VSplitLeft(5.0f, &Button, &TB_Top);
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 		static int s_InOutButton = 0;
-		if(DoButton_Ex(&s_InOutButton, "I/O", Enabled, &Button, 0, "[Y] Toggle teleporter in/out", CUI::CORNER_L) || Input()->KeyDown('y'))
+		if(DoButton_Ex(&s_InOutButton, "I/O", Enabled, &Button, 0, "[Z] Toggle teleporter in/out", CUI::CORNER_L) || Input()->KeyDown('z'))
 		{
 			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
 				m_Brush.m_lLayers[i]->BrushToggleTeleIO();
+		}
+
+		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
+		static int s_CutOwnButton = 0;
+		if(DoButton_Ex(&s_CutOwnButton, "Cut own", Enabled, &Button, 0, "[X] Toggle teleporter cut own hook", 0) || Input()->KeyDown('x'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushToggleTeleCutOwn();
+		}
+
+		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
+		static int s_CutOtherButton = 0;
+		if(DoButton_Ex(&s_CutOtherButton, "Cut other", Enabled, &Button, 0, "[c] Toggle teleporter cut other's hook", CUI::CORNER_R) || Input()->KeyDown('c'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushToggleTeleCutOther();
 		}
 	}
 

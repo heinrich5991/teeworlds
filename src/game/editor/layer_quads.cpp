@@ -190,6 +190,15 @@ void CLayerQuads::BrushToggleTeleIO()
 {
 
 }
+void CLayerQuads::BrushToggleTeleCutOwn()
+{
+
+}
+
+void CLayerQuads::BrushToggleTeleCutOther()
+{
+
+}
 
 void CLayerQuads::GetSize(float *w, float *h)
 {

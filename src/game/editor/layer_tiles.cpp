@@ -289,10 +289,8 @@ void CLayerTiles::BrushRotate(float Amount)
 
 void CLayerTiles::BrushToggleTeleIO()
 {
-	dbg_msg("dbg", "bla1");
 	if(m_GameLayerType == GAMELAYERTYPE_TELE)
 	{
-		dbg_msg("dbg", "bla2");
 		CTile *pTempData = new CTile[m_Width*m_Height];
 		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
 		CTile *pDst = m_pTiles;
@@ -301,6 +299,48 @@ void CLayerTiles::BrushToggleTeleIO()
 			{
 				*pDst = pTempData[y*m_Width+x];
 				pDst->m_Flags ^= TELEFLAG_IN;
+			}
+
+		int Temp = m_Width;
+		m_Width = m_Height;
+		m_Height = Temp;
+		delete[] pTempData;
+	}
+}
+
+void CLayerTiles::BrushToggleTeleCutOwn()
+{
+	if(m_GameLayerType == GAMELAYERTYPE_TELE)
+	{
+		CTile *pTempData = new CTile[m_Width*m_Height];
+		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
+		CTile *pDst = m_pTiles;
+		for(int x = 0; x < m_Width; ++x)
+			for(int y = m_Height-1; y >= 0; --y, ++pDst)
+			{
+				*pDst = pTempData[y*m_Width+x];
+				pDst->m_Flags ^= TELEFLAG_CUT_OWN;
+			}
+
+		int Temp = m_Width;
+		m_Width = m_Height;
+		m_Height = Temp;
+		delete[] pTempData;
+	}
+}
+
+void CLayerTiles::BrushToggleTeleCutOther()
+{
+	if(m_GameLayerType == GAMELAYERTYPE_TELE)
+	{
+		CTile *pTempData = new CTile[m_Width*m_Height];
+		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
+		CTile *pDst = m_pTiles;
+		for(int x = 0; x < m_Width; ++x)
+			for(int y = m_Height-1; y >= 0; --y, ++pDst)
+			{
+				*pDst = pTempData[y*m_Width+x];
+				pDst->m_Flags ^= TELEFLAG_CUT_OTHER;
 			}
 
 		int Temp = m_Width;

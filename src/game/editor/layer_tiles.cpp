@@ -62,18 +62,61 @@ void CLayerTiles::MakePalette()
 			m_pTiles[y*m_Width+x].m_Index = y*16+x;
 }
 
-void CLayerTiles::Render()
+void CLayerTiles::Render(bool TileSetPicker)
 {
 	if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size())
 		m_Texture = m_pEditor->m_Map.m_lImages[m_Image]->m_Texture;
-	Graphics()->TextureSet(m_Texture);
 	vec4 Color = vec4(m_Color.r/255.0f, m_Color.g/255.0f, m_Color.b/255.0f, m_Color.a/255.0f);
-	Graphics()->BlendNone();
-	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_OPAQUE,
+	if(m_GameLayerType == GAMELAYERTYPE_TELE)
+	{
+		int Flags = LAYERRENDERFLAG_NO_FLAGS;
+		if(TileSetPicker)
+			Graphics()->TextureSet(m_Texture);
+		else
+		{
+			Graphics()->TextureSet(m_AltTexture);
+			Flags |= LAYERRENDERFLAG_FLAGS_AS_INDEX;
+		}			
+		Graphics()->BlendNormal();
+		m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, Flags,
 												m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
-	Graphics()->BlendNormal();
-	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_TRANSPARENT,
+		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+		Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());
+		Graphics()->QuadsBegin();
+
+		int StartY = max(0, (int)(ScreenY0/32.0f)-1);
+		int StartX = max(0, (int)(ScreenX0/32.0f)-1);
+		int EndY = min((int)(ScreenY1/32.0f)+1, m_Height);
+		int EndX = min((int)(ScreenX1/32.0f)+1, m_Width);
+
+		for(int y = StartY; y < EndY; y++)
+			for(int x = StartX; x < EndX; x++)
+			{
+				int c = x + y*m_Width;
+				if(m_pTiles[c].m_Index)
+				{
+					char aBuf[64];
+					str_format(aBuf, sizeof(aBuf), "%i", m_pTiles[c].m_Index);
+					m_pEditor->Graphics()->QuadsText(x*32, y*32, 16.0f, aBuf);
+				}
+				x += m_pTiles[c].m_Skip;
+			}
+
+		Graphics()->QuadsEnd();
+		Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+	}
+	else
+	{
+		Graphics()->TextureSet(m_Texture);
+
+		Graphics()->BlendNone();
+		m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_OPAQUE,
 												m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
+		Graphics()->BlendNormal();
+		m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_TRANSPARENT,
+												m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
+	}
 }
 
 int CLayerTiles::ConvertX(float x) const { return (int)(x/32.0f); }
@@ -150,6 +193,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 	CLayerTiles *pGrabbed = new CLayerTiles(r.w, r.h);
 	pGrabbed->m_pEditor = m_pEditor;
 	pGrabbed->m_Texture = m_Texture;
+	pGrabbed->m_AltTexture = m_AltTexture;
 	pGrabbed->m_Image = m_Image;
 	pGrabbed->m_Game = m_Game;
 	pGrabbed->m_GameLayerType = m_GameLayerType;
@@ -291,85 +335,33 @@ void CLayerTiles::BrushRotate(float Amount)
 void CLayerTiles::BrushToggleTeleIO()
 {
 	if(m_GameLayerType == GAMELAYERTYPE_TELE)
-	{
-		CTile *pTempData = new CTile[m_Width*m_Height];
-		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
-		CTile *pDst = m_pTiles;
-		for(int x = 0; x < m_Width; ++x)
-			for(int y = m_Height-1; y >= 0; --y, ++pDst)
-			{
-				*pDst = pTempData[y*m_Width+x];
-				pDst->m_Flags ^= TELEFLAG_IN;
-			}
-
-		int Temp = m_Width;
-		m_Width = m_Height;
-		m_Height = Temp;
-		delete[] pTempData;
-	}
+		for(int y = 0; y < m_Height; y++)
+			for(int x = 0; x < m_Width; ++x)
+				m_pTiles[y*m_Width+x].m_Flags ^= TELEFLAG_IN;
 }
 
 void CLayerTiles::BrushToggleTeleCutOwn()
 {
 	if(m_GameLayerType == GAMELAYERTYPE_TELE)
-	{
-		CTile *pTempData = new CTile[m_Width*m_Height];
-		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
-		CTile *pDst = m_pTiles;
-		for(int x = 0; x < m_Width; ++x)
-			for(int y = m_Height-1; y >= 0; --y, ++pDst)
-			{
-				*pDst = pTempData[y*m_Width+x];
-				pDst->m_Flags ^= TELEFLAG_CUT_OWN;
-			}
-
-		int Temp = m_Width;
-		m_Width = m_Height;
-		m_Height = Temp;
-		delete[] pTempData;
-	}
+		for(int y = 0; y < m_Height; y++)
+			for(int x = 0; x < m_Width; ++x)
+				m_pTiles[y*m_Width+x].m_Flags ^= TELEFLAG_CUT_OWN;
 }
 
 void CLayerTiles::BrushToggleTeleCutOther()
 {
 	if(m_GameLayerType == GAMELAYERTYPE_TELE)
-	{
-		CTile *pTempData = new CTile[m_Width*m_Height];
-		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
-		CTile *pDst = m_pTiles;
-		for(int x = 0; x < m_Width; ++x)
-			for(int y = m_Height-1; y >= 0; --y, ++pDst)
-			{
-				*pDst = pTempData[y*m_Width+x];
-				pDst->m_Flags ^= TELEFLAG_CUT_OTHER;
-			}
-
-		int Temp = m_Width;
-		m_Width = m_Height;
-		m_Height = Temp;
-		delete[] pTempData;
-	}
+		for(int y = 0; y < m_Height; y++)
+			for(int x = 0; x < m_Width; ++x)
+				m_pTiles[y*m_Width+x].m_Flags ^= TELEFLAG_CUT_OTHER;
 }
 
 void CLayerTiles::BrushToggleTeleResetVel()
 {
 	if(m_GameLayerType == GAMELAYERTYPE_TELE)
-	{
-		CTile *pTempData = new CTile[m_Width*m_Height];
-		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
-		CTile *pDst = m_pTiles;
-		for(int x = 0; x < m_Width; ++x)
-			for(int y = m_Height-1; y >= 0; --y, ++pDst)
-			{
-				*pDst = pTempData[y*m_Width+x];
-				pDst->m_Flags ^= TELEFLAG_RESET_VEL;
-			}
-
-		int Temp = m_Width;
-		m_Width = m_Height;
-		m_Height = Temp;
-		delete[] pTempData;
-	}
+		for(int y = 0; y < m_Height; y++)
+			for(int x = 0; x < m_Width; ++x)
+				m_pTiles[y*m_Width+x].m_Flags ^= TELEFLAG_RESET_VEL;
 }
 
 void CLayerTiles::Resize(int NewW, int NewH)

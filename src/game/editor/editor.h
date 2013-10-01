@@ -410,7 +410,8 @@ public:
 	void Shift(int Direction);
 
 	void MakePalette();
-	virtual void Render();
+	virtual void Render() { Render(false); }
+	virtual void Render(bool TileSetPicker);
 
 	int ConvertX(float x) const;
 	int ConvertY(float y) const;
@@ -441,6 +442,7 @@ public:
 	void GetSize(float *w, float *h) { *w = m_Width*32.0f; *h = m_Height*32.0f; }
 
 	IGraphics::CTextureHandle m_Texture;
+	IGraphics::CTextureHandle m_AltTexture;
 	int m_Game;
 	int m_GameLayerType;
 	int m_Image;
@@ -710,6 +712,7 @@ public:
 	IGraphics::CTextureHandle m_BackgroundTexture;
 	IGraphics::CTextureHandle m_CursorTexture;
 	IGraphics::CTextureHandle m_aEntitiesTexture[NUM_GAMELAYERTYPES];
+	IGraphics::CTextureHandle m_aAltEntitiesTexture[NUM_GAMELAYERTYPES];
 
 	CLayerGroup m_Brush;
 	CLayerTiles m_TilesetPicker;

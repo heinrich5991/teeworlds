@@ -1832,7 +1832,8 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		{
 			m_TilesetPicker.m_Image = t->m_Image;
 			m_TilesetPicker.m_Texture = t->m_Texture;
-			m_TilesetPicker.Render();
+			m_TilesetPicker.m_AltTexture = t->m_AltTexture;
+			m_TilesetPicker.Render(true);
 			m_TilesetPicker.m_Game = t->m_Game;
 			m_TilesetPicker.m_GameLayerType = t->m_GameLayerType;
 			if(m_ShowTileInfo)
@@ -4041,6 +4042,7 @@ void CEditorMap::MakeGameLayers(CLayerGame *apLayers[NUM_GAMELAYERTYPES])
 		m_apGameLayers[t] = apLayers[t];
 		m_apGameLayers[t]->m_pEditor = m_pEditor;
 		m_apGameLayers[t]->m_Texture = m_pEditor->m_aEntitiesTexture[t];
+		m_apGameLayers[t]->m_AltTexture = m_pEditor->m_aAltEntitiesTexture[t];
 	}
 }
 
@@ -4122,6 +4124,8 @@ void CEditor::Init()
 	mem_zero(m_aEntitiesTexture, sizeof(m_aEntitiesTexture));
 	m_aEntitiesTexture[GAMELAYERTYPE_VANILLA] = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_aEntitiesTexture[GAMELAYERTYPE_TELE] = Graphics()->LoadTexture("editor/entities_tele.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+	mem_zero(m_aAltEntitiesTexture, sizeof(m_aAltEntitiesTexture));
+	m_aAltEntitiesTexture[GAMELAYERTYPE_TELE] = Graphics()->LoadTexture("editor/tele_combos.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
 	m_TilesetPicker.m_pEditor = this;
 	m_TilesetPicker.MakePalette();

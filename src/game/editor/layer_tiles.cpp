@@ -42,9 +42,10 @@ CLayerTiles::~CLayerTiles()
 
 void CLayerTiles::PrepareForSave()
 {
-	for(int y = 0; y < m_Height; y++)
-		for(int x = 0; x < m_Width; x++)
-			m_pTiles[y*m_Width+x].m_Flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE;
+	if(!m_Game)
+		for(int y = 0; y < m_Height; y++)
+			for(int x = 0; x < m_Width; x++)
+				m_pTiles[y*m_Width+x].m_Flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE;
 
 	if(m_Image != -1 && m_Color.a == 255)
 	{

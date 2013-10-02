@@ -85,6 +85,7 @@ void CLayerTiles::Render(bool TileSetPicker)
 		Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());
 		Graphics()->QuadsBegin();
 
+
 		int StartY = max(0, (int)(ScreenY0/32.0f)-1);
 		int StartX = max(0, (int)(ScreenX0/32.0f)-1);
 		int EndY = min((int)(ScreenY1/32.0f)+1, m_Height);
@@ -98,7 +99,7 @@ void CLayerTiles::Render(bool TileSetPicker)
 				{
 					char aBuf[64];
 					str_format(aBuf, sizeof(aBuf), "%i", m_pTiles[c].m_Index);
-					m_pEditor->Graphics()->QuadsText(x*32, y*32, 16.0f, aBuf);
+					m_pEditor->Graphics()->QuadsText(x*32+10, y*32+10, 12.0f, aBuf);
 				}
 				x += m_pTiles[c].m_Skip;
 			}

@@ -146,7 +146,7 @@ void CCharacter::HandleNinja()
 		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
 		vec2 OldPos = m_Pos;
 
-		CCollision::CTriggers aTriggers[2 * (int)((MAX_SPEED + 31) / 32) + 1];
+		CCollision::CTriggers aTriggers[4 * (int)((MAX_SPEED + 15) / 16) + 2];
 		int Size = GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, aTriggers, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
 		for(int i = 0; i < Size; i++)
 		{

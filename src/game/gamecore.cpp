@@ -412,7 +412,7 @@ int CCharacterCore::Move(CCollision::CTriggers *pOutTriggers)
 
 void CCharacterCore::Move()
 {
-	CCollision::CTriggers aTriggers[2 * (int)((MAX_SPEED + 31) / 32) + 1];
+	CCollision::CTriggers aTriggers[4 * (int)((MAX_SPEED + 15) / 16) + 2];
 	Move(aTriggers);
 }
 

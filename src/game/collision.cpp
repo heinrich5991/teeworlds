@@ -14,79 +14,91 @@
 
 CCollision::CCollision()
 {
-	m_pTiles = 0;
-	m_Width = 0;
-	m_Height = 0;
+	for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
+	{
+		m_apTiles[t] = 0;
+		m_aWidth[t] = 0;
+		m_aHeight[t] = 0;
+	}
 	m_pLayers = 0;
-}
-
-CCollision::~CCollision()
-{
-	delete []m_pFreezeFlags;
 }
 
 void CCollision::Init(class CLayers *pLayers)
 {
 	m_pLayers = pLayers;
-	m_Width = m_pLayers->GameLayer()->m_Width;
-	m_Height = m_pLayers->GameLayer()->m_Height;
-	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
-	delete []m_pFreezeFlags;
-	m_pFreezeFlags = new int[m_Width*m_Height];
+	m_aWidth[GAMELAYERTYPE_VANILLA] = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Width;
+	m_aHeight[GAMELAYERTYPE_VANILLA] = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Height;
+	m_apTiles[GAMELAYERTYPE_VANILLA] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Data));
+	m_aWidth[GAMELAYERTYPE_FREEZE] = m_pLayers->GameLayer(GAMELAYERTYPE_FREEZE)->m_Width;
+	m_aHeight[GAMELAYERTYPE_FREEZE] = m_pLayers->GameLayer(GAMELAYERTYPE_FREEZE)->m_Height;
+	m_apTiles[GAMELAYERTYPE_FREEZE] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_FREEZE)->m_Data));
 
-	for(int i = 0; i < m_Width*m_Height; i++)
+	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_VANILLA]*m_aHeight[GAMELAYERTYPE_VANILLA]; i++)
 	{
-		int Index = m_pTiles[i].m_Index;
+		int Index = m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index;
 
 		if(Index > 128)
-		{
-			m_pFreezeFlags[i] = 0;
 			continue;
-		}
 
 		switch(Index)
 		{
 		case TILE_DEATH:
-			m_pTiles[i].m_Index = COLFLAG_DEATH;
-			m_pFreezeFlags[i] = 0;
+			m_apTiles[GAMELAYERTYPE_FREEZE][i].m_Index = COLFLAG_DEATH;
 			break;
 		case TILE_SOLID:
-			m_pTiles[i].m_Index = COLFLAG_SOLID;
-			m_pFreezeFlags[i] = 0;
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID;
 			break;
 		case TILE_NOHOOK:
-			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
-			m_pFreezeFlags[i] = 0;
-			break;
-		case TILE_FREEZE:
-			m_pTiles[i].m_Index = 0;
-			m_pFreezeFlags[i] = FREEZEFLAG_FREEZE;
-			break;
-		case TILE_UNFREEZE:
-			m_pTiles[i].m_Index = 0;
-			m_pFreezeFlags[i] = FREEZEFLAG_UNFREEZE;
-			break;
-		case TILE_DEEP_FREEZE:
-			m_pTiles[i].m_Index = 0;
-			m_pFreezeFlags[i] = FREEZEFLAG_DEEP_FREEZE;
-			break;
-		case TILE_DEEP_UNFREEZE:
-			m_pTiles[i].m_Index = 0;
-			m_pFreezeFlags[i] = FREEZEFLAG_DEEP_UNFREEZE;
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
 			break;
 		default:
-			m_pTiles[i].m_Index = 0;
-			m_pFreezeFlags[i] = 0;
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = 0;
+		}
+	}
+
+	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_FREEZE]*m_aHeight[GAMELAYERTYPE_FREEZE]; i++)
+	{
+		int Index = m_apTiles[GAMELAYERTYPE_FREEZE][i].m_Index;
+
+		switch(Index)
+		{
+		case TILE_FREEZE:
+			m_apTiles[GAMELAYERTYPE_FREEZE][i].m_Index = FREEZEFLAG_FREEZE;
+			break;
+		case TILE_UNFREEZE:
+			m_apTiles[GAMELAYERTYPE_FREEZE][i].m_Index = FREEZEFLAG_UNFREEZE;
+			break;
+		case TILE_DEEP_FREEZE:
+			m_apTiles[GAMELAYERTYPE_FREEZE][i].m_Index = FREEZEFLAG_DEEP_FREEZE;
+			break;
+		case TILE_DEEP_UNFREEZE:
+			m_apTiles[GAMELAYERTYPE_FREEZE][i].m_Index = FREEZEFLAG_DEEP_UNFREEZE;
+			break;
+		case TILE_FREEZE_DEEP_UNFREEZE:
+			m_apTiles[GAMELAYERTYPE_FREEZE][i].m_Index = FREEZEFLAG_DEEP_UNFREEZE|FREEZEFLAG_FREEZE;
+			break;
+		case TILE_UNFREEZE_DEEP_UNFREEZE:
+			m_apTiles[GAMELAYERTYPE_FREEZE][i].m_Index = FREEZEFLAG_DEEP_UNFREEZE|FREEZEFLAG_UNFREEZE;
+			break;
+		default:
+			m_apTiles[GAMELAYERTYPE_FREEZE][i].m_Index = 0;
 		}
 	}
 }
 
 int CCollision::GetTile(int x, int y)
 {
-	int Nx = clamp(x/32, 0, m_Width-1);
-	int Ny = clamp(y/32, 0, m_Height-1);
+	int Index = GetTilePosIndex(x, y, GAMELAYERTYPE_VANILLA);
 
-	return m_pTiles[Ny*m_Width+Nx].m_Index > 128 ? 0 : m_pTiles[Ny*m_Width+Nx].m_Index;
+	return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
+}
+
+int CCollision::GetTilePosIndex(int x, int y, int Layer)
+{
+	int Nx = clamp(x/32, 0, m_aWidth[Layer]-1);
+	int Ny = clamp(y/32, 0, m_aHeight[Layer]-1);
+
+	return Ny*m_aWidth[Layer]+Nx;
 }
 
 bool CCollision::IsTileSolid(int x, int y)
@@ -189,7 +201,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	{
 		//vec2 old_pos = pos;
 		float Fraction = 1.0f/(float)(Max+1);
-		int OldPosIndex = -1;
+		ivec2 OldPos = ivec2(-1, -1);
 		for(int i = 0; i <= Max; i++)
 		{
 			//float amount = i/(float)max;
@@ -228,16 +240,12 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 			}
 
 			Pos = NewPos;
-
-			int Nx = clamp(round(Pos.x)/32, 0, m_Width-1);
-			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
-			int PosIndex = Ny*m_Width+Nx;
-
-			if(pOutTriggers && PosIndex != OldPosIndex)
+			ivec2 iPos = ivec2(Pos.x, Pos.y);
+			if(pOutTriggers && iPos != OldPos)
 			{
-				OldPosIndex = PosIndex;
+				OldPos = iPos;
 				pOutTriggers[NumTiles] = CTriggers();
-				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
+				HandleTriggerTiles(iPos.x, iPos.y, pOutTriggers + NumTiles);
 				NumTiles++;
 			}
 		}
@@ -250,29 +258,18 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	return NumTiles;
 }
 
-void CCollision::HandleTriggerTiles(int Index, CTriggers *pOutTriggers)
+void CCollision::HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers)
 {
 	pOutTriggers->m_Freeze = 0;
+	int Index = GetTilePosIndex(x, y, GAMELAYERTYPE_FREEZE);
 
-	if(m_pFreezeFlags[Index]&FREEZEFLAG_FREEZE)
-	{
+	if(m_apTiles[GAMELAYERTYPE_FREEZE][Index].m_Index&FREEZEFLAG_FREEZE)
 		pOutTriggers->m_Freeze |= TRIGGERFLAG_FREEZE;
-		pOutTriggers->m_Freeze &= ~TRIGGERFLAG_UNFREEZE;
-	}
-	else if(m_pFreezeFlags[Index]&FREEZEFLAG_UNFREEZE)
-	{
-		pOutTriggers->m_Freeze &= ~TRIGGERFLAG_FREEZE;
+	else if(m_apTiles[GAMELAYERTYPE_FREEZE][Index].m_Index&FREEZEFLAG_UNFREEZE)
 		pOutTriggers->m_Freeze |= TRIGGERFLAG_UNFREEZE;
-	}
 
-	if(m_pFreezeFlags[Index]&FREEZEFLAG_DEEP_FREEZE)
-	{
+	if(m_apTiles[GAMELAYERTYPE_FREEZE][Index].m_Index&FREEZEFLAG_DEEP_FREEZE)
 		pOutTriggers->m_Freeze |= TRIGGERFLAG_DEEP_FREEZE;
-		pOutTriggers->m_Freeze &= ~TRIGGERFLAG_DEEP_UNFREEZE;
-	}
-	else if(m_pFreezeFlags[Index]&FREEZEFLAG_DEEP_UNFREEZE)
-	{
-		pOutTriggers->m_Freeze &= ~TRIGGERFLAG_DEEP_FREEZE;
+	else if(m_apTiles[GAMELAYERTYPE_FREEZE][Index].m_Index&FREEZEFLAG_DEEP_UNFREEZE)
 		pOutTriggers->m_Freeze |= TRIGGERFLAG_DEEP_UNFREEZE;
-	}
 }

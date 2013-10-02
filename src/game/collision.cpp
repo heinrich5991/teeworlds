@@ -56,12 +56,18 @@ void CCollision::Init(class CLayers *pLayers)
 
 int CCollision::GetTile(int x, int y)
 {
+	ivec2 Pos = GetTilePos(x, y);
+	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
+
+	return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
+}
+
+ivec2 CCollision::GetTilePos(int x, int y)
+{
 	int Nx = clamp(x/32, 0, m_aWidth[GAMELAYERTYPE_VANILLA]-1);
 	int Ny = clamp(y/32, 0, m_aHeight[GAMELAYERTYPE_VANILLA]-1);
 
-	int Index = GetPosIndex(Nx, Ny, GAMELAYERTYPE_VANILLA);
-
-	return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
+	return ivec2(Nx, Ny);
 }
 
 int CCollision::GetPosIndex(int x, int y, int Layer)
@@ -208,7 +214,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 			}
 
 			Pos = NewPos;
-			ivec2 iPos = ivec2(Pos.x/32, Pos.y/32);
+			ivec2 iPos = GetTilePos(Pos.x, Pos.y);
 			if(pOutTriggers && iPos != OldPos)
 			{
 				OldPos = iPos;

@@ -56,17 +56,17 @@ void CCollision::Init(class CLayers *pLayers)
 
 int CCollision::GetTile(int x, int y)
 {
-	int Index = GetTilePosIndex(x, y, GAMELAYERTYPE_VANILLA);
+	int Nx = clamp(x/32, 0, m_aWidth[GAMELAYERTYPE_VANILLA]-1);
+	int Ny = clamp(y/32, 0, m_aHeight[GAMELAYERTYPE_VANILLA]-1);
+
+	int Index = GetPosIndex(Nx, Ny, GAMELAYERTYPE_VANILLA);
 
 	return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
 }
 
-int CCollision::GetTilePosIndex(int x, int y, int Layer)
+int CCollision::GetPosIndex(int x, int y, int Layer)
 {
-	int Nx = clamp(x/32, 0, m_aWidth[Layer]-1);
-	int Ny = clamp(y/32, 0, m_aHeight[Layer]-1);
-
-	return Ny*m_aWidth[Layer]+Nx;
+	return y*m_aWidth[Layer]+x;
 }
 
 bool CCollision::IsTileSolid(int x, int y)
@@ -208,7 +208,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 			}
 
 			Pos = NewPos;
-			ivec2 iPos = ivec2(Pos.x, Pos.y);
+			ivec2 iPos = ivec2(Pos.x/32, Pos.y/32);
 			if(pOutTriggers && iPos != OldPos)
 			{
 				OldPos = iPos;

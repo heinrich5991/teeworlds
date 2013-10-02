@@ -15,7 +15,7 @@ class CCollision
 
 	bool IsTileSolid(int x, int y);
 	int GetTile(int x, int y);
-	int GetTilePosIndex(int x, int y, int Layer);
+	int GetPosIndex(int x, int y, int Layer);
 
 public:
 	enum

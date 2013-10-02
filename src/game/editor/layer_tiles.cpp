@@ -417,6 +417,9 @@ void CLayerTiles::Shift(int Direction)
 
 void CLayerTiles::ShowInfo()
 {
+	if(m_GameLayerType == GAMELAYERTYPE_TELE)
+		return;
+
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 	Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());

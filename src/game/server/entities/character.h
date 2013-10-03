@@ -37,6 +37,9 @@ public:
 	void OnFinish();
 	void OnCheckpoint();
 
+	void SetRaceGroup(int RaceGroup);
+	int GetRaceGroup();
+
 	void OnPredictedInput(CNetObj_PlayerInput *pNewInput);
 	void OnDirectInput(CNetObj_PlayerInput *pNewInput);
 	void ResetInput();
@@ -109,6 +112,8 @@ private:
 	int m_RaceStartTick;
 	int m_LastCheckpoint;
 	int m_LastCorrectCheckpoint;
+
+	int m_RaceGroup;
 
 	int m_Health;
 	int m_Armor;

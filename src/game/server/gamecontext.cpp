@@ -141,6 +141,8 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 		int Num = m_World.FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 		for(int i = 0; i < Num; i++)
 		{
+			if(apEnts[i]->GetRaceGroup() != m_apPlayers[Owner]->GetCharacter()->GetRaceGroup())
+				continue;
 			vec2 Diff = apEnts[i]->m_Pos - Pos;
 			vec2 ForceDir(0,1);
 			float l = length(Diff);
@@ -742,6 +744,15 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				pMessage++;
 			}
 
+			//dbg_msg("dbg", ""+*pMessage);
+			if(m_apPlayers[ClientID]->GetCharacter())
+			{
+			//if(*pMessage == '+')
+				m_apPlayers[ClientID]->GetCharacter()->SetRaceGroup((m_apPlayers[ClientID]->GetCharacter()->GetRaceGroup() + 1) % 16);
+			//else if(*pMessage == '-')
+			//	m_apPlayers[ClientID]->GetCharacter()->SetRaceGroup((m_apPlayers[ClientID]->GetCharacter()->GetRaceGroup() + 16) % 16);
+			//else
+			}
 			SendChat(ClientID, Team, pMsg->m_pMessage);
 		}
 		else if(MsgID == NETMSGTYPE_CL_CALLVOTE)

@@ -24,7 +24,7 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 	vec2 At;
 	CCharacter *pOwnerChar = GameServer()->GetPlayerChar(m_Owner);
 	CCharacter *pHit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar);
-	if(!pHit)
+	if(!pHit || pHit->GetRaceGroup() != pOwnerChar->GetRaceGroup())
 		return false;
 
 	m_From = From;

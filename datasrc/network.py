@@ -145,6 +145,8 @@ Objects = [
 		NetIntRange("m_HookState", -1, 5),
 		NetTick("m_HookTick"),
 
+		NetIntRange("m_CollisionGroup", 0, 16),
+
 		NetIntAny("m_HookX"),
 		NetIntAny("m_HookY"),
 	]),

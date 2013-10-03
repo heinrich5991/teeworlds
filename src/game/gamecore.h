@@ -180,6 +180,8 @@ public:
 	int m_HookState;
 	int m_HookedPlayer;
 
+	int m_CollisionGroup;
+
 	int m_Jumped;
 
 	int m_Direction;

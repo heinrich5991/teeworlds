@@ -9,7 +9,7 @@ CLayers::CLayers()
 	m_LayersNum = 0;
 	m_LayersStart = 0;
 	m_pGameGroup = 0;
-	m_pGameLayer = 0;
+	mem_zero(m_apGameLayers, sizeof(m_apGameLayers));
 	m_pMap = 0;
 }
 
@@ -18,6 +18,8 @@ void CLayers::Init(class IKernel *pKernel, IMap *pMap)
 	m_pMap = pMap ? pMap : pKernel->RequestInterface<IMap>();
 	m_pMap->GetType(MAPITEMTYPE_GROUP, &m_GroupsStart, &m_GroupsNum);
 	m_pMap->GetType(MAPITEMTYPE_LAYER, &m_LayersStart, &m_LayersNum);
+	m_pGameGroup = 0;
+	mem_zero(m_apGameLayers, sizeof(m_apGameLayers));
 
 	for(int g = 0; g < NumGroups(); g++)
 	{
@@ -31,25 +33,33 @@ void CLayers::Init(class IKernel *pKernel, IMap *pMap)
 				CMapItemLayerTilemap *pTilemap = reinterpret_cast<CMapItemLayerTilemap *>(pLayer);
 				if(pTilemap->m_Flags&TILESLAYERFLAG_GAME)
 				{
-					m_pGameLayer = pTilemap;
-					m_pGameGroup = pGroup;
-
-					// make sure the game group has standard settings
-					m_pGameGroup->m_OffsetX = 0;
-					m_pGameGroup->m_OffsetY = 0;
-					m_pGameGroup->m_ParallaxX = 100;
-					m_pGameGroup->m_ParallaxY = 100;
-
-					if(m_pGameGroup->m_Version >= 2)
+					// reproduce previous behaviour
+					// only the first game group is marked as such
+					if(!m_pGameGroup)
 					{
-						m_pGameGroup->m_UseClipping = 0;
-						m_pGameGroup->m_ClipX = 0;
-						m_pGameGroup->m_ClipY = 0;
-						m_pGameGroup->m_ClipW = 0;
-						m_pGameGroup->m_ClipH = 0;
+						m_pGameGroup = pGroup;
+						// make sure the game group has standard settings
+						m_pGameGroup->m_OffsetX = 0;
+						m_pGameGroup->m_OffsetY = 0;
+						m_pGameGroup->m_ParallaxX = 100;
+						m_pGameGroup->m_ParallaxY = 100;
+
+						if(m_pGameGroup->m_Version >= 2)
+						{
+							m_pGameGroup->m_UseClipping = 0;
+							m_pGameGroup->m_ClipX = 0;
+							m_pGameGroup->m_ClipY = 0;
+							m_pGameGroup->m_ClipW = 0;
+							m_pGameGroup->m_ClipH = 0;
+						}
 					}
 
-					break;
+					int Type = (pTilemap->m_Flags>>GAMELAYERMASK_TYPE_SHIFT)&GAMELAYERMASK_TYPE;
+					// known type? - if so, save this layer
+					if(0 <= Type && Type < NUM_GAMELAYERTYPES)
+						// only save if we haven't found one yet
+						if(!m_apGameLayers[Type])
+							m_apGameLayers[Type] = pTilemap;
 				}
 			}
 		}

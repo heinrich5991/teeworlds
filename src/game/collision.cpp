@@ -14,9 +14,12 @@
 
 CCollision::CCollision()
 {
-	m_pTiles = 0;
-	m_Width = 0;
-	m_Height = 0;
+	for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
+	{
+		m_apTiles[t] = 0;
+		m_aWidth[t] = 0;
+		m_aHeight[t] = 0;
+	}
 	m_pLayers = 0;
 }
 
@@ -24,63 +27,70 @@ void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 {
 	m_pSwitchStates = pSwitchStates;
 	m_pLayers = pLayers;
-	m_Width = m_pLayers->GameLayer()->m_Width;
-	m_Height = m_pLayers->GameLayer()->m_Height;
-	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
-	// TODO this
-	m_pSwitchTiles = static_cast<CTile *>(m_pLayers->Map()->GetData((reinterpret_cast<CMapItemLayerTilemap *>(m_pLayers->GetLayer(7)))->m_Data));
-	// should be replaced by something like this
-	//m_pSwitchTiles = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->SwitchLayer()->m_Data));
-	// once we have a switch layer
+	m_aWidth[GAMELAYERTYPE_VANILLA] = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Width;
+	m_aHeight[GAMELAYERTYPE_VANILLA] = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Height;
+	m_apTiles[GAMELAYERTYPE_VANILLA] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Data));
+	m_aWidth[GAMELAYERTYPE_SWITCH] = m_pLayers->GameLayer(GAMELAYERTYPE_SWITCH)->m_Width;
+	m_aHeight[GAMELAYERTYPE_SWITCH] = m_pLayers->GameLayer(GAMELAYERTYPE_SWITCH)->m_Height;
+	m_apTiles[GAMELAYERTYPE_SWITCH] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_SWITCH)->m_Data));
 
-	for(int i = 0; i < m_Width*m_Height; i++)
+	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_VANILLA]*m_aHeight[GAMELAYERTYPE_VANILLA]; i++)
 	{
-		int Index = m_pTiles[i].m_Index;
+		int Index = m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index;
 
-		if(Index <= 128)
+		if(Index > 128)
+			continue;		
+
+		switch(Index)
 		{
-			switch(Index)
-			{
-			case TILE_DEATH:
-				m_pTiles[i].m_Index = COLFLAG_DEATH;
-				break;
-			case TILE_SOLID:
-				m_pTiles[i].m_Index = COLFLAG_SOLID;
-				break;
-			case TILE_NOHOOK:
-				m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
-				break;
-			default:
-				m_pTiles[i].m_Index = 0;
-			}
+		case TILE_DEATH:
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_DEATH;
+			break;
+		case TILE_SOLID:
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID;
+			break;
+		case TILE_NOHOOK:
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
+			break;
+		default:
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = 0;
 		}
 	}
 }
 
-int CCollision::GetTile(int PosIndex)
+int CCollision::GetTile(int x, int y)
 {
-	return m_pTiles[PosIndex].m_Index > 128 ? 0 : m_pTiles[PosIndex].m_Index;
+	ivec2 Pos = GetTilePos(x, y);
+	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
+
+	return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
 }
 
 int CCollision::GetSwitchGroup(int PosIndex)
 {
-	return m_pTiles[PosIndex].m_Reserved;
+	return m_apTiles[GAMELAYERTYPE_SWITCH][PosIndex].m_Reserved;
 }
 
-int CCollision::GetPosIndex(int x, int y)
+ivec2 CCollision::GetTilePos(int x, int y)
 {
-	int Nx = clamp(x/32, 0, m_Width-1);
-	int Ny = clamp(y/32, 0, m_Height-1);
+	int Nx = clamp(x/32, 0, m_aWidth[GAMELAYERTYPE_VANILLA]-1);
+	int Ny = clamp(y/32, 0, m_aHeight[GAMELAYERTYPE_VANILLA]-1);
 
-	return Ny*m_Width+Nx;
+	return ivec2(Nx, Ny);
+}
+
+int CCollision::GetPosIndex(int x, int y, int Layer)
+{
+	return y*m_aWidth[Layer]+x;
 }
 
 bool CCollision::IsTileSolid(int x, int y)
 {
-	int PosIndex = GetPosIndex(x, y);
+	ivec2 Pos = GetTilePos(x, y);
+	int PosIndex = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
 	bool Switch = m_pSwitchStates[GetSwitchGroup(PosIndex)];
-	bool Invert = m_pTiles[PosIndex].m_Flags&TILEFLAG_INVERT_SWITCH;
-	return (GetTile(PosIndex)&COLFLAG_SOLID) && ((Switch && Invert) || (!Switch && !Invert));
+	bool Invert = m_apTiles[GAMELAYERTYPE_VANILLA][PosIndex].m_Flags&TILEFLAG_INVERT_SWITCH;
+	return (GetTile(x, y)&COLFLAG_SOLID) && ((Switch && Invert) || (!Switch && !Invert));
 }
 
 // TODO: rewrite this smarter!
@@ -178,7 +188,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	{
 		//vec2 old_pos = pos;
 		float Fraction = 1.0f/(float)(Max+1);
-		int OldPosIndex = -1;
+		ivec2 OldPos = ivec2(-1, -1);
 		for(int i = 0; i <= Max; i++)
 		{
 			//float amount = i/(float)max;
@@ -217,16 +227,12 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 			}
 
 			Pos = NewPos;
-
-			int Nx = clamp(round(Pos.x)/32, 0, m_Width-1);
-			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
-			int PosIndex = Ny*m_Width+Nx;
-
-			if(pOutTriggers && PosIndex != OldPosIndex)
+			ivec2 iPos = GetTilePos(Pos.x, Pos.y);
+			if(pOutTriggers && iPos != OldPos)
 			{
-				OldPosIndex = PosIndex;
+				OldPos = iPos;
 				pOutTriggers[NumTiles] = CTriggers();
-				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
+				HandleTriggerTiles(iPos.x, iPos.y, pOutTriggers + NumTiles);
 				NumTiles++;
 			}
 		}
@@ -239,13 +245,14 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	return NumTiles;
 }
 
-void CCollision::HandleTriggerTiles(int Index, CTriggers *pOutTriggers)
+void CCollision::HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers)
 {
-	if(m_pSwitchTiles[Index].m_Index > 0)
+	int Index = GetPosIndex(x, y, GAMELAYERTYPE_SWITCH);
+	if(m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Index > 0)
 	{
 		pOutTriggers->m_Flags |= TRIGGERFLAG_SWITCH;
-		pOutTriggers->m_SwitchState = m_pSwitchTiles[Index].m_Flags&TILEFLAG_SWITCH_ON;
-		pOutTriggers->m_SwitchGroup = m_pSwitchTiles[Index].m_Index - 1;
-		pOutTriggers->m_SwitchDuration = m_pSwitchTiles[Index].m_Reserved;
+		pOutTriggers->m_SwitchState = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Flags&TILEFLAG_SWITCH_ON;
+		pOutTriggers->m_SwitchGroup = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Index - 1;
+		pOutTriggers->m_SwitchDuration = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Reserved;
 	}
 }

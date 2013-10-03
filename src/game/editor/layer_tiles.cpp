@@ -20,6 +20,7 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_Height = h;
 	m_Image = -1;
 	m_Game = 0;
+	m_GameLayerType = 0;
 	m_Color.r = 255;
 	m_Color.g = 255;
 	m_Color.b = 255;
@@ -150,6 +151,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 	pGrabbed->m_Texture = m_Texture;
 	pGrabbed->m_Image = m_Image;
 	pGrabbed->m_Game = m_Game;
+	pGrabbed->m_GameLayerType = m_GameLayerType;
 	pBrush->AddLayer(pGrabbed);
 
 	// copy the tiles
@@ -285,6 +287,16 @@ void CLayerTiles::BrushRotate(float Amount)
 	}
 }
 
+
+void CLayerTiles::BrushToggleSwitchOnOff()
+{
+
+	if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
+		for(int x = 0; x < m_Width; x++)
+			for(int y = 0; y < m_Height; y++)
+				m_pTiles[y*m_Width+x].m_Flags ^= (TILEFLAG_SWITCH_ON);
+}
+
 void CLayerTiles::Resize(int NewW, int NewH)
 {
 	CTile *pNewData = new CTile[NewW*NewH];
@@ -375,7 +387,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	CUIRect Button;
 
 	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
-	if(m_pEditor->m_Map.m_pGameLayer != this)
+	if(!m_pEditor->m_Map.IsGameLayer(this))
 	{
 		if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size() && m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper)
 		{
@@ -411,7 +423,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		int Result = m_pEditor->PopupSelectGameTileOpResult();
 		if(Result > -1)
 		{
-			CLayerTiles *gl = m_pEditor->m_Map.m_pGameLayer;
+			CLayerTiles *gl = m_pEditor->m_Map.m_apGameLayers[GAMELAYERTYPE_VANILLA];
 			int w = min(gl->m_Width, m_Width);
 			int h = min(gl->m_Height, m_Height);
 			for(int y = 0; y < h; y++)
@@ -452,7 +464,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		{0},
 	};
 
-	if(m_pEditor->m_Map.m_pGameLayer == this) // remove the image and color properties if this is the game layer
+	if(m_pEditor->m_Map.IsGameLayer(this)) // remove the image and color properties if this is the game layer
 	{
 		aProps[3].m_pName = 0;
 		aProps[4].m_pName = 0;

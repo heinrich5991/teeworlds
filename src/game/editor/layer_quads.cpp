@@ -186,6 +186,11 @@ void CLayerQuads::BrushRotate(float Amount)
 	}
 }
 
+void CLayerQuads::BrushToggleSwitchOnOff()
+{
+
+}
+
 void CLayerQuads::GetSize(float *w, float *h)
 {
 	*w = 0; *h = 0;

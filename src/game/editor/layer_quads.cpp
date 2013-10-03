@@ -186,7 +186,22 @@ void CLayerQuads::BrushRotate(float Amount)
 	}
 }
 
-void CLayerQuads::BrushToggleSwitchOnOff()
+void CLayerQuads::BrushToggleSwitch()
+{
+
+}
+
+void CLayerQuads::BrushSetSwitchGroup(int sg)
+{
+
+}
+
+void CLayerQuads::BrushIncreaseSwitchGroup()
+{
+
+}
+
+void CLayerQuads::BrushDecreaseSwitchGroup()
 {
 
 }

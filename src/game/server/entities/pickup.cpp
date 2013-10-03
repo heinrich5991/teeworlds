@@ -7,8 +7,8 @@
 #include "character.h"
 #include "pickup.h"
 
-CPickup::CPickup(CGameWorld *pGameWorld, int Type, int SwitchGroup)
-: CEntity(pGameWorld, CGameWorld::ENTTYPE_PICKUP, SwitchGroup)
+CPickup::CPickup(CGameWorld *pGameWorld, int Type, int SwitchGroup, bool InvertSwitch)
+: CEntity(pGameWorld, CGameWorld::ENTTYPE_PICKUP, SwitchGroup, InvertSwitch)
 {
 	m_Type = Type;
 	m_ProximityRadius = PickupPhysSize;
@@ -44,7 +44,7 @@ void CPickup::Tick()
 	}
 	// Check if a player intersected us
 	CCharacter *pChr = GameServer()->m_World.ClosestCharacter(m_Pos, 20.0f, 0);
-	if(pChr && pChr->IsAlive() && !GameWorld()->m_aSwitchStates[m_SwitchGroup])
+	if(pChr && pChr->IsAlive() && Active())
 	{
 		// player picked us up, is someone was hooking us, let them go
 		int RespawnTime = -1;
@@ -135,7 +135,7 @@ void CPickup::TickPaused()
 
 void CPickup::Snap(int SnappingClient)
 {
-	if(m_SpawnTick != -1 || NetworkClipped(SnappingClient) || GameWorld()->m_aSwitchStates[m_SwitchGroup])
+	if(m_SpawnTick != -1 || NetworkClipped(SnappingClient) || !Active())
 		return;
 
 	CNetObj_Pickup *pP = static_cast<CNetObj_Pickup *>(Server()->SnapNewItem(NETOBJTYPE_PICKUP, m_ID, sizeof(CNetObj_Pickup)));

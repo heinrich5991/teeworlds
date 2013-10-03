@@ -15,7 +15,7 @@ class CCollision
 	bool *m_pSwitchStates;
 
 	bool IsTileSolid(int x, int y);
-	int GetSwitchGroup(int PosIndex);
+	int GetSwitchGroup(int PosIndex, int Layer);
 	int GetTile(int x, int y);
 	ivec2 GetTilePos(int x, int y);
 	int GetPosIndex(int x, int y, int Layer);

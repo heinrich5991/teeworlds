@@ -8,7 +8,7 @@
 //////////////////////////////////////////////////
 // Entity
 //////////////////////////////////////////////////
-CEntity::CEntity(CGameWorld *pGameWorld, int ObjType, int SwitchGroup)
+CEntity::CEntity(CGameWorld *pGameWorld, int ObjType, int SwitchGroup, bool InvertSwitch)
 {
 	m_pGameWorld = pGameWorld;
 
@@ -23,6 +23,7 @@ CEntity::CEntity(CGameWorld *pGameWorld, int ObjType, int SwitchGroup)
 	m_pNextTypeEntity = 0;
 
 	m_SwitchGroup = SwitchGroup;
+	m_InvertSwitch = InvertSwitch;
 }
 
 CEntity::~CEntity()
@@ -56,4 +57,9 @@ bool CEntity::GameLayerClipped(vec2 CheckPos)
 {
 	return round(CheckPos.x)/32 < -200 || round(CheckPos.x)/32 > GameServer()->Collision()->GetWidth()+200 ||
 			round(CheckPos.y)/32 < -200 || round(CheckPos.y)/32 > GameServer()->Collision()->GetHeight()+200 ? true : false;
+}
+bool CEntity::Active()
+{
+	return (GameWorld()->m_aSwitchStates[m_SwitchGroup] && m_InvertSwitch)
+			|| (!GameWorld()->m_aSwitchStates[m_SwitchGroup] && !m_InvertSwitch);
 }

@@ -151,11 +151,12 @@ public:
 			index - Entity index.
 			pos - Where the entity is located in the world.
 			SwitchGroup - The switch group ID the entity shall have.
+			InvertSwitch - Whether entity should react inverted to switches.
 
 		Returns:
 			bool?
 	*/
-	virtual bool OnEntity(int Index, vec2 Pos, int SwitchGroup);
+	virtual bool OnEntity(int Index, vec2 Pos, int SwitchGroup, bool InvertSwitch);
 
 	void OnPlayerConnect(class CPlayer *pPlayer);
 	void OnPlayerDisconnect(class CPlayer *pPlayer);

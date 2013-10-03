@@ -1378,11 +1378,11 @@ void CGameContext::OnInit()
 		{
 			int Index = pTiles[y*pTileMap->m_Width+x].m_Index;
 			int SwitchGroup = pTiles[y*pTileMap->m_Width+x].m_Reserved;
-
+			bool InvertSwitch = pTiles[y*pTileMap->m_Width+x].m_Flags&TILEFLAG_INVERT_SWITCH;
 			if(Index >= ENTITY_OFFSET)
 			{
 				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos, SwitchGroup);
+				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos, SwitchGroup, InvertSwitch);
 			}
 		}
 	}

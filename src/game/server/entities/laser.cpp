@@ -6,7 +6,7 @@
 #include "laser.h"
 
 CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner)
-: CEntity(pGameWorld, CGameWorld::ENTTYPE_LASER, 0)
+: CEntity(pGameWorld, CGameWorld::ENTTYPE_LASER, 0, false)
 {
 	m_Pos = Pos;
 	m_Owner = Owner;

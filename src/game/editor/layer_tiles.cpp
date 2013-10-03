@@ -398,7 +398,8 @@ void CLayerTiles::BrushIncreaseSwitchGroup()
 	else
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
-				m_pTiles[y*m_Width+x].m_Index = min(m_pTiles[y*m_Width+x].m_Index + 1, 255);
+				if(m_pTiles[y*m_Width+x].m_Index)
+					m_pTiles[y*m_Width+x].m_Index = min(m_pTiles[y*m_Width+x].m_Index + 1, 255);
 }
 
 void CLayerTiles::BrushDecreaseSwitchGroup()

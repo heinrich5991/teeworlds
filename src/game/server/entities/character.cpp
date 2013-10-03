@@ -172,7 +172,7 @@ void CCharacter::HandleNinja()
 
 			for (int i = 0; i < Num; ++i)
 			{
-				if (aEnts[i] == this)
+				if (aEnts[i] == this || aEnts[i]->m_RaceGroup != m_RaceGroup)
 					continue;
 
 				// make sure we haven't Hit this object before

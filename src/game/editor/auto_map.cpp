@@ -330,7 +330,7 @@ void CDoodadsMapper::AnalyzeGameLayer()
 	m_RightWallIDs.clear();
 	m_LeftWallIDs.clear();
 
-	CLayerGame *pLayer = m_pEditor->m_Map.m_pGameLayer;
+	CLayerGame *pLayer = m_pEditor->m_Map.m_apGameLayers[GAMELAYERTYPE_VANILLA];
 
 	bool FloorKeepChaining = false;
 	bool CeilingKeepChaining = false;

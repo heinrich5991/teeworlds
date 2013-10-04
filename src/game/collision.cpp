@@ -71,10 +71,10 @@ int CCollision::GetSwitchGroup(int PosIndex, int Layer)
 	return m_apTiles[Layer][PosIndex].m_Reserved;
 }
 
-ivec2 CCollision::GetTilePos(int x, int y)
+ivec2 CCollision::GetTilePos(float x, float y)
 {
-	int Nx = clamp(x/32, 0, m_aWidth[GAMELAYERTYPE_VANILLA]-1);
-	int Ny = clamp(y/32, 0, m_aHeight[GAMELAYERTYPE_VANILLA]-1);
+	int Nx = clamp(round(x)/32, 0, m_aWidth[GAMELAYERTYPE_VANILLA]-1);
+	int Ny = clamp(round(y)/32, 0, m_aHeight[GAMELAYERTYPE_VANILLA]-1);
 
 	return ivec2(Nx, Ny);
 }
@@ -188,7 +188,8 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	{
 		//vec2 old_pos = pos;
 		float Fraction = 1.0f/(float)(Max+1);
-		ivec2 OldPos = ivec2(-1, -1);
+		ivec2 OldPos = GetTilePos(Pos.x, Pos.y);
+		bool First = true;
 		for(int i = 0; i <= Max; i++)
 		{
 			//float amount = i/(float)max;
@@ -228,13 +229,15 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 
 			Pos = NewPos;
 			ivec2 iPos = GetTilePos(Pos.x, Pos.y);
-			if(pOutTriggers && iPos != OldPos)
+			if(pOutTriggers && (iPos != OldPos || First))
 			{
 				OldPos = iPos;
 				pOutTriggers[NumTiles] = CTriggers();
 				HandleTriggerTiles(iPos.x, iPos.y, pOutTriggers + NumTiles);
 				NumTiles++;
 			}
+
+			First = false;
 		}
 	}
 

@@ -68,10 +68,10 @@ int CCollision::GetTile(int x, int y)
 	return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
 }
 
-ivec2 CCollision::GetTilePos(int x, int y)
+ivec2 CCollision::GetTilePos(float x, float y)
 {
-	int Nx = clamp(x/32, 0, m_aWidth[GAMELAYERTYPE_VANILLA]-1);
-	int Ny = clamp(y/32, 0, m_aHeight[GAMELAYERTYPE_VANILLA]-1);
+	int Nx = clamp(round(x)/32, 0, m_aWidth[GAMELAYERTYPE_VANILLA]-1);
+	int Ny = clamp(round(y)/32, 0, m_aHeight[GAMELAYERTYPE_VANILLA]-1);
 
 	return ivec2(Nx, Ny);
 }
@@ -182,8 +182,8 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	{
 		//vec2 old_pos = pos;
 		float Fraction = 1.0f/(float)(Max+1);
-		bool First = true;
 		ivec2 OldPos = GetTilePos(Pos.x, Pos.y);
+		bool First = true;
 		for(int i = 0; i <= Max; i++)
 		{
 			//float amount = i/(float)max;
@@ -252,7 +252,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 			if(pOutTriggers && (iPos != OldPos || First))
 			{
 				pOutTriggers[NumTiles] = CTriggers();
-				dbg_msg("dbg", "%d,%d -> %d,%d", OldPos.x, OldPos.y, iPos.x, iPos.y);
+
 				if(Speedup && iPos != OldPos)
 					pOutTriggers[NumTiles].m_SpeedupFlags |= TRIGGERFLAG_SPEEDUP;
 				HandleTriggerTiles(iPos.x, iPos.y, pOutTriggers + NumTiles);

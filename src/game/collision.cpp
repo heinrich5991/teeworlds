@@ -14,29 +14,31 @@
 
 CCollision::CCollision()
 {
-	m_pTiles = 0;
-	m_Width = 0;
-	m_Height = 0;
+	for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
+	{
+		m_apTiles[t] = 0;
+		m_aWidth[t] = 0;
+		m_aHeight[t] = 0;
+	}
 	m_pLayers = 0;
 }
 
 void CCollision::Init(class CLayers *pLayers)
 {
 	m_pLayers = pLayers;
-	m_Width = m_pLayers->GameLayer()->m_Width;
-	m_Height = m_pLayers->GameLayer()->m_Height;
-	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
-	// TODO this
-	m_pHSpeedupTiles = static_cast<CTile *>(m_pLayers->Map()->GetData((reinterpret_cast<CMapItemLayerTilemap *>(m_pLayers->GetLayer(7)))->m_Data));
-	m_pVSpeedupTiles = static_cast<CTile *>(m_pLayers->Map()->GetData((reinterpret_cast<CMapItemLayerTilemap *>(m_pLayers->GetLayer(8)))->m_Data));
-	// should be replaced by something like this
-	//m_pHSpeedupTiles = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->HSpeedupLayer()->m_Data));
-	//m_pVSpeedupTiles = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->VSpeedupLayer()->m_Data));
-	// once we have a speedup layer
+	m_aWidth[GAMELAYERTYPE_VANILLA] = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Width;
+	m_aHeight[GAMELAYERTYPE_VANILLA] = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Height;
+	m_apTiles[GAMELAYERTYPE_VANILLA] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Data));
+	m_aWidth[GAMELAYERTYPE_HSPEEDUP] = m_pLayers->GameLayer(GAMELAYERTYPE_HSPEEDUP)->m_Width;
+	m_aHeight[GAMELAYERTYPE_HSPEEDUP] = m_pLayers->GameLayer(GAMELAYERTYPE_HSPEEDUP)->m_Height;
+	m_apTiles[GAMELAYERTYPE_HSPEEDUP] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_HSPEEDUP)->m_Data));
+	m_aWidth[GAMELAYERTYPE_VSPEEDUP] = m_pLayers->GameLayer(GAMELAYERTYPE_VSPEEDUP)->m_Width;
+	m_aHeight[GAMELAYERTYPE_VSPEEDUP] = m_pLayers->GameLayer(GAMELAYERTYPE_VSPEEDUP)->m_Height;
+	m_apTiles[GAMELAYERTYPE_VSPEEDUP] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_VSPEEDUP)->m_Data));
 
-	for(int i = 0; i < m_Width*m_Height; i++)
+	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_VANILLA]*m_aHeight[GAMELAYERTYPE_VANILLA]; i++)
 	{
-		int Index = m_pTiles[i].m_Index;
+		int Index = m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index;
 
 		if(Index > 128)
 			continue;
@@ -44,26 +46,39 @@ void CCollision::Init(class CLayers *pLayers)
 		switch(Index)
 		{
 		case TILE_DEATH:
-			m_pTiles[i].m_Index = COLFLAG_DEATH;
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_DEATH;
 			break;
 		case TILE_SOLID:
-			m_pTiles[i].m_Index = COLFLAG_SOLID;
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID;
 			break;
 		case TILE_NOHOOK:
-			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
 			break;
 		default:
-			m_pTiles[i].m_Index = 0;
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = 0;
 		}
 	}
 }
 
 int CCollision::GetTile(int x, int y)
 {
-	int Nx = clamp(x/32, 0, m_Width-1);
-	int Ny = clamp(y/32, 0, m_Height-1);
+	ivec2 Pos = GetTilePos(x, y);
+	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
 
-	return m_pTiles[Ny*m_Width+Nx].m_Index > 128 ? 0 : m_pTiles[Ny*m_Width+Nx].m_Index;
+	return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
+}
+
+ivec2 CCollision::GetTilePos(int x, int y)
+{
+	int Nx = clamp(x/32, 0, m_aWidth[GAMELAYERTYPE_VANILLA]-1);
+	int Ny = clamp(y/32, 0, m_aHeight[GAMELAYERTYPE_VANILLA]-1);
+
+	return ivec2(Nx, Ny);
+}
+
+int CCollision::GetPosIndex(int x, int y, int Layer)
+{
+	return y*m_aWidth[Layer]+x;
 }
 
 bool CCollision::IsTileSolid(int x, int y)
@@ -167,10 +182,8 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	{
 		//vec2 old_pos = pos;
 		float Fraction = 1.0f/(float)(Max+1);
-		int Nx = clamp(round(Pos.x)/32, 0, m_Width-1);
-		int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
-		int OldPosIndex = Ny*m_Width+Nx;
 		bool First = true;
+		ivec2 OldPos = GetTilePos(Pos.x, Pos.y);
 		for(int i = 0; i <= Max; i++)
 		{
 			//float amount = i/(float)max;
@@ -210,41 +223,42 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 
 			Pos = NewPos;
 
-			int Nx = clamp(round(Pos.x)/32, 0, m_Width-1);
-			int Ny = clamp(round(Pos.y)/32, 0, m_Height-1);
-			int PosIndex = Ny*m_Width+Nx;
-
 			// speedups
 			bool Speedup = false;
-			if(m_pHSpeedupTiles[PosIndex].m_Index > 0)
+			ivec2 iPos = GetTilePos(Pos.x, Pos.y);
+
+			int PosIndex = GetPosIndex(iPos.x, iPos.y, GAMELAYERTYPE_HSPEEDUP);
+			if(m_apTiles[GAMELAYERTYPE_HSPEEDUP][PosIndex].m_Index > 0)
 			{
-				float Accel = m_pHSpeedupTiles[PosIndex].m_Index * Fraction;
+				float Accel = m_apTiles[GAMELAYERTYPE_HSPEEDUP][PosIndex].m_Index * Fraction;
 				Speedup = true;
-				if(m_pHSpeedupTiles[PosIndex].m_Flags&SPEEDUPFLAG_FLIP)
+				if(m_apTiles[GAMELAYERTYPE_HSPEEDUP][PosIndex].m_Flags&SPEEDUPFLAG_FLIP)
 					SpeedupVel.x -= Accel;
 				else
 					SpeedupVel.x += Accel;
 			}
-			if(m_pVSpeedupTiles[PosIndex].m_Index > 0)
+
+			PosIndex = GetPosIndex(iPos.x, iPos.y, GAMELAYERTYPE_VSPEEDUP);
+			if(m_apTiles[GAMELAYERTYPE_VSPEEDUP][PosIndex].m_Index > 0)
 			{
-				float Accel = m_pVSpeedupTiles[PosIndex].m_Index * Fraction;
+				float Accel = m_apTiles[GAMELAYERTYPE_VSPEEDUP][PosIndex].m_Index * Fraction;
 				Speedup = true;
-				if(m_pVSpeedupTiles[PosIndex].m_Flags&SPEEDUPFLAG_FLIP)
+				if(m_apTiles[GAMELAYERTYPE_VSPEEDUP][PosIndex].m_Flags&SPEEDUPFLAG_FLIP)
 					SpeedupVel.y -= Accel;
 				else
 					SpeedupVel.y += Accel;
 			}
 
-			if(pOutTriggers && (PosIndex != OldPosIndex || First))
+			if(pOutTriggers && (iPos != OldPos || First))
 			{
 				pOutTriggers[NumTiles] = CTriggers();
-
-				if(Speedup && PosIndex != OldPosIndex)
+				dbg_msg("dbg", "%d,%d -> %d,%d", OldPos.x, OldPos.y, iPos.x, iPos.y);
+				if(Speedup && iPos != OldPos)
 					pOutTriggers[NumTiles].m_SpeedupFlags |= TRIGGERFLAG_SPEEDUP;
-				HandleTriggerTiles(PosIndex, pOutTriggers + NumTiles);
+				HandleTriggerTiles(iPos.x, iPos.y, pOutTriggers + NumTiles);
 				NumTiles++;
 
-				OldPosIndex = PosIndex;
+				OldPos = iPos;
 			}
 
 			First = false;
@@ -258,7 +272,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	return NumTiles;
 }
 
-void CCollision::HandleTriggerTiles(int Index, CTriggers *pOutTriggers)
+void CCollision::HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers)
 {
 
 }

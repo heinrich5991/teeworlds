@@ -333,20 +333,30 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	Cmd.m_Format = ImageFormatToTexFormat(Format);
 	Cmd.m_StoreFormat = ImageFormatToTexFormat(StoreFormat);
 
+
 	// flags
-	Cmd.m_Flags = 0;
+	Cmd.m_Flags = CCommandBuffer::TEXFLAG_TEXTURE2D;
 	if(Flags&IGraphics::TEXLOAD_NOMIPMAPS)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_NOMIPMAPS;
 	if(g_Config.m_GfxTextureCompression)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_COMPRESSED;
 	if(g_Config.m_GfxTextureQuality || Flags&TEXLOAD_NORESAMPLE)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_QUALITY;
+	if(Flags&IGraphics::TEXLOAD_ARRAY_256)
+	{
+		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_TEXTURE3D;
+		Cmd.m_Flags &= ~CCommandBuffer::TEXFLAG_TEXTURE2D;
+	}
+	if(Flags&IGraphics::TEXLOAD_MULTI_DIMENSION)
+		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_TEXTURE3D;
 
+	
 	// copy texture data
 	int MemSize = Width*Height*Cmd.m_PixelSize;
 	void *pTmpData = mem_alloc(MemSize, sizeof(void*));
 	mem_copy(pTmpData, pData, MemSize);
 	Cmd.m_pData = pTmpData;
+	
 
 	//
 	m_pCommandBuffer->AddCommand(Cmd);
@@ -476,6 +486,7 @@ void CGraphics_Threaded::TextureSet(CTextureHandle TextureID)
 {
 	dbg_assert(m_Drawing == 0, "called Graphics()->TextureSet within begin");
 	m_State.m_Texture = TextureID.Id();
+	m_State.m_Dimension = 2;
 }
 
 void CGraphics_Threaded::Clear(float r, float g, float b)
@@ -493,7 +504,7 @@ void CGraphics_Threaded::QuadsBegin()
 	dbg_assert(m_Drawing == 0, "called Graphics()->QuadsBegin twice");
 	m_Drawing = DRAWING_QUADS;
 
-	QuadsSetSubset(0,0,1,1);
+	QuadsSetSubset(0,0,1,1,-1);
 	QuadsSetRotation(0);
 	SetColor(1,1,1,1);
 }
@@ -546,7 +557,7 @@ void CGraphics_Threaded::SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft,
 	SetColorVertex(Array, 4);
 }
 
-void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV)
+void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex)
 {
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsSetSubset without begin");
 
@@ -555,16 +566,22 @@ void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float B
 
 	m_aTexture[3].u = TlU;	m_aTexture[2].u = BrU;
 	m_aTexture[3].v = BrV;	m_aTexture[2].v = BrV;
+
+	m_aTexture[0].i = m_aTexture[1].i = m_aTexture[2].i = m_aTexture[3].i = (0.5f + TextureIndex) / 256.0f;
+	m_State.m_Dimension = (TextureIndex < 0) ? 2 : 3;
 }
 
 void CGraphics_Threaded::QuadsSetSubsetFree(
 	float x0, float y0, float x1, float y1,
-	float x2, float y2, float x3, float y3)
+	float x2, float y2, float x3, float y3, int TextureIndex)
 {
 	m_aTexture[0].u = x0; m_aTexture[0].v = y0;
 	m_aTexture[1].u = x1; m_aTexture[1].v = y1;
 	m_aTexture[2].u = x2; m_aTexture[2].v = y2;
 	m_aTexture[3].u = x3; m_aTexture[3].v = y3;
+
+	m_aTexture[0].i = m_aTexture[1].i = m_aTexture[2].i = m_aTexture[3].i = (0.5f + TextureIndex) / 256.0f;
+	m_State.m_Dimension = (TextureIndex < 0) ? 2 : 3;
 }
 
 void CGraphics_Threaded::QuadsDraw(CQuadItem *pArray, int Num)
@@ -760,14 +777,44 @@ int CGraphics_Threaded::Init()
 	m_pCommandBuffer = m_apCommandBuffers[0];
 
 	// create null texture, will get id=0
-	static const unsigned char aNullTextureData[] = {
-		0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
-		0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff,
-		0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
-		0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff,
-	};
+	unsigned char aNullTextureData[4*32*32];
+	for(int x = 0; x < 32; ++x)
+		for(int y = 0; y < 32; ++y)
+		{
+			if(x < 16)
+			{
+				if(y < 16)
+				{
+					aNullTextureData[4*(y*32+x)+0] = y*8+x*8+15;
+					aNullTextureData[4*(y*32+x)+1] = 0;
+					aNullTextureData[4*(y*32+x)+2] = 0;
+				}
+				else
+				{
+					aNullTextureData[4*(y*32+x)+0] = 0;
+					aNullTextureData[4*(y*32+x)+1] = y*8+x*8-113;
+					aNullTextureData[4*(y*32+x)+2] = 0;
+				}
+			}
+			else
+			{
+				if(y < 16)
+				{
+					aNullTextureData[4*(y*32+x)+0] = 0;
+					aNullTextureData[4*(y*32+x)+1] = 0;
+					aNullTextureData[4*(y*32+x)+2] = y*8+x*8-113;
+				}
+				else
+				{
+					aNullTextureData[4*(y*32+x)+0] = y*8+x*8-496;
+					aNullTextureData[4*(y*32+x)+1] = y*8+x*8-496;
+					aNullTextureData[4*(y*32+x)+2] = 0;
+				}
+			}
+			aNullTextureData[4*(y*32+x)+3] = 255;
+		}
 
-	m_InvalidTexture = LoadTextureRaw(4,4,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE);
+	m_InvalidTexture = LoadTextureRaw(32,32,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE|TEXLOAD_MULTI_DIMENSION);
 	return 0;
 }
 

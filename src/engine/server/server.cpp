@@ -31,7 +31,6 @@
 #include "server.h"
 
 #if defined(CONF_FAMILY_WINDOWS)
-	#define _WIN32_WINNT 0x0501
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
 #endif
@@ -1531,7 +1530,10 @@ void CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserD
 {
 	pfnCallback(pResult, pCallbackUserData);
 	if(pResult->NumArguments())
+	{
+		str_clean_whitespaces(g_Config.m_SvName);
 		((CServer *)pUserData)->UpdateServerInfo();
+	}
 }
 
 void CServer::ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)

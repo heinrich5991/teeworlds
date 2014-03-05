@@ -45,7 +45,6 @@
 #include "client.h"
 
 #if defined(CONF_FAMILY_WINDOWS)
-	#define _WIN32_WINNT 0x0501
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
 #endif
@@ -987,6 +986,8 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 			Info.m_aClients[i].m_Score = Up.GetInt();
 			Info.m_aClients[i].m_Player = Up.GetInt() != 0 ? true : false;
 		}
+		
+		str_clean_whitespaces(Info.m_aName);
 
 		if(!Up.Error())
 		{

@@ -96,8 +96,8 @@ int CCollision::GetTile(int x, int y)
 
 ivec2 CCollision::GetTilePos(float x, float y)
 {
-	int Nx = clamp(round(x)/32, 0, m_aWidth[GAMELAYERTYPE_VANILLA]-1);
-	int Ny = clamp(round(y)/32, 0, m_aHeight[GAMELAYERTYPE_VANILLA]-1);
+	int Nx = clamp(round_to_int(x)/32, 0, m_aWidth[GAMELAYERTYPE_VANILLA]-1);
+	int Ny = clamp(round_to_int(y)/32, 0, m_aHeight[GAMELAYERTYPE_VANILLA]-1);
 
 	return ivec2(Nx, Ny);
 }

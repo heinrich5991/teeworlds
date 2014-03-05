@@ -341,7 +341,8 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 		for(int i = 0; i < Input()->NumEvents(); i++)
 		{
 			Len = str_length(pStr);
-			ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, &Len, &s_AtIndex);
+			int NumChars = Len;
+			ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars);
 		}
 	}
 
@@ -2539,7 +2540,7 @@ void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 	pImg->m_External = External;
 	pEditor->ExtractName(pFileName, pImg->m_aName, sizeof(pImg->m_aName));
 	pImg->LoadAutoMapper();
-	pImg->m_Texture = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
+	pImg->m_Texture = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	ImgInfo.m_pData = 0;
 	pEditor->SortImages();
 	for(int i = 0; i < pEditor->m_Map.m_lImages.size(); ++i)
@@ -2568,7 +2569,7 @@ void CEditor::AddImage(const char *pFileName, int StorageType, void *pUser)
 
 	CEditorImage *pImg = new CEditorImage(pEditor);
 	*pImg = ImgInfo;
-	pImg->m_Texture = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
+	pImg->m_Texture = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	ImgInfo.m_pData = 0;
 	pImg->m_External = 1;	// external by default
 	str_copy(pImg->m_aName, aBuf, sizeof(pImg->m_aName));
@@ -3911,10 +3912,6 @@ void CEditor::Reset(bool CreateDefault)
 	if(CreateDefault)
 		m_Map.CreateDefault();
 
-	/*
-	{
-	}*/
-
 	m_SelectedLayer = 0;
 	m_SelectedGroup = 0;
 	m_SelectedQuad = -1;
@@ -4081,7 +4078,7 @@ void CEditor::Init()
 	m_CursorTexture = Graphics()->LoadTexture("editor/cursor.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
 	mem_zero(m_aEntitiesTexture, sizeof(m_aEntitiesTexture));
-	m_aEntitiesTexture[GAMELAYERTYPE_VANILLA] = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+	m_aEntitiesTexture[GAMELAYERTYPE_VANILLA] = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	//m_aEntitiesTexture[GAMELAYERTYPE_NEW] = Graphics()->LoadTexture("editor/new.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
 	m_TilesetPicker.m_pEditor = this;

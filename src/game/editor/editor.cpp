@@ -1086,6 +1086,56 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		if(m_GridFactor < 15)
 			m_GridFactor++;
 	}
+
+	// switch brush manipulation
+	{
+		int Enabled = m_Brush.IsEmpty()?-1:0;
+
+		TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
+
+		TB_Bottom.VSplitLeft(40.0f, &Button, &TB_Bottom);
+		static int s_SwitchButton = 0;
+		if(DoButton_Ex(&s_SwitchButton, "TS", Enabled, &Button, 0, "[D] Toggle switch", CUI::CORNER_ALL) || Input()->KeyDown('d'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushToggleSwitch();
+		}
+
+		TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
+		TB_Bottom.VSplitLeft(30.0f, &Button, &TB_Bottom);
+		static int s_SwitchGroup = 0;
+		s_SwitchGroup = UiDoValueSelector(&s_SwitchGroup, &Button, "", s_SwitchGroup, 0, 255, 1, 10.0f, "Set the switch group. Use left mouse button to drag and change the value. Hold shift to be more precise.");
+
+
+		TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
+		TB_Bottom.VSplitLeft(40.0f, &Button, &TB_Bottom);
+
+		static int s_SetSwitchGroup = 0;
+		if(DoButton_Ex(&s_SetSwitchGroup, "SG", Enabled, &Button, 0, "[F] Set switch group", CUI::CORNER_ALL) || Input()->KeyDown('f'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushSetSwitchGroup(s_SwitchGroup);
+		}
+
+		TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
+		TB_Bottom.VSplitLeft(40.0f, &Button, &TB_Bottom);
+
+		static int s_IncreaseSwitchButton = 0;
+		if(DoButton_Ex(&s_IncreaseSwitchButton, "+SG", Enabled, &Button, 0, "[G] Increase switch group", CUI::CORNER_L) || Input()->KeyDown('g'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushIncreaseSwitchGroup();
+		}
+
+		TB_Bottom.VSplitLeft(40.0f, &Button, &TB_Bottom);
+
+		static int s_DecreaseSwitchButton = 0;
+		if(DoButton_Ex(&s_DecreaseSwitchButton, "-SG", Enabled, &Button, 0, "[B] Decrease switch group", CUI::CORNER_R) || Input()->KeyDown('b'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushDecreaseSwitchGroup();
+		}
+	}
 }
 
 static void Rotate(const CPoint *pCenter, CPoint *pPoint, float Rotation)
@@ -1794,7 +1844,8 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		{
 			m_TilesetPicker.m_Image = t->m_Image;
 			m_TilesetPicker.m_Texture = t->m_Texture;
-			m_TilesetPicker.Render();
+			m_TilesetPicker.m_AltTexture = t->m_AltTexture;
+			m_TilesetPicker.Render(true);
 			m_TilesetPicker.m_Game = t->m_Game;
 			m_TilesetPicker.m_GameLayerType = t->m_GameLayerType;
 			if(m_ShowTileInfo)
@@ -3999,6 +4050,7 @@ void CEditorMap::MakeGameLayers(CLayerGame *apLayers[NUM_GAMELAYERTYPES])
 		m_apGameLayers[t] = apLayers[t];
 		m_apGameLayers[t]->m_pEditor = m_pEditor;
 		m_apGameLayers[t]->m_Texture = m_pEditor->m_aEntitiesTexture[t];
+		m_apGameLayers[t]->m_AltTexture = m_pEditor->m_aAltEntitiesTexture[t];
 	}
 }
 
@@ -4080,6 +4132,9 @@ void CEditor::Init()
 	mem_zero(m_aEntitiesTexture, sizeof(m_aEntitiesTexture));
 	m_aEntitiesTexture[GAMELAYERTYPE_VANILLA] = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_aEntitiesTexture[GAMELAYERTYPE_FREEZE] = Graphics()->LoadTexture("editor/entities_freeze.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_aEntitiesTexture[GAMELAYERTYPE_SWITCH] = Graphics()->LoadTexture("editor/entities_switch.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	mem_zero(m_aAltEntitiesTexture, sizeof(m_aAltEntitiesTexture));
+	m_aAltEntitiesTexture[GAMELAYERTYPE_SWITCH] = Graphics()->LoadTexture("editor/switch_combos.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
 	m_TilesetPicker.m_pEditor = this;
 	m_TilesetPicker.MakePalette();

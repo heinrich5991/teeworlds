@@ -12,8 +12,10 @@ class CCollision
 	int m_aWidth[NUM_GAMELAYERTYPES];
 	int m_aHeight[NUM_GAMELAYERTYPES];
 	class CLayers *m_pLayers;
+	bool *m_pSwitchStates;
 
 	bool IsTileSolid(int x, int y);
+	int GetSwitchGroup(int PosIndex, int Layer);
 	int GetTile(int x, int y);
 	ivec2 GetTilePos(float x, float y);
 	int GetPosIndex(int x, int y, int Layer);
@@ -36,16 +38,24 @@ public:
 		TRIGGERFLAG_UNFREEZE=2,
 		TRIGGERFLAG_DEEP_FREEZE=4,
 		TRIGGERFLAG_DEEP_UNFREEZE=8,
+
+		TRIGGERFLAG_SWITCH=16,
 	};
 
 	struct CTriggers
 	{
 		int m_Freeze;
-		CTriggers() : m_Freeze() {}
+
+		int m_Flags;
+		bool m_SwitchState;
+		int m_SwitchGroup;
+		int m_SwitchDuration;
+
+		CTriggers() : m_Freeze(), m_Flags(), m_SwitchState(), m_SwitchGroup(), m_SwitchDuration() {}
 	};
 
 	CCollision();
-	void Init(class CLayers *pLayers);
+	void Init(class CLayers *pLayers, bool *pSwitchStates);
 	bool CheckPoint(float x, float y) { return IsTileSolid(round_to_int(x), round_to_int(y)); }
 	bool CheckPoint(vec2 Pos) { return CheckPoint(Pos.x, Pos.y); }
 	int GetCollisionAt(float x, float y) { return GetTile(round_to_int(x), round_to_int(y)); }

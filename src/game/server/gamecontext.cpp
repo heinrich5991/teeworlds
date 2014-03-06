@@ -192,7 +192,6 @@ void CGameContext::CreateSound(vec2 Pos, int Sound, int Mask)
 	}
 }
 
-
 void CGameContext::SendChatTarget(int To, const char *pText)
 {
 	CNetMsg_Sv_Chat Msg;
@@ -1373,7 +1372,7 @@ void CGameContext::OnInit()
 		Server()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
 
 	m_Layers.Init(Kernel());
-	m_Collision.Init(&m_Layers);
+	m_Collision.Init(&m_Layers, m_World.m_aSwitchStates);
 
 	// select gametype
 	if(str_comp_nocase(g_Config.m_SvGametype, "mod") == 0)
@@ -1397,11 +1396,12 @@ void CGameContext::OnInit()
 		for(int x = 0; x < pTileMap->m_Width; x++)
 		{
 			int Index = pTiles[y*pTileMap->m_Width+x].m_Index;
-
+			int SwitchGroup = pTiles[y*pTileMap->m_Width+x].m_Reserved;
+			bool InvertSwitch = pTiles[y*pTileMap->m_Width+x].m_Flags&TILEFLAG_INVERT_SWITCH;
 			if(Index >= ENTITY_OFFSET)
 			{
 				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos);
+				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos, SwitchGroup, InvertSwitch);
 			}
 		}
 	}

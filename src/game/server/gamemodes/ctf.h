@@ -20,7 +20,7 @@ public:
 	
 	// event
 	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
-	virtual bool OnEntity(int Index, vec2 Pos);
+	virtual bool OnEntity(int Index, vec2 Pos, int SwitchGroup, bool InvertSwitch);
 
 	// general
 	virtual void Snap(int SnappingClient);

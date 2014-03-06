@@ -43,6 +43,10 @@ public:
 	bool m_ResetRequested;
 	bool m_Paused;
 	CWorldCore m_Core;
+	bool m_aSwitchStates[255];
+	int m_aSwitchTicks[255];
+
+	void SetSwitchState(bool State, int GroupID, int Duration);
 
 	CGameWorld();
 	~CGameWorld();

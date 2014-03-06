@@ -42,7 +42,7 @@ MACRO_ALLOC_POOL_ID_IMPL(CCharacter, MAX_CLIENTS)
 
 // Character, "physical" player's part
 CCharacter::CCharacter(CGameWorld *pWorld)
-: CEntity(pWorld, CGameWorld::ENTTYPE_CHARACTER)
+: CEntity(pWorld, CGameWorld::ENTTYPE_CHARACTER, 0, false)
 {
 	m_ProximityRadius = ms_PhysSize;
 	m_Health = 0;
@@ -680,7 +680,8 @@ void CCharacter::TickDefered()
 
 void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 {
-
+	if(Triggers.m_Flags&CCollision::TRIGGERFLAG_SWITCH)
+		GameServer()->m_World.SetSwitchState(Triggers.m_SwitchState, Triggers.m_SwitchGroup, Triggers.m_SwitchDuration);
 }
 
 void CCharacter::TickPaused()

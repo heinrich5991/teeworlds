@@ -179,6 +179,26 @@ void CLayerQuads::BrushRotate(float Amount)
 	}
 }
 
+void CLayerQuads::BrushToggleSwitch()
+{
+
+}
+
+void CLayerQuads::BrushSetSwitchGroup(int sg)
+{
+
+}
+
+void CLayerQuads::BrushIncreaseSwitchGroup()
+{
+
+}
+
+void CLayerQuads::BrushDecreaseSwitchGroup()
+{
+
+}
+
 void CLayerQuads::GetSize(float *w, float *h)
 {
 	*w = 0; *h = 0;

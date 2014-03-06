@@ -104,6 +104,12 @@ void CGameWorld::RemoveEntity(CEntity *pEnt)
 	pEnt->m_pPrevTypeEntity = 0;
 }
 
+void CGameWorld::SetSwitchState(bool State, int GroupID, int Duration)
+{
+	m_aSwitchStates[GroupID] = State;
+	m_aSwitchTicks[GroupID] = Duration * Server()->TickSpeed();
+}
+
 //
 void CGameWorld::Snap(int SnappingClient)
 {
@@ -114,6 +120,14 @@ void CGameWorld::Snap(int SnappingClient)
 			pEnt->Snap(SnappingClient);
 			pEnt = m_pNextTraverseEntity;
 		}
+
+	// snap switch states
+	CNetObj_SwitchStates *pSwitchStates = static_cast<CNetObj_SwitchStates *>(Server()->SnapNewItem(NETOBJTYPE_SWITCHSTATES, 0, sizeof(CNetObj_SwitchStates)));
+	if(pSwitchStates)
+	{
+		for(int i = 0; i < 255; i++)
+			pSwitchStates->m_aStates[i/8] |= m_aSwitchStates[i] << (i % 8);
+	}
 }
 
 void CGameWorld::PostSnap()
@@ -168,6 +182,17 @@ void CGameWorld::Tick()
 
 	if(!m_Paused)
 	{
+		// update switch states
+		for(int i = 0; i < 255; i++)
+		{
+			if(m_aSwitchTicks[i] > 0)
+			{
+				m_aSwitchTicks[i]--;
+				if(m_aSwitchTicks[i] == 0)
+					m_aSwitchStates[i] = !m_aSwitchStates[i];
+			}
+		}
+
 		// update all objects
 		for(int i = 0; i < NUM_ENTTYPES; i++)
 			for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )

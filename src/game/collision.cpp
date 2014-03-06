@@ -23,8 +23,9 @@ CCollision::CCollision()
 	m_pLayers = 0;
 }
 
-void CCollision::Init(class CLayers *pLayers)
+void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 {
+	m_pSwitchStates = pSwitchStates;
 	m_pLayers = pLayers;
 	m_aWidth[GAMELAYERTYPE_VANILLA] = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Width;
 	m_aHeight[GAMELAYERTYPE_VANILLA] = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Height;
@@ -32,13 +33,16 @@ void CCollision::Init(class CLayers *pLayers)
 	m_aWidth[GAMELAYERTYPE_FREEZE] = m_pLayers->GameLayer(GAMELAYERTYPE_FREEZE)->m_Width;
 	m_aHeight[GAMELAYERTYPE_FREEZE] = m_pLayers->GameLayer(GAMELAYERTYPE_FREEZE)->m_Height;
 	m_apTiles[GAMELAYERTYPE_FREEZE] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_FREEZE)->m_Data));
+	m_aWidth[GAMELAYERTYPE_SWITCH] = m_pLayers->GameLayer(GAMELAYERTYPE_SWITCH)->m_Width;
+	m_aHeight[GAMELAYERTYPE_SWITCH] = m_pLayers->GameLayer(GAMELAYERTYPE_SWITCH)->m_Height;
+	m_apTiles[GAMELAYERTYPE_SWITCH] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_SWITCH)->m_Data));
 
 	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_VANILLA]*m_aHeight[GAMELAYERTYPE_VANILLA]; i++)
 	{
 		int Index = m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index;
 
 		if(Index > 128)
-			continue;
+			continue;		
 
 		switch(Index)
 		{
@@ -106,6 +110,11 @@ int CCollision::GetTile(int x, int y)
 	return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
 }
 
+int CCollision::GetSwitchGroup(int PosIndex, int Layer)
+{
+	return m_apTiles[Layer][PosIndex].m_Reserved;
+}
+
 ivec2 CCollision::GetTilePos(float x, float y)
 {
 	int Nx = clamp(round_to_int(x)/32, 0, m_aWidth[GAMELAYERTYPE_VANILLA]-1);
@@ -121,7 +130,11 @@ int CCollision::GetPosIndex(int x, int y, int Layer)
 
 bool CCollision::IsTileSolid(int x, int y)
 {
-	return GetTile(x, y)&COLFLAG_SOLID;
+	ivec2 Pos = GetTilePos(x, y);
+	int PosIndex = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
+	bool Switch = m_pSwitchStates[GetSwitchGroup(PosIndex, GAMELAYERTYPE_VANILLA)];
+	bool Invert = m_apTiles[GAMELAYERTYPE_VANILLA][PosIndex].m_Flags&TILEFLAG_INVERT_SWITCH;
+	return (GetTile(x, y)&COLFLAG_SOLID) && ((Switch && Invert) || (!Switch && !Invert));
 }
 
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
@@ -318,4 +331,13 @@ void CCollision::HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers)
 		pOutTriggers->m_Freeze |= TRIGGERFLAG_DEEP_FREEZE;
 	else if(m_apTiles[GAMELAYERTYPE_FREEZE][Index].m_Index&FREEZEFLAG_DEEP_UNFREEZE)
 		pOutTriggers->m_Freeze |= TRIGGERFLAG_DEEP_UNFREEZE;
+
+	Index = GetPosIndex(x, y, GAMELAYERTYPE_SWITCH);
+	if(m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Index > 0)
+	{
+		pOutTriggers->m_Flags |= TRIGGERFLAG_SWITCH;
+		pOutTriggers->m_SwitchState = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Flags&TILEFLAG_SWITCH_ON;
+		pOutTriggers->m_SwitchGroup = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Index;
+		pOutTriggers->m_SwitchDuration = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Reserved;
+	}
 }

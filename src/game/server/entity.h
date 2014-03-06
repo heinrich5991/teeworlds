@@ -22,12 +22,15 @@ class CEntity
 	CEntity *m_pNextTypeEntity;
 
 	class CGameWorld *m_pGameWorld;
+
 protected:
 	bool m_MarkedForDestroy;
 	int m_ID;
 	int m_ObjType;
+	int m_SwitchGroup;
+	bool m_InvertSwitch;
 public:
-	CEntity(CGameWorld *pGameWorld, int Objtype);
+	CEntity(CGameWorld *pGameWorld, int Objtype, int SwitchGroup, bool InvertSwitch);
 	virtual ~CEntity();
 
 	class CGameWorld *GameWorld() { return m_pGameWorld; }
@@ -103,6 +106,7 @@ public:
 	int NetworkClipped(int SnappingClient, vec2 CheckPos);
 
 	bool GameLayerClipped(vec2 CheckPos);
+	bool Active();
 
 	/*
 		Variable: proximity_radius

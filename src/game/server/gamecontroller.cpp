@@ -258,7 +258,7 @@ void IGameController::OnCharacterSpawn(CCharacter *pChr)
 	}
 }
 
-bool IGameController::OnEntity(int Index, vec2 Pos)
+bool IGameController::OnEntity(int Index, vec2 Pos, int SwitchGroup, bool InvertSwitch)
 {
 	// don't add pickups in survival
 	if(m_GameFlags&GAMEFLAG_SURVIVAL)
@@ -302,7 +302,7 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 
 	if(Type != -1)
 	{
-		CPickup *pPickup = new CPickup(&GameServer()->m_World, Type);
+		CPickup *pPickup = new CPickup(&GameServer()->m_World, Type, SwitchGroup, InvertSwitch);
 		pPickup->m_Pos = Pos;
 		return true;
 	}

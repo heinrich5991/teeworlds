@@ -47,6 +47,7 @@ class CGameClient : public IGameClient
 
 	CLayers m_Layers;
 	class CCollision m_Collision;
+	bool m_aSwitchStates[255];
 	CUI m_UI;
 
 	void DispatchInput();
@@ -126,6 +127,7 @@ public:
 		const CNetObj_GameData *m_pGameData;
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
+		const CNetObj_SwitchStates *m_pSwitchStates;
 		int m_GameDataFlagSnapID;
 		
 		int m_NotReadyCount;

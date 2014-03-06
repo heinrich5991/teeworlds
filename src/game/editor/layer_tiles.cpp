@@ -42,9 +42,10 @@ CLayerTiles::~CLayerTiles()
 
 void CLayerTiles::PrepareForSave()
 {
-	for(int y = 0; y < m_Height; y++)
-		for(int x = 0; x < m_Width; x++)
-			m_pTiles[y*m_Width+x].m_Flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE;
+	if(!m_Game)
+		for(int y = 0; y < m_Height; y++)
+			for(int x = 0; x < m_Width; x++)
+				m_pTiles[y*m_Width+x].m_Flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE;
 
 	if(m_Image != -1 && m_Color.a == 255)
 	{
@@ -61,18 +62,94 @@ void CLayerTiles::MakePalette()
 			m_pTiles[y*m_Width+x].m_Index = y*16+x;
 }
 
-void CLayerTiles::Render()
+void CLayerTiles::Render(bool TileSetPicker)
 {
 	if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size())
-		m_Texture = m_pEditor->m_Map.m_lImages[m_Image]->m_Texture;
-	Graphics()->TextureSet(m_Texture);
+	m_Texture = m_pEditor->m_Map.m_lImages[m_Image]->m_Texture;
 	vec4 Color = vec4(m_Color.r/255.0f, m_Color.g/255.0f, m_Color.b/255.0f, m_Color.a/255.0f);
-	Graphics()->BlendNone();
-	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_OPAQUE,
-												m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
-	Graphics()->BlendNormal();
-	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_TRANSPARENT,
-												m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
+	if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
+	{
+		int Flags = LAYERRENDERFLAG_NO_FLAGS;
+		if(TileSetPicker)
+			Graphics()->TextureSet(m_Texture);
+		else
+		{
+			Graphics()->TextureSet(m_AltTexture);
+			Flags |= LAYERRENDERFLAG_FLAGS_AS_INDEX;
+		}	
+		Graphics()->BlendNormal();
+		m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, Flags,
+							m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
+
+		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+		Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());
+		Graphics()->QuadsBegin();
+
+
+		int StartY = max(0, (int)(ScreenY0/32.0f)-1);
+		int StartX = max(0, (int)(ScreenX0/32.0f)-1);
+		int EndY = min((int)(ScreenY1/32.0f)+1, m_Height);
+		int EndX = min((int)(ScreenX1/32.0f)+1, m_Width);
+
+		for(int y = StartY; y < EndY; y++)
+			for(int x = StartX; x < EndX; x++)
+			{
+				int c = x + y*m_Width;
+				if(m_pTiles[c].m_Index)
+				{
+					char aBuf[64];
+					str_format(aBuf, sizeof(aBuf), "%i", m_pTiles[c].m_Index);
+					m_pEditor->Graphics()->QuadsText(x*32+10, y*32+10, 12.0f, aBuf);
+				}
+				x += m_pTiles[c].m_Skip;
+			}
+
+		Graphics()->QuadsEnd();
+		Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+	}
+	else
+	{
+		Graphics()->TextureSet(m_Texture);
+
+		Graphics()->BlendNone();
+		m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_OPAQUE,
+							m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
+		Graphics()->BlendNormal();
+		m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_TRANSPARENT,
+							m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
+
+		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+		Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());
+		Graphics()->QuadsBegin();
+
+
+		int StartY = max(0, (int)(ScreenY0/32.0f)-1);
+		int StartX = max(0, (int)(ScreenX0/32.0f)-1);
+		int EndY = min((int)(ScreenY1/32.0f)+1, m_Height);
+		int EndX = min((int)(ScreenX1/32.0f)+1, m_Width);
+
+		for(int y = StartY; y < EndY; y++)
+			for(int x = StartX; x < EndX; x++)
+			{
+				int c = x + y*m_Width;
+				if(m_pTiles[c].m_Index && m_pTiles[c].m_Reserved > 0)
+				{
+					if(m_pTiles[c].m_Flags&TILEFLAG_INVERT_SWITCH)
+						Graphics()->SetColor(1.0f, 0.2f, 0.2f, 1.0f);
+					else
+						Graphics()->SetColor(0.2f, 1.0f, 0.2f, 1.0f);
+					char aBuf[64];
+					str_format(aBuf, sizeof(aBuf), "%i", m_pTiles[c].m_Reserved);
+					m_pEditor->Graphics()->QuadsText(x*32, y*32+17, 15.0f, aBuf);
+				}
+				x += m_pTiles[c].m_Skip;
+			}
+
+		Graphics()->QuadsEnd();
+		Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+	}
 }
 
 int CLayerTiles::ConvertX(float x) const { return (int)(x/32.0f); }
@@ -149,6 +226,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 	CLayerTiles *pGrabbed = new CLayerTiles(r.w, r.h);
 	pGrabbed->m_pEditor = m_pEditor;
 	pGrabbed->m_Texture = m_Texture;
+	pGrabbed->m_AltTexture = m_AltTexture;
 	pGrabbed->m_Image = m_Image;
 	pGrabbed->m_Game = m_Game;
 	pGrabbed->m_GameLayerType = m_GameLayerType;
@@ -287,6 +365,55 @@ void CLayerTiles::BrushRotate(float Amount)
 	}
 }
 
+void CLayerTiles::BrushToggleSwitch()
+{
+	if(!m_Game || m_GameLayerType != GAMELAYERTYPE_SWITCH)
+		for(int x = 0; x < m_Width; x++)
+			for(int y = 0; y < m_Height; y++)
+				m_pTiles[y*m_Width+x].m_Flags ^= TILEFLAG_INVERT_SWITCH;
+	else
+		for(int x = 0; x < m_Width; x++)
+			for(int y = 0; y < m_Height; y++)
+				m_pTiles[y*m_Width+x].m_Flags ^= TILEFLAG_SWITCH_ON;
+}
+
+void CLayerTiles::BrushSetSwitchGroup(int sg)
+{
+	if(!m_Game || m_GameLayerType != GAMELAYERTYPE_SWITCH)
+		for(int x = 0; x < m_Width; x++)
+			for(int y = 0; y < m_Height; y++)
+				m_pTiles[y*m_Width+x].m_Reserved = sg;
+	else
+		for(int x = 0; x < m_Width; x++)
+			for(int y = 0; y < m_Height; y++)
+				m_pTiles[y*m_Width+x].m_Index = sg;
+}
+
+void CLayerTiles::BrushIncreaseSwitchGroup()
+{
+	if(!m_Game || m_GameLayerType != GAMELAYERTYPE_SWITCH)
+		for(int x = 0; x < m_Width; x++)
+			for(int y = 0; y < m_Height; y++)
+				m_pTiles[y*m_Width+x].m_Reserved = min(m_pTiles[y*m_Width+x].m_Reserved + 1, 255);
+	else
+		for(int x = 0; x < m_Width; x++)
+			for(int y = 0; y < m_Height; y++)
+				if(m_pTiles[y*m_Width+x].m_Index)
+					m_pTiles[y*m_Width+x].m_Index = min(m_pTiles[y*m_Width+x].m_Index + 1, 255);
+}
+
+void CLayerTiles::BrushDecreaseSwitchGroup()
+{
+	if(!m_Game || m_GameLayerType != GAMELAYERTYPE_SWITCH)
+		for(int x = 0; x < m_Width; x++)
+			for(int y = 0; y < m_Height; y++)
+				m_pTiles[y*m_Width+x].m_Reserved = max(m_pTiles[y*m_Width+x].m_Reserved - 1, 0);
+	else
+		for(int x = 0; x < m_Width; x++)
+			for(int y = 0; y < m_Height; y++)
+				m_pTiles[y*m_Width+x].m_Index = max(m_pTiles[y*m_Width+x].m_Index - 1, 0);
+}
+
 void CLayerTiles::Resize(int NewW, int NewH)
 {
 	CTile *pNewData = new CTile[NewW*NewH];
@@ -339,6 +466,8 @@ void CLayerTiles::Shift(int Direction)
 
 void CLayerTiles::ShowInfo()
 {
+	if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
+		return;
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 	Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());

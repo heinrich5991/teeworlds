@@ -16,6 +16,8 @@ class CCollision
 
 	vec2 m_aTeleTargets[255];
 
+	int m_NumCheckpoints;
+
 	bool IsTileSolid(int x, int y);
 	int GetSwitchGroup(int PosIndex, int Layer);
 	int GetTile(int x, int y);
@@ -66,11 +68,15 @@ public:
 		vec2 m_TeleOutPos;
 		int m_SpeedupFlags;
 
-		CTriggers() : m_FreezeFlags(), m_SwitchFlags(), m_SwitchState(), m_SwitchGroup(), m_SwitchDuration(), m_TeleFlags(), m_TeleInPos(vec2(0.0f, 0.0f)), m_TeleOutPos(vec2(0.0f, 0.0f)), m_SpeedupFlags() {}
+		int m_Checkpoint;
+
+		CTriggers() : m_FreezeFlags(), m_SwitchFlags(), m_SwitchState(), m_SwitchGroup(), m_SwitchDuration(), m_TeleFlags(), m_TeleInPos(vec2(0.0f, 0.0f)),
+			m_TeleOutPos(vec2(0.0f, 0.0f)), m_SpeedupFlags(), m_Checkpoint() {}
 	};
 
 	CCollision();
 	void Init(class CLayers *pLayers, bool *pSwitchStates);
+	int GetNumCheckpoints();
 	bool CheckPoint(float x, float y) { return IsTileSolid(round_to_int(x), round_to_int(y)); }
 	bool CheckPoint(vec2 Pos) { return CheckPoint(Pos.x, Pos.y); }
 	int GetCollisionAt(float x, float y) { return GetTile(round_to_int(x), round_to_int(y)); }

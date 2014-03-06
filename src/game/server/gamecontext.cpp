@@ -139,6 +139,8 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 	int Num = m_World.FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 	for(int i = 0; i < Num; i++)
 	{
+			if(apEnts[i]->GetRaceGroup() != m_apPlayers[Owner]->GetCharacter()->GetRaceGroup())
+				continue;
 		vec2 Diff = apEnts[i]->m_Pos - Pos;
 		vec2 ForceDir(0,1);
 		float l = length(Diff);
@@ -243,6 +245,19 @@ void CGameContext::SendChat(int ChatterClientID, int Team, const char *pText)
 			if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() == Team)
 				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
 		}
+	}
+}
+
+void CGameContext::SendChatOthers(const char *pText, int NotMeID)
+{
+	CNetMsg_Sv_Chat Msg;
+	Msg.m_Team = 0;
+	Msg.m_ClientID = -1;
+	Msg.m_pMessage = pText;
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(m_apPlayers[i] && i != NotMeID)
+			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
 	}
 }
 
@@ -754,6 +769,16 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				return;
 
 			pPlayer->m_LastChat = Server()->Tick();
+
+			//dbg_msg("dbg", ""+*pMessage);
+			if(m_apPlayers[ClientID]->GetCharacter())
+			{
+			//if(*pMessage == '+')
+				m_apPlayers[ClientID]->GetCharacter()->SetRaceGroup((m_apPlayers[ClientID]->GetCharacter()->GetRaceGroup() + 1) % 16);
+			//else if(*pMessage == '-')
+			//	m_apPlayers[ClientID]->GetCharacter()->SetRaceGroup((m_apPlayers[ClientID]->GetCharacter()->GetRaceGroup() + 16) % 16);
+			//else
+			}
 
 			SendChat(ClientID, Team, pMsg->m_pMessage);
 		}

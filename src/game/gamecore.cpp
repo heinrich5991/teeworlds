@@ -70,6 +70,7 @@ void CCharacterCore::Reset()
 	m_HookTick = 0;
 	m_HookState = HOOK_IDLE;
 	m_HookedPlayer = -1;
+	m_CollisionGroup = 0;
 	m_Jumped = 0;
 	m_FreezeTick = 0;
 	m_TriggeredEvents = 0;
@@ -225,7 +226,7 @@ void CCharacterCore::Tick(bool UseInput)
 					continue;
 
 				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, pCharCore->m_Pos);
-				if(distance(pCharCore->m_Pos, ClosestPoint) < PhysSize+2.0f)
+				if(distance(pCharCore->m_Pos, ClosestPoint) < PhysSize+2.0f && m_CollisionGroup == pCharCore->m_CollisionGroup)
 				{
 					if (m_HookedPlayer == -1 || distance(m_HookPos, pCharCore->m_Pos) < Distance)
 					{
@@ -305,9 +306,8 @@ void CCharacterCore::Tick(bool UseInput)
 
 		// release hook (max hook time is 1.2)
 		m_HookTick++;
-		if(m_FreezeTick != 0
-			|| (m_HookedPlayer != -1
-				&& (m_HookTick > SERVER_TICK_SPEED+SERVER_TICK_SPEED/5 || !m_pWorld->m_apCharacters[m_HookedPlayer])))
+		if(m_FreezeTick != 0 || m_HookedPlayer != -1 && (m_HookTick > SERVER_TICK_SPEED+SERVER_TICK_SPEED/5 || !m_pWorld->m_apCharacters[m_HookedPlayer]
+									|| m_pWorld->m_apCharacters[m_HookedPlayer]->m_CollisionGroup != m_CollisionGroup))
 		{
 			m_HookedPlayer = -1;
 			m_HookState = HOOK_RETRACTED;
@@ -320,7 +320,7 @@ void CCharacterCore::Tick(bool UseInput)
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
 			CCharacterCore *pCharCore = m_pWorld->m_apCharacters[i];
-			if(!pCharCore)
+			if(!pCharCore || pCharCore->m_CollisionGroup != m_CollisionGroup)
 				continue;
 
 			//player *p = (player*)ent;
@@ -382,7 +382,7 @@ int CCharacterCore::Move(CCollision::CTriggers *pOutTriggers)
 	m_Vel.x = m_Vel.x*RampValue;
 
 	vec2 NewPos = m_Pos;
-	
+
 	int Size = m_pCollision->MoveBox(&NewPos, &m_Vel, pOutTriggers, vec2(28.0f, 28.0f), 0);
 	for(int i = 0; i < Size; i++)
 		HandleTriggers(pOutTriggers[i]);
@@ -402,7 +402,7 @@ int CCharacterCore::Move(CCollision::CTriggers *pOutTriggers)
 			for(int p = 0; p < MAX_CLIENTS; p++)
 			{
 				CCharacterCore *pCharCore = m_pWorld->m_apCharacters[p];
-				if(!pCharCore || pCharCore == this)
+				if(!pCharCore || pCharCore == this || pCharCore->m_CollisionGroup != m_CollisionGroup)
 					continue;
 				float D = distance(Pos, pCharCore->m_Pos);
 				if(D < 28.0f && D > 0.0f)
@@ -530,6 +530,7 @@ void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
 	pObjCore->m_HookX = round_to_int(m_HookPos.x);
 	pObjCore->m_HookY = round_to_int(m_HookPos.y);
 	pObjCore->m_HookedPlayer = m_HookedPlayer;
+	pObjCore->m_CollisionGroup = m_CollisionGroup;
 	pObjCore->m_Jumped = m_Jumped;
 	pObjCore->m_FreezeTick = m_FreezeTick;
 	pObjCore->m_Direction = m_Direction;
@@ -548,6 +549,7 @@ void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
 	m_HookPos.y = pObjCore->m_HookY;
 	m_HookDir = normalize(m_HookPos-m_Pos);
 	m_HookedPlayer = pObjCore->m_HookedPlayer;
+	m_CollisionGroup = pObjCore->m_CollisionGroup;
 	m_Jumped = pObjCore->m_Jumped;
 	m_FreezeTick = pObjCore->m_FreezeTick;
 	m_Direction = pObjCore->m_Direction;

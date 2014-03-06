@@ -65,6 +65,12 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_LastWeapon = WEAPON_HAMMER;
 	m_QueuedWeapon = -1;
 
+	m_RaceStartTick = -1;
+	m_LastCheckpoint = -1;
+	m_LastCorrectCheckpoint = -1;
+
+	m_RaceGroup = 0;
+
 	m_pPlayer = pPlayer;
 	m_Pos = Pos;
 
@@ -171,7 +177,7 @@ void CCharacter::HandleNinja()
 
 			for (int i = 0; i < Num; ++i)
 			{
-				if (aEnts[i] == this)
+				if (aEnts[i] == this || aEnts[i]->m_RaceGroup != m_RaceGroup)
 					continue;
 
 				// make sure we haven't Hit this object before
@@ -327,7 +333,7 @@ void CCharacter::FireWeapon()
 			{
 				CCharacter *pTarget = apEnts[i];
 
-				if ((pTarget == this) || GameServer()->Collision()->IntersectLineProj(ProjStartPos, pTarget->m_Pos, NULL, NULL))
+				if (pTarget == this || pTarget->m_RaceGroup != m_RaceGroup || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
 					continue;
 
 				// set his velocity to fast upward (for now)
@@ -646,6 +652,84 @@ void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 	}
 	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_STOP_NINJA)
 		m_Ninja.m_CurrentMoveTime = -1;
+
+	int Checkpoint = Triggers.m_Checkpoint;
+	if(Checkpoint == 0)
+	{
+		m_RaceStartTick = Server()->Tick();
+		m_LastCheckpoint = -1;
+		m_LastCorrectCheckpoint = -1;
+	}
+	else if(Checkpoint >= 0 && Checkpoint - 1 != m_LastCheckpoint && m_RaceStartTick >= 0)
+	{
+		m_LastCheckpoint = Checkpoint - 1;
+		if(Checkpoint - 2 == m_LastCorrectCheckpoint)
+		{
+			if(Checkpoint == GameServer()->Collision()->GetNumCheckpoints() + 1)
+			{
+				OnFinish();
+				m_LastCheckpoint = -1;
+				m_LastCorrectCheckpoint = -1;
+				m_RaceStartTick = -1;
+			}
+			else
+			{
+				OnCheckpoint();
+				m_LastCorrectCheckpoint++;
+			}
+		}
+		else if(Checkpoint - 2 > m_LastCorrectCheckpoint)
+		{
+			// TODO this should be only for vanilla
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "You missed checkpoint %d", m_LastCorrectCheckpoint + 1);
+			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+		}
+		else if(Checkpoint - 1 < m_LastCorrectCheckpoint)
+		{
+			// TODO this should be only for vanilla
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "Wrong direction!");
+			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+		}
+	}
+}
+
+void CCharacter::OnFinish()
+{
+	float Time =  (Server()->Tick() - m_RaceStartTick) / (float) Server()->TickSpeed();
+
+	// TODO this should be only for vanilla
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "'%s' finished in %.2f seconds!", Server()->ClientName(m_pPlayer->GetCID()), Time);
+	GameServer()->SendChatOthers(aBuf, m_pPlayer->GetCID());
+	str_format(aBuf, sizeof(aBuf), "You finished in %.2f seconds!", Time);
+	GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+
+	// TODO store finish time
+}
+
+void CCharacter::OnCheckpoint()
+{
+	float Time =  (Server()->Tick() - m_RaceStartTick) / (float) Server()->TickSpeed();
+
+	// TODO this should be only for vanilla
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "You reached Checkpoint %d in %.2f seconds.", m_LastCheckpoint, Time);
+	GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+
+	// TODO store checkpoint time
+}
+
+void CCharacter::SetRaceGroup(int RaceGroup)
+{
+	m_RaceGroup = RaceGroup;
+	m_Core.m_CollisionGroup = RaceGroup;
+}
+
+int CCharacter::GetRaceGroup()
+{
+	return m_RaceGroup;
 }
 
 void CCharacter::TickPaused()

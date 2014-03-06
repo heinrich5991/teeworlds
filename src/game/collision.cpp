@@ -21,6 +21,7 @@ CCollision::CCollision()
 		m_aHeight[t] = 0;
 	}
 	m_pLayers = 0;
+	m_NumCheckpoints = 0;
 }
 
 void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
@@ -103,6 +104,14 @@ void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 		if(m_apTiles[GAMELAYERTYPE_TELE][i].m_Index > 0)
 			if(!(m_apTiles[GAMELAYERTYPE_TELE][i].m_Flags&TELEFLAG_IN))
 				m_aTeleTargets[m_apTiles[GAMELAYERTYPE_TELE][i].m_Index] = vec2((i%m_aWidth[GAMELAYERTYPE_TELE]+0.5f)*32, (i/m_aWidth[GAMELAYERTYPE_TELE]+0.5f)*32);
+
+	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_RACE]*m_aHeight[GAMELAYERTYPE_RACE]; i++)
+		m_NumCheckpoints = max(m_apTiles[GAMELAYERTYPE_RACE][i].m_Index - 2, m_NumCheckpoints);
+}
+
+int CCollision::GetNumCheckpoints()
+{
+	return m_NumCheckpoints;
 }
 
 int CCollision::GetTile(int x, int y)
@@ -404,4 +413,17 @@ void CCollision::HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers)
 		pOutTriggers->m_SwitchGroup = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Index;
 		pOutTriggers->m_SwitchDuration = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Reserved;
 	}
+
+	Index = GetPosIndex(x, y, GAMELAYERTYPE_RACE);
+	if(m_apTiles[GAMELAYERTYPE_RACE][Index].m_Index > 0)
+	{
+		if(m_apTiles[GAMELAYERTYPE_RACE][Index].m_Index == TILE_RACE_START)
+			pOutTriggers->m_Checkpoint = 0;
+		else if(m_apTiles[GAMELAYERTYPE_RACE][Index].m_Index == TILE_RACE_FINISH)
+			pOutTriggers->m_Checkpoint = m_NumCheckpoints + 1;
+		else
+			pOutTriggers->m_Checkpoint = m_apTiles[GAMELAYERTYPE_RACE][Index].m_Index - RACE_FIRST_CP_TILE + 1;
+	}
+	else
+		pOutTriggers->m_Checkpoint = -1;
 }

@@ -5,7 +5,7 @@
 #include "character.h"
 #include "laser.h"
 
-CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner)
+CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, bool Pull)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_LASER, 0, false)
 {
 	m_Pos = Pos;
@@ -14,6 +14,7 @@ CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEner
 	m_Dir = Direction;
 	m_Bounces = 0;
 	m_EvalTick = 0;
+	m_Pull = Pull;
 	GameWorld()->InsertEntity(this);
 	DoBounce();
 }
@@ -30,7 +31,10 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 	m_From = From;
 	m_Pos = At;
 	m_Energy = -1;
-	pHit->TakeDamage(vec2(0.f, 0.f), GameServer()->Tuning()->m_LaserDamage, m_Owner, WEAPON_LASER);
+	if(m_Pull)
+		pHit->TakeDamage(normalize(From-To)*10, GameServer()->Tuning()->m_LaserDamage/2, m_Owner, WEAPON_LASER);
+	else
+		pHit->TakeDamage(vec2(0.f, 0.f), GameServer()->Tuning()->m_LaserDamage, m_Owner, WEAPON_LASER);
 	return true;
 }
 

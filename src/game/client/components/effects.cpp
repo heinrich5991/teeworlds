@@ -150,6 +150,28 @@ void CEffects::PlayerSpawn(vec2 Pos)
 	m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SPAWN, 1.0f, Pos);
 }
 
+void CEffects::PlayerTeleport(vec2 Pos)
+{
+	for(int i = 0; i < 32; i++)
+	{
+		CParticle p;
+		p.SetDefault();
+		p.m_Spr = SPRITE_PART_SHELL;
+		p.m_Pos = Pos;
+		p.m_Vel = RandomDir() * (powf(frandom(), 3)*600.0f);
+		p.m_LifeSpan = 0.3f + frandom()*0.3f;
+		p.m_StartSize = 32.0f + frandom()*16;
+		p.m_EndSize = 0;
+		p.m_Rot = frandom()*pi*2;
+		p.m_Rotspeed = frandom();
+		p.m_Gravity = frandom()*-400.0f;
+		p.m_Friction = 0.7f;
+		p.m_Color = vec4(0xb5/255.0f, 0x50/255.0f, 0xcb/255.0f, 1.0f);
+		m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
+
+	}
+}
+
 void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 {
 	vec3 BloodColor(1.0f,1.0f,1.0f);

@@ -165,6 +165,17 @@ void CGameContext::CreatePlayerSpawn(vec2 Pos)
 	}
 }
 
+void CGameContext::CreatePlayerTeleport(vec2 Pos)
+{
+	// create the event
+	CNetEvent_Teleport *ev = (CNetEvent_Teleport *)m_Events.Create(NETEVENTTYPE_TELEPORT, sizeof(CNetEvent_Teleport));
+	if(ev)
+	{
+		ev->m_X = (int)Pos.x;
+		ev->m_Y = (int)Pos.y;
+	}
+}
+
 void CGameContext::CreateDeath(vec2 Pos, int ClientID)
 {
 	// create the event

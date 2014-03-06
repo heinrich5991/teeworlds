@@ -150,7 +150,7 @@ void CCharacter::HandleNinja()
 		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
 		vec2 OldPos = m_Pos;
 
-		CCollision::CTriggers aTriggers[2 * (int)((MAX_SPEED + 31) / 32) + 1];
+		CCollision::CTriggers aTriggers[4 * (int)((MAX_SPEED + 15) / 16) + 2];
 		int Size = GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, aTriggers, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
 		for(int i = 0; i < Size; i++)
 		{
@@ -680,8 +680,16 @@ void CCharacter::TickDefered()
 
 void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 {
-	if(Triggers.m_Flags&CCollision::TRIGGERFLAG_SWITCH)
+	if(Triggers.m_SwitchFlags&CCollision::TRIGGERFLAG_SWITCH)
 		GameServer()->m_World.SetSwitchState(Triggers.m_SwitchState, Triggers.m_SwitchGroup, Triggers.m_SwitchDuration);
+
+	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_TELEPORT)
+	{
+		GameServer()->CreatePlayerTeleport(Triggers.m_TeleInPos);
+		GameServer()->CreatePlayerTeleport(Triggers.m_TeleOutPos);
+	}
+	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_STOP_NINJA)
+		m_Ninja.m_CurrentMoveTime = -1;
 }
 
 void CCharacter::TickPaused()

@@ -184,17 +184,36 @@ void CLayerQuads::BrushToggleSwitch()
 
 }
 
-void CLayerQuads::BrushSetSwitchGroup(int sg)
-{
-
-}
-
 void CLayerQuads::BrushIncreaseSwitchGroup()
 {
 
 }
 
+void CLayerQuads::BrushSetSwitchGroup(int sg)
+{
+
+}
+
 void CLayerQuads::BrushDecreaseSwitchGroup()
+{
+
+}
+
+void CLayerQuads::BrushToggleTeleIO()
+{
+
+}
+void CLayerQuads::BrushToggleTeleCutOwn()
+{
+
+}
+
+void CLayerQuads::BrushToggleTeleCutOther()
+{
+
+}
+
+void CLayerQuads::BrushToggleTeleResetVel()
 {
 
 }

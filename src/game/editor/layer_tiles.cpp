@@ -10,7 +10,7 @@
 #include <game/client/localization.h>
 #include <game/client/render.h>
 #include "editor.h"
-
+#include <typeinfo>
 
 CLayerTiles::CLayerTiles(int w, int h)
 {
@@ -65,9 +65,9 @@ void CLayerTiles::MakePalette()
 void CLayerTiles::Render(bool TileSetPicker)
 {
 	if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size())
-	m_Texture = m_pEditor->m_Map.m_lImages[m_Image]->m_Texture;
+		m_Texture = m_pEditor->m_Map.m_lImages[m_Image]->m_Texture;
 	vec4 Color = vec4(m_Color.r/255.0f, m_Color.g/255.0f, m_Color.b/255.0f, m_Color.a/255.0f);
-	if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
+	if(m_GameLayerType == GAMELAYERTYPE_SWITCH || m_GameLayerType == GAMELAYERTYPE_TELE)
 	{
 		int Flags = LAYERRENDERFLAG_NO_FLAGS;
 		if(TileSetPicker)
@@ -367,11 +367,11 @@ void CLayerTiles::BrushRotate(float Amount)
 
 void CLayerTiles::BrushToggleSwitch()
 {
-	if(!m_Game || m_GameLayerType != GAMELAYERTYPE_SWITCH)
+	if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
 				m_pTiles[y*m_Width+x].m_Flags ^= TILEFLAG_INVERT_SWITCH;
-	else
+	else if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
 				m_pTiles[y*m_Width+x].m_Flags ^= TILEFLAG_SWITCH_ON;
@@ -379,11 +379,11 @@ void CLayerTiles::BrushToggleSwitch()
 
 void CLayerTiles::BrushSetSwitchGroup(int sg)
 {
-	if(!m_Game || m_GameLayerType != GAMELAYERTYPE_SWITCH)
+	if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
 				m_pTiles[y*m_Width+x].m_Reserved = sg;
-	else
+	else if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
 				m_pTiles[y*m_Width+x].m_Index = sg;
@@ -391,11 +391,11 @@ void CLayerTiles::BrushSetSwitchGroup(int sg)
 
 void CLayerTiles::BrushIncreaseSwitchGroup()
 {
-	if(!m_Game || m_GameLayerType != GAMELAYERTYPE_SWITCH)
+	if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
 				m_pTiles[y*m_Width+x].m_Reserved = min(m_pTiles[y*m_Width+x].m_Reserved + 1, 255);
-	else
+	else if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
 				if(m_pTiles[y*m_Width+x].m_Index)
@@ -404,14 +404,46 @@ void CLayerTiles::BrushIncreaseSwitchGroup()
 
 void CLayerTiles::BrushDecreaseSwitchGroup()
 {
-	if(!m_Game || m_GameLayerType != GAMELAYERTYPE_SWITCH)
+	if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
 				m_pTiles[y*m_Width+x].m_Reserved = max(m_pTiles[y*m_Width+x].m_Reserved - 1, 0);
-	else
+	else if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
 				m_pTiles[y*m_Width+x].m_Index = max(m_pTiles[y*m_Width+x].m_Index - 1, 0);
+}
+
+void CLayerTiles::BrushToggleTeleIO()
+{
+	if(m_GameLayerType == GAMELAYERTYPE_TELE)
+		for(int y = 0; y < m_Height; y++)
+			for(int x = 0; x < m_Width; ++x)
+				m_pTiles[y*m_Width+x].m_Flags ^= TELEFLAG_IN;
+}
+
+void CLayerTiles::BrushToggleTeleCutOwn()
+{
+	if(m_GameLayerType == GAMELAYERTYPE_TELE)
+		for(int y = 0; y < m_Height; y++)
+			for(int x = 0; x < m_Width; ++x)
+				m_pTiles[y*m_Width+x].m_Flags ^= TELEFLAG_CUT_OWN;
+}
+
+void CLayerTiles::BrushToggleTeleCutOther()
+{
+	if(m_GameLayerType == GAMELAYERTYPE_TELE)
+		for(int y = 0; y < m_Height; y++)
+			for(int x = 0; x < m_Width; ++x)
+				m_pTiles[y*m_Width+x].m_Flags ^= TELEFLAG_CUT_OTHER;
+}
+
+void CLayerTiles::BrushToggleTeleResetVel()
+{
+	if(m_GameLayerType == GAMELAYERTYPE_TELE)
+		for(int y = 0; y < m_Height; y++)
+			for(int x = 0; x < m_Width; ++x)
+				m_pTiles[y*m_Width+x].m_Flags ^= TELEFLAG_RESET_VEL;
 }
 
 void CLayerTiles::Resize(int NewW, int NewH)
@@ -466,8 +498,9 @@ void CLayerTiles::Shift(int Direction)
 
 void CLayerTiles::ShowInfo()
 {
-	if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
+	if(m_GameLayerType == GAMELAYERTYPE_SWITCH || m_GameLayerType == GAMELAYERTYPE_TELE)
 		return;
+
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 	Graphics()->TextureSet(m_pEditor->Client()->GetDebugFont());

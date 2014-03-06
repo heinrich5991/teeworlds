@@ -217,6 +217,7 @@ Objects = [
 
 	NetEvent("Explosion:Common", []),
 	NetEvent("Spawn:Common", []),
+	NetEvent("Teleport:Common", []),
 	NetEvent("HammerHit:Common", []),
 
 	NetEvent("Death:Common", [

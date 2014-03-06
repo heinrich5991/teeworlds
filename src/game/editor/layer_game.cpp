@@ -6,6 +6,7 @@ static const char *const s_apGameLayerTypeNames[] = {
 	"Game",
 	"Freeze",
 	"Switches",
+	"Tele",
 };
 
 CLayerGame::CLayerGame(int w, int h, int Type)

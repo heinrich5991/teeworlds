@@ -27,15 +27,12 @@ void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 {
 	m_pSwitchStates = pSwitchStates;
 	m_pLayers = pLayers;
-	m_aWidth[GAMELAYERTYPE_VANILLA] = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Width;
-	m_aHeight[GAMELAYERTYPE_VANILLA] = m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Height;
-	m_apTiles[GAMELAYERTYPE_VANILLA] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_VANILLA)->m_Data));
-	m_aWidth[GAMELAYERTYPE_FREEZE] = m_pLayers->GameLayer(GAMELAYERTYPE_FREEZE)->m_Width;
-	m_aHeight[GAMELAYERTYPE_FREEZE] = m_pLayers->GameLayer(GAMELAYERTYPE_FREEZE)->m_Height;
-	m_apTiles[GAMELAYERTYPE_FREEZE] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_FREEZE)->m_Data));
-	m_aWidth[GAMELAYERTYPE_SWITCH] = m_pLayers->GameLayer(GAMELAYERTYPE_SWITCH)->m_Width;
-	m_aHeight[GAMELAYERTYPE_SWITCH] = m_pLayers->GameLayer(GAMELAYERTYPE_SWITCH)->m_Height;
-	m_apTiles[GAMELAYERTYPE_SWITCH] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(GAMELAYERTYPE_SWITCH)->m_Data));
+	for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
+	{
+		m_aWidth[t] = m_pLayers->GameLayer(t)->m_Width;
+		m_aHeight[t] = m_pLayers->GameLayer(t)->m_Height;
+		m_apTiles[t] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(t)->m_Data));
+	}
 
 	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_VANILLA]*m_aHeight[GAMELAYERTYPE_VANILLA]; i++)
 	{
@@ -100,6 +97,11 @@ void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 			m_apTiles[GAMELAYERTYPE_FREEZE][i].m_Index = 0;
 		}
 	}
+
+	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_TELE]*m_aHeight[GAMELAYERTYPE_TELE]; i++)
+		if(m_apTiles[GAMELAYERTYPE_TELE][i].m_Index > 0)
+			if(!(m_apTiles[GAMELAYERTYPE_TELE][i].m_Flags&TELEFLAG_IN))
+				m_aTeleTargets[m_apTiles[GAMELAYERTYPE_TELE][i].m_Index] = vec2((i%m_aWidth[GAMELAYERTYPE_TELE]+0.5f)*32, (i/m_aWidth[GAMELAYERTYPE_TELE]+0.5f)*32);
 }
 
 int CCollision::GetTile(int x, int y)
@@ -303,6 +305,37 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 				OldPos = iPos;
 				pOutTriggers[NumTiles] = CTriggers();
 				HandleTriggerTiles(iPos.x, iPos.y, pOutTriggers + NumTiles);
+
+				// handle teleporters
+				int PosIndex = GetPosIndex(iPos.x, iPos.y, GAMELAYERTYPE_TELE);
+				int TeleFlags = m_apTiles[GAMELAYERTYPE_TELE][PosIndex].m_Flags;
+
+				if(TeleFlags&TELEFLAG_IN)
+				{
+					pOutTriggers[NumTiles].m_TeleFlags |= TRIGGERFLAG_TELEPORT;
+					pOutTriggers[NumTiles].m_TeleInPos = Pos;
+
+					Pos = m_aTeleTargets[m_apTiles[GAMELAYERTYPE_TELE][PosIndex].m_Index];
+
+					pOutTriggers[NumTiles].m_TeleOutPos = Pos;
+					if(TeleFlags&TELEFLAG_RESET_VEL)
+					{
+						Vel = vec2(0.0f, 0.0f);
+						pOutTriggers[NumTiles].m_TeleFlags |= TRIGGERFLAG_STOP_NINJA;
+					}
+					if(TeleFlags&TELEFLAG_CUT_OTHER)
+						pOutTriggers[NumTiles].m_TeleFlags |= TRIGGERFLAG_CUT_OTHER;
+					if(TeleFlags&TELEFLAG_CUT_OWN)
+						pOutTriggers[NumTiles].m_TeleFlags |= TRIGGERFLAG_CUT_OWN;
+
+					NumTiles++;
+
+					ivec2 iPos = GetTilePos(Pos.x, Pos.y);
+					OldPos = iPos;
+
+					pOutTriggers[NumTiles] = CTriggers();
+					HandleTriggerTiles(iPos.x, iPos.y, pOutTriggers + NumTiles);
+				}
 				NumTiles++;
 			}
 
@@ -313,29 +346,28 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	*pInoutPos = Pos;
 	*pInoutVel = Vel;
 
-
 	return NumTiles;
 }
 
 void CCollision::HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers)
 {
-	pOutTriggers->m_Freeze = 0;
+	pOutTriggers->m_FreezeFlags = 0;
 	int Index = GetPosIndex(x, y, GAMELAYERTYPE_FREEZE);
 
 	if(m_apTiles[GAMELAYERTYPE_FREEZE][Index].m_Index&FREEZEFLAG_FREEZE)
-		pOutTriggers->m_Freeze |= TRIGGERFLAG_FREEZE;
+		pOutTriggers->m_FreezeFlags |= TRIGGERFLAG_FREEZE;
 	else if(m_apTiles[GAMELAYERTYPE_FREEZE][Index].m_Index&FREEZEFLAG_UNFREEZE)
-		pOutTriggers->m_Freeze |= TRIGGERFLAG_UNFREEZE;
+		pOutTriggers->m_FreezeFlags |= TRIGGERFLAG_UNFREEZE;
 
 	if(m_apTiles[GAMELAYERTYPE_FREEZE][Index].m_Index&FREEZEFLAG_DEEP_FREEZE)
-		pOutTriggers->m_Freeze |= TRIGGERFLAG_DEEP_FREEZE;
+		pOutTriggers->m_FreezeFlags |= TRIGGERFLAG_DEEP_FREEZE;
 	else if(m_apTiles[GAMELAYERTYPE_FREEZE][Index].m_Index&FREEZEFLAG_DEEP_UNFREEZE)
-		pOutTriggers->m_Freeze |= TRIGGERFLAG_DEEP_UNFREEZE;
+		pOutTriggers->m_FreezeFlags |= TRIGGERFLAG_DEEP_UNFREEZE;
 
 	Index = GetPosIndex(x, y, GAMELAYERTYPE_SWITCH);
 	if(m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Index > 0)
 	{
-		pOutTriggers->m_Flags |= TRIGGERFLAG_SWITCH;
+		pOutTriggers->m_SwitchFlags |= TRIGGERFLAG_SWITCH;
 		pOutTriggers->m_SwitchState = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Flags&TILEFLAG_SWITCH_ON;
 		pOutTriggers->m_SwitchGroup = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Index;
 		pOutTriggers->m_SwitchDuration = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Reserved;

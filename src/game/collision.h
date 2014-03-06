@@ -14,6 +14,8 @@ class CCollision
 	class CLayers *m_pLayers;
 	bool *m_pSwitchStates;
 
+	vec2 m_aTeleTargets[255];
+
 	bool IsTileSolid(int x, int y);
 	int GetSwitchGroup(int PosIndex, int Layer);
 	int GetTile(int x, int y);
@@ -39,19 +41,27 @@ public:
 		TRIGGERFLAG_DEEP_FREEZE=4,
 		TRIGGERFLAG_DEEP_UNFREEZE=8,
 
-		TRIGGERFLAG_SWITCH=16,
+		TRIGGERFLAG_SWITCH=1,
+
+		TRIGGERFLAG_TELEPORT=1,
+		TRIGGERFLAG_CUT_OTHER=2,
+		TRIGGERFLAG_CUT_OWN=4,
+		TRIGGERFLAG_STOP_NINJA=8,
 	};
 
 	struct CTriggers
 	{
-		int m_Freeze;
+		int m_FreezeFlags;
 
-		int m_Flags;
+		int m_SwitchFlags;
 		bool m_SwitchState;
 		int m_SwitchGroup;
 		int m_SwitchDuration;
 
-		CTriggers() : m_Freeze(), m_Flags(), m_SwitchState(), m_SwitchGroup(), m_SwitchDuration() {}
+		int m_TeleFlags;
+		vec2 m_TeleInPos;
+		vec2 m_TeleOutPos;
+		CTriggers() : m_FreezeFlags(), m_SwitchFlags(), m_SwitchState(), m_SwitchGroup(), m_SwitchDuration(), m_TeleFlags(), m_TeleInPos(vec2(0.0f, 0.0f)), m_TeleOutPos(vec2(0.0f, 0.0f)) {}
 	};
 
 	CCollision();

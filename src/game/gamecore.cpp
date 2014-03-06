@@ -426,22 +426,64 @@ int CCharacterCore::Move(CCollision::CTriggers *pOutTriggers)
 
 void CCharacterCore::Move()
 {
-	CCollision::CTriggers aTriggers[2 * (int)((MAX_SPEED + 31) / 32) + 1];
+	CCollision::CTriggers aTriggers[4 * (int)((MAX_SPEED + 15) / 16) + 2];
 	Move(aTriggers);
 }
 
 void CCharacterCore::HandleTriggers(CCollision::CTriggers Triggers)
 {
 	// handle freeze-tiles
-	if(Triggers.m_Freeze&CCollision::TRIGGERFLAG_DEEP_FREEZE)
+	if(Triggers.m_FreezeFlags&CCollision::TRIGGERFLAG_DEEP_FREEZE)
 		DeepFreeze();
-	else if(Triggers.m_Freeze&CCollision::TRIGGERFLAG_DEEP_UNFREEZE)
+	else if(Triggers.m_FreezeFlags&CCollision::TRIGGERFLAG_DEEP_UNFREEZE)
 		DeepUnfreeze();
 
-	if(Triggers.m_Freeze&CCollision::TRIGGERFLAG_FREEZE)
+	if(Triggers.m_FreezeFlags&CCollision::TRIGGERFLAG_FREEZE)
 		Freeze();
-	else if(Triggers.m_Freeze&CCollision::TRIGGERFLAG_UNFREEZE)
+	else if(Triggers.m_FreezeFlags&CCollision::TRIGGERFLAG_UNFREEZE)
 		Unfreeze();
+
+	// handle teleporters
+	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_CUT_OTHER)
+	{
+		// this part is very dirty
+		int MyId;
+		for(int i = 0; i != MAX_CLIENTS; i++)
+		{
+			CCharacterCore *pCharCore = m_pWorld->m_apCharacters[i];
+
+			if(pCharCore == this)
+			{
+				// find out my own id
+				MyId = i;
+				break;
+			}
+		}
+
+		for(int i = 0; i != MAX_CLIENTS; i++)
+		{
+			CCharacterCore *pCharCore = m_pWorld->m_apCharacters[i];
+			if(!pCharCore)
+				continue;
+
+			if(pCharCore == this)
+				continue;
+
+			if(pCharCore->m_HookedPlayer == MyId)
+			{
+				// reject player's hook that hooks me
+				pCharCore->m_HookedPlayer = -1;
+				pCharCore->m_HookState = HOOK_RETRACTED;
+				pCharCore->m_HookPos = pCharCore->m_Pos;
+			}
+		}
+	}
+
+	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_CUT_OWN && m_HookState != HOOK_IDLE)
+	{
+		m_HookedPlayer = -1;
+		m_HookState = HOOK_RETRACT_START;
+	}
 }
 
 void CCharacterCore::Freeze()

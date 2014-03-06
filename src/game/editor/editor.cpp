@@ -1136,6 +1136,44 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 				m_Brush.m_lLayers[i]->BrushDecreaseSwitchGroup();
 		}
 	}
+	// tele brush manipulation
+	{
+		int Enabled = m_Brush.IsEmpty()?-1:0;
+
+		TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
+
+		TB_Bottom.VSplitLeft(25.0f, &Button, &TB_Bottom);
+		static int s_InOutButton = 0;
+		if(DoButton_Ex(&s_InOutButton, "I/O", Enabled, &Button, 0, "[Z] Toggle teleporter in/out", CUI::CORNER_L) || Input()->KeyDown('z'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushToggleTeleIO();
+		}
+
+		TB_Bottom.VSplitLeft(55.0f, &Button, &TB_Bottom);
+		static int s_CutOwnButton = 0;
+		if(DoButton_Ex(&s_CutOwnButton, "Cut own", Enabled, &Button, 0, "[X] Toggle teleporter cut own hook", 0) || Input()->KeyDown('x'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushToggleTeleCutOwn();
+		}
+
+		TB_Bottom.VSplitLeft(60.0f, &Button, &TB_Bottom);
+		static int s_CutOtherButton = 0;
+		if(DoButton_Ex(&s_CutOtherButton, "Cut other", Enabled, &Button, 0, "[C] Toggle teleporter cut other's hook", 0) || Input()->KeyDown('c'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushToggleTeleCutOther();
+		}
+
+		TB_Bottom.VSplitLeft(80.0f, &Button, &TB_Bottom);
+		static int s_ResetVelButton = 0;
+		if(DoButton_Ex(&s_ResetVelButton, "Reset velocity", Enabled, &Button, 0, "[V] Toggle teleporter reset velocity", CUI::CORNER_R) || Input()->KeyDown('v'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushToggleTeleResetVel();
+		}
+	}
 }
 
 static void Rotate(const CPoint *pCenter, CPoint *pPoint, float Rotation)
@@ -4133,8 +4171,10 @@ void CEditor::Init()
 	m_aEntitiesTexture[GAMELAYERTYPE_VANILLA] = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_aEntitiesTexture[GAMELAYERTYPE_FREEZE] = Graphics()->LoadTexture("editor/entities_freeze.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_aEntitiesTexture[GAMELAYERTYPE_SWITCH] = Graphics()->LoadTexture("editor/entities_switch.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_aEntitiesTexture[GAMELAYERTYPE_TELE] = Graphics()->LoadTexture("editor/entities_tele.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	mem_zero(m_aAltEntitiesTexture, sizeof(m_aAltEntitiesTexture));
 	m_aAltEntitiesTexture[GAMELAYERTYPE_SWITCH] = Graphics()->LoadTexture("editor/switch_combos.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_aAltEntitiesTexture[GAMELAYERTYPE_TELE] = Graphics()->LoadTexture("editor/tele_combos.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
 	m_TilesetPicker.m_pEditor = this;
 	m_TilesetPicker.MakePalette();

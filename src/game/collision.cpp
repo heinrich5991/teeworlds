@@ -27,6 +27,7 @@ void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 {
 	m_pSwitchStates = pSwitchStates;
 	m_pLayers = pLayers;
+
 	for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
 	{
 		m_aWidth[t] = m_pLayers->GameLayer(t)->m_Width;
@@ -250,6 +251,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	// do the move
 	vec2 Pos = *pInoutPos;
 	vec2 Vel = *pInoutVel;
+	vec2 SpeedupVel = vec2(0.0f, 0.0f);
 
 	float Distance = length(Vel);
 	int Max = (int)Distance;
@@ -299,11 +301,39 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 			}
 
 			Pos = NewPos;
+
+			// speedups
+			bool Speedup = false;
 			ivec2 iPos = GetTilePos(Pos.x, Pos.y);
+
+			int PosIndex = GetPosIndex(iPos.x, iPos.y, GAMELAYERTYPE_HSPEEDUP);
+			if(m_apTiles[GAMELAYERTYPE_HSPEEDUP][PosIndex].m_Index > 0)
+			{
+				float Accel = m_apTiles[GAMELAYERTYPE_HSPEEDUP][PosIndex].m_Index * Fraction;
+				Speedup = true;
+				if(m_apTiles[GAMELAYERTYPE_HSPEEDUP][PosIndex].m_Flags&SPEEDUPFLAG_FLIP)
+					SpeedupVel.x -= Accel;
+				else
+					SpeedupVel.x += Accel;
+			}
+
+			PosIndex = GetPosIndex(iPos.x, iPos.y, GAMELAYERTYPE_VSPEEDUP);
+			if(m_apTiles[GAMELAYERTYPE_VSPEEDUP][PosIndex].m_Index > 0)
+			{
+				float Accel = m_apTiles[GAMELAYERTYPE_VSPEEDUP][PosIndex].m_Index * Fraction;
+				Speedup = true;
+				if(m_apTiles[GAMELAYERTYPE_VSPEEDUP][PosIndex].m_Flags&SPEEDUPFLAG_FLIP)
+					SpeedupVel.y -= Accel;
+				else
+					SpeedupVel.y += Accel;
+			}
+
 			if(pOutTriggers && (iPos != OldPos || First))
 			{
-				OldPos = iPos;
 				pOutTriggers[NumTiles] = CTriggers();
+
+				if(Speedup && iPos != OldPos)
+					pOutTriggers[NumTiles].m_SpeedupFlags |= TRIGGERFLAG_SPEEDUP;
 				HandleTriggerTiles(iPos.x, iPos.y, pOutTriggers + NumTiles);
 
 				// handle teleporters
@@ -337,6 +367,8 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 					HandleTriggerTiles(iPos.x, iPos.y, pOutTriggers + NumTiles);
 				}
 				NumTiles++;
+
+				OldPos = iPos;
 			}
 
 			First = false;
@@ -344,7 +376,7 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 	}
 
 	*pInoutPos = Pos;
-	*pInoutVel = Vel;
+	*pInoutVel = Vel + SpeedupVel;
 
 	return NumTiles;
 }

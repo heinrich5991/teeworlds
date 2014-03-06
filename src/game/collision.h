@@ -47,6 +47,8 @@ public:
 		TRIGGERFLAG_CUT_OTHER=2,
 		TRIGGERFLAG_CUT_OWN=4,
 		TRIGGERFLAG_STOP_NINJA=8,
+
+		TRIGGERFLAG_SPEEDUP=1,
 	};
 
 	struct CTriggers
@@ -60,8 +62,11 @@ public:
 
 		int m_TeleFlags;
 		vec2 m_TeleInPos;
+
 		vec2 m_TeleOutPos;
-		CTriggers() : m_FreezeFlags(), m_SwitchFlags(), m_SwitchState(), m_SwitchGroup(), m_SwitchDuration(), m_TeleFlags(), m_TeleInPos(vec2(0.0f, 0.0f)), m_TeleOutPos(vec2(0.0f, 0.0f)) {}
+		int m_SpeedupFlags;
+
+		CTriggers() : m_FreezeFlags(), m_SwitchFlags(), m_SwitchState(), m_SwitchGroup(), m_SwitchDuration(), m_TeleFlags(), m_TeleInPos(vec2(0.0f, 0.0f)), m_TeleOutPos(vec2(0.0f, 0.0f)), m_SpeedupFlags() {}
 	};
 
 	CCollision();

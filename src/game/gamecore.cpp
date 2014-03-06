@@ -484,6 +484,9 @@ void CCharacterCore::HandleTriggers(CCollision::CTriggers Triggers)
 		m_HookedPlayer = -1;
 		m_HookState = HOOK_RETRACT_START;
 	}
+
+	if(Triggers.m_SpeedupFlags&CCollision::TRIGGERFLAG_SPEEDUP)
+		m_TriggeredEvents |= COREEVENTFLAG_SPEEDUP;
 }
 
 void CCharacterCore::Freeze()

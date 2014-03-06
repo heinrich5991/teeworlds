@@ -48,7 +48,7 @@ public:
 	bool IncreaseHealth(int Amount);
 	bool IncreaseArmor(int Amount);
 
-	bool GiveWeapon(int Weapon, int Ammo);
+	bool GiveWeapon(int Weapon);
 	void GiveNinja();
 
 	void SetEmote(int Emote, int Tick);
@@ -123,6 +123,8 @@ private:
 		int m_CurrentMoveTime;
 		int m_OldVelAmount;
 	} m_Ninja;
+
+	int m_LastNinjaSound;
 
 	// the player core for the physics
 	CCharacterCore m_Core;

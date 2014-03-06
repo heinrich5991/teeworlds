@@ -24,6 +24,8 @@ public:
 		COLFLAG_SOLID=1,
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
+		COLFLAG_SOLID_HOOK=8,
+		COLFLAG_SOLID_PROJ=16,
 
 		FREEZEFLAG_FREEZE=1,
 		FREEZEFLAG_UNFREEZE=2,
@@ -47,10 +49,16 @@ public:
 	bool CheckPoint(float x, float y) { return IsTileSolid(round_to_int(x), round_to_int(y)); }
 	bool CheckPoint(vec2 Pos) { return CheckPoint(Pos.x, Pos.y); }
 	int GetCollisionAt(float x, float y) { return GetTile(round_to_int(x), round_to_int(y)); }
+	int GetCollisionAt(vec2 Pos) { return GetCollisionAt(Pos.x, Pos.y); }
 	int GetWidth() { return m_aWidth[GAMELAYERTYPE_VANILLA]; };
 	int GetHeight() { return m_aHeight[GAMELAYERTYPE_VANILLA]; };
+	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int ColFlag);
+	int IntersectLineHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
+	int IntersectLineProj(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces);
+	void MovePointProj(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces);
+	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces, int ColFlag);
 	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTriggers, vec2 Size, float Elasticity);
 	void HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers);
 	bool TestBox(vec2 Pos, vec2 Size);

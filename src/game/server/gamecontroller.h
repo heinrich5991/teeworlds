@@ -149,6 +149,7 @@ public:
 
 		Arguments:
 			index - Entity index.
+			index - Tile flags.
 			pos - Where the entity is located in the world.
 			SwitchGroup - The switch group ID the entity shall have.
 			InvertSwitch - Whether entity should react inverted to switches.
@@ -156,7 +157,7 @@ public:
 		Returns:
 			bool?
 	*/
-	virtual bool OnEntity(int Index, vec2 Pos, int SwitchGroup, bool InvertSwitch);
+	virtual bool OnEntity(int Index, int Flags, vec2 Pos, int SwitchGroup, bool InvertSwitch);
 
 	void OnPlayerConnect(class CPlayer *pPlayer);
 	void OnPlayerDisconnect(class CPlayer *pPlayer);

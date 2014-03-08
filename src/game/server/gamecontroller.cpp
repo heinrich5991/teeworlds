@@ -6,6 +6,7 @@
 
 #include "entities/character.h"
 #include "entities/pickup.h"
+#include "entities/projectile.h"
 #include "gamecontext.h"
 #include "gamecontroller.h"
 #include "player.h"
@@ -258,7 +259,7 @@ void IGameController::OnCharacterSpawn(CCharacter *pChr)
 	}
 }
 
-bool IGameController::OnEntity(int Index, vec2 Pos, int SwitchGroup, bool InvertSwitch)
+bool IGameController::OnEntity(int Index, int Flags, vec2 Pos, int SwitchGroup, bool InvertSwitch)
 {
 	// don't add pickups in survival
 	if(m_GameFlags&GAMEFLAG_SURVIVAL)
@@ -298,6 +299,14 @@ bool IGameController::OnEntity(int Index, vec2 Pos, int SwitchGroup, bool Invert
 	case ENTITY_POWERUP_NINJA:
 		if(g_Config.m_SvPowerups)
 			Type = PICKUP_NINJA;
+		break;
+	case ENTITY_CRAZY_BULLET:
+		vec2 Dir = vec2(0.0, 1.0);
+		//Dir.x = (Flags&TILEFLAG_HFLIP) > 0;
+		//Dir.y = (Flags&TILEFLAG_ROTATE) > 0;
+		new CProjectile(&GameServer()->m_World, WEAPON_SHOTGUN, -1, Pos, Dir, 0,
+				0, false, 0, SOUND_GUN_FIRE, WEAPON_SHOTGUN, SwitchGroup, InvertSwitch);
+		break;
 	}
 
 	if(Type != -1)

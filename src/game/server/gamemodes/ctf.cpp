@@ -67,7 +67,7 @@ int CGameControllerCTF::OnCharacterDeath(CCharacter *pVictim, CPlayer *pKiller, 
 
 bool CGameControllerCTF::OnEntity(int Index, vec2 Pos, int SwitchGroup, bool InvertSwitch)
 {
-	if(IGameController::OnEntity(Index, Pos, SwitchGroup, InvertSwitch))
+	if(IGameController::OnEntity(Index, 0, Pos, SwitchGroup, InvertSwitch))
 		return true;
 
 	int Team = -1;

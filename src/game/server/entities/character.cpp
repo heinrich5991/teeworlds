@@ -366,7 +366,7 @@ void CCharacter::FireWeapon()
 				ProjStartPos,
 				Direction,
 				(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GunLifetime),
-				0, 0, 0, -1, WEAPON_GUN);
+				0, 0, 0, -1, WEAPON_GUN, 0, false);
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;
@@ -395,7 +395,7 @@ void CCharacter::FireWeapon()
 				ProjStartPos,
 				Direction,
 				(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GrenadeLifetime),
-				0, true, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
+				0, true, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE, 0, false);
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;

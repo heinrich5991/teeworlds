@@ -69,20 +69,14 @@ void CProjectile::Tick()
 	{
 		if(Collide && CurPos != ColPos)
 		{
-			dbg_msg("dbg", "collision");
-			dbg_msg("dbg", "old: %f, %f, %f, %f", m_Direction.x, m_Direction.y, m_Pos.x, m_Pos.y);
 			vec2 Pos = ColPos;
 			vec2 Vel = CurPos - ColPos;
-			dbg_msg("dbg", "vel: %f, %f", Vel.x, Vel.y);
 			GameServer()->Collision()->MovePoint(&Pos, &Vel , 1, 0, CCollision::COLFLAG_SOLID_PROJ);
 			GameServer()->Collision()->MovePoint(&Pos, &Vel , 1, 0, CCollision::COLFLAG_SOLID_PROJ);
 			m_Pos = Pos;
 			m_Direction = normalize(Vel);
-			dbg_msg("dbg", "new: %f, %f, %f, %f", m_Direction.x, m_Direction.y, m_Pos.x, m_Pos.y);
 			m_StartTick = Server()->Tick();
 		}
-
-		dbg_msg("dbg", "nofl: %f, %f, %f, %f", m_Direction.x, m_Direction.y, m_Pos.x, m_Pos.y);
 
 		CCharacter *pChr = (CCharacter *)GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER);
 		if(Active()){

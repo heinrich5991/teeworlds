@@ -12,6 +12,8 @@ CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, 
 	m_Type = Type;
 	m_Pos = Pos;
 	m_Direction = Dir;
+	m_StartPos = Pos;
+	m_StartDir = Dir;
 	m_LifeSpan = Span;
 	m_Owner = Owner;
 	m_Force = Force;
@@ -26,7 +28,14 @@ CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, 
 
 void CProjectile::Reset()
 {
-	GameServer()->m_World.DestroyEntity(this);
+	if(m_Type == WEAPON_SHOTGUN)
+	{
+		m_Pos = m_StartPos;
+		m_Direction = m_StartDir;
+		m_StartTick = Server()->Tick();
+	}	
+	else
+		GameServer()->m_World.DestroyEntity(this);
 }
 
 vec2 CProjectile::GetPos(float Time)

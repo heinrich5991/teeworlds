@@ -19,6 +19,8 @@ public:
 
 private:
 	vec2 m_Direction;
+	vec2 m_StartPos;
+	vec2 m_StartDir;
 	int m_LifeSpan;
 	int m_Owner;
 	int m_Type;

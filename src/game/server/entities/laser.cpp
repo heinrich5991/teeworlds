@@ -35,7 +35,7 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 	m_Pos = At;
 	m_Energy = -1;
 	if(m_Pull)
-		pHit->TakeDamage(normalize(From-To)*10, GameServer()->Tuning()->m_LaserDamage/2, m_Owner, WEAPON_LASER);
+		pHit->TakeDamage(normalize(From-To)*10, GameServer()->Tuning()->m_LaserDamage/2, m_Owner, WEAPON_SHOTGUN);
 	else
 		pHit->TakeDamage(vec2(0.f, 0.f), GameServer()->Tuning()->m_LaserDamage, m_Owner, WEAPON_LASER);
 	return true;

@@ -301,9 +301,11 @@ bool IGameController::OnEntity(int Index, int Flags, vec2 Pos, int SwitchGroup, 
 			Type = PICKUP_NINJA;
 		break;
 	case ENTITY_CRAZY_BULLET:
-		vec2 Dir = vec2(0.0, 1.0);
-		//Dir.x = (Flags&TILEFLAG_HFLIP) > 0;
-		//Dir.y = (Flags&TILEFLAG_ROTATE) > 0;
+		vec2 Dir = vec2(0.0, 0.0);
+		if(Flags&TILEFLAG_ROTATE)
+			Dir.x = Flags&TILEFLAG_HFLIP ? -1.0 : 1.0;
+		else
+			Dir.y = Flags&TILEFLAG_VFLIP ? 1.0 : -1.0;
 		new CProjectile(&GameServer()->m_World, WEAPON_SHOTGUN, -1, Pos, Dir, 0,
 				0, false, 0, SOUND_GUN_FIRE, WEAPON_SHOTGUN, SwitchGroup, InvertSwitch);
 		break;

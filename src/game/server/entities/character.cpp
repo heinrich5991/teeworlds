@@ -333,7 +333,7 @@ void CCharacter::FireWeapon()
 			{
 				CCharacter *pTarget = apEnts[i];
 
-				if (pTarget == this || pTarget->m_RaceGroup != m_RaceGroup || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
+				if (pTarget == this || pTarget->m_RaceGroup != m_RaceGroup)
 					continue;
 
 				// set his velocity to fast upward (for now)

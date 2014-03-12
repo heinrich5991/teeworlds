@@ -6,12 +6,14 @@
 #include "projectile.h"
 
 CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, vec2 Dir, int Span,
-		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon)
-: CEntity(pGameWorld, CGameWorld::ENTTYPE_PROJECTILE, 0, false)
+		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon, int SwitchGroup, bool InvertSwitch)
+: CEntity(pGameWorld, CGameWorld::ENTTYPE_PROJECTILE, SwitchGroup, InvertSwitch)
 {
 	m_Type = Type;
 	m_Pos = Pos;
 	m_Direction = Dir;
+	m_StartPos = Pos;
+	m_StartDir = Dir;
 	m_LifeSpan = Span;
 	m_Owner = Owner;
 	m_Force = Force;
@@ -26,7 +28,14 @@ CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, 
 
 void CProjectile::Reset()
 {
-	GameServer()->m_World.DestroyEntity(this);
+	if(m_Type == WEAPON_SHOTGUN)
+	{
+		m_Pos = m_StartPos;
+		m_Direction = m_StartDir;
+		m_StartTick = Server()->Tick();
+	}	
+	else
+		GameServer()->m_World.DestroyEntity(this);
 }
 
 vec2 CProjectile::GetPos(float Time)
@@ -62,24 +71,52 @@ void CProjectile::Tick()
 	float Ct = (Server()->Tick()-m_StartTick)/(float)Server()->TickSpeed();
 	vec2 PrevPos = GetPos(Pt);
 	vec2 CurPos = GetPos(Ct);
-	int Collide = GameServer()->Collision()->IntersectLineProj(PrevPos, CurPos, &CurPos, 0);
-	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
-	CCharacter *TargetChr = GameServer()->m_World.IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, OwnerChar);
+	vec2 ColPos = CurPos;
+	int Collide = GameServer()->Collision()->IntersectLineProj(PrevPos, CurPos, &ColPos, 0);
 
-	m_LifeSpan--;
-
-	if((TargetChr && TargetChr->GetRaceGroup() == OwnerChar->GetRaceGroup()) || Collide || m_LifeSpan < 0 || GameLayerClipped(CurPos))
+	if(m_Type == WEAPON_SHOTGUN)
 	{
-		if(m_LifeSpan >= 0 || m_Weapon == WEAPON_GRENADE)
-			GameServer()->CreateSound(CurPos, m_SoundImpact);
+		if(Collide && CurPos != ColPos)
+		{
+			vec2 Pos = ColPos;
+			vec2 Vel = CurPos - ColPos;
+			GameServer()->Collision()->MovePoint(&Pos, &Vel , 1, 0, CCollision::COLFLAG_SOLID_PROJ);
+			GameServer()->Collision()->MovePoint(&Pos, &Vel , 1, 0, CCollision::COLFLAG_SOLID_PROJ);
+			m_Pos = Pos;
+			m_Direction = normalize(Vel);
+			m_StartTick = Server()->Tick();
+		}
 
-		if(m_Explosive)
-			GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, true);
+		CCharacter *pChr = (CCharacter *)GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER);
+		if(Active()){
+			for(; pChr; pChr = (CCharacter *)pChr->TypeNext())
+		 	{
+				if(pChr && pChr->IsAlive() && distance(CurPos, pChr->m_Pos) < pChr->m_ProximityRadius)
+					pChr->Freeze();
+			}
+		}
+	}
+	else
+	{
+		CurPos = ColPos;
+		CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
+		CCharacter *TargetChr = GameServer()->m_World.IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, OwnerChar);
 
-		else if(TargetChr && TargetChr->GetRaceGroup() == OwnerChar->GetRaceGroup())
-			TargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Damage, m_Owner, m_Weapon);
+		m_LifeSpan--;
 
-		GameServer()->m_World.DestroyEntity(this);
+		if((TargetChr && TargetChr->GetRaceGroup() == OwnerChar->GetRaceGroup()) || Collide || m_LifeSpan < 0 || GameLayerClipped(CurPos))
+		{
+			if(m_LifeSpan >= 0 || m_Weapon == WEAPON_GRENADE)
+				GameServer()->CreateSound(CurPos, m_SoundImpact);
+
+			if(m_Explosive)
+				GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, true);
+
+			else if(TargetChr && TargetChr->GetRaceGroup() == OwnerChar->GetRaceGroup())
+				TargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Damage, m_Owner, m_Weapon);
+
+			GameServer()->m_World.DestroyEntity(this);
+		}
 	}
 }
 

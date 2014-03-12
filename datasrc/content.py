@@ -116,10 +116,10 @@ class Weapon_Shotgun(Struct):
 	def __init__(self):
 		Struct.__init__(self, "CDataWeaponspecShotgun")
 		self.base = Pointer(WeaponSpec, WeaponSpec())
-		self.curvature = Float(1.25)
+		self.curvature = Float(0)
 		self.speed = Float(2200)
 		self.speeddiff = Float(0.8)
-		self.lifetime = Float(0.25)
+		self.lifetime = Float(0.0)
 
 class Weapon_Grenade(Struct):
 	def __init__(self):

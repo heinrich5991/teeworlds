@@ -76,11 +76,11 @@ bool CGameControllerCTF::OnEntity(int Index, vec2 Pos, int SwitchGroup, bool Inv
 	if(Team == -1 || m_apFlags[Team])
 		return false;
 
-	CFlag *F = new CFlag(&GameServer()->m_World, Team);
+	CFlag *F = new CFlag(GameServer()->m_TeamsCore.GetTeamWorld(0), Team);
 	F->m_StandPos = Pos;
 	F->m_Pos = Pos;
 	m_apFlags[Team] = F;
-	GameServer()->m_World.InsertEntity(F);
+	GameServer()->m_TeamsCore.GetTeamWorld(0)->InsertEntity(F);
 	return true;
 }
 
@@ -151,7 +151,7 @@ void CGameControllerCTF::Tick()
 {
 	IGameController::Tick();
 
-	if(GameServer()->m_World.m_ResetRequested || GameServer()->m_World.m_Paused)
+	if(GameServer()->m_TeamsCore.GetTeamWorld(0)->m_ResetRequested || GameServer()->m_TeamsCore.GetTeamWorld(0)->m_Paused)
 		return;
 
 	for(int fi = 0; fi < 2; fi++)
@@ -199,7 +199,7 @@ void CGameControllerCTF::Tick()
 		else
 		{
 			CCharacter *apCloseCCharacters[MAX_CLIENTS];
-			int Num = GameServer()->m_World.FindEntities(F->m_Pos, CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+			int Num = GameServer()->m_TeamsCore.GetTeamWorld(0)->FindEntities(F->m_Pos, CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 			for(int i = 0; i < Num; i++)
 			{
 				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == TEAM_SPECTATORS || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL, CCollision::COLFLAG_SOLID))
@@ -253,9 +253,9 @@ void CGameControllerCTF::Tick()
 					F->Reset();
 				}
 				else
-				{
-					F->m_Vel.y += GameServer()->m_World.m_Core.m_Tuning.m_Gravity;
+					F->m_Vel.y += GameServer()->m_TeamsCore.GetTeamWorld(0)->m_Core.m_Tuning.m_Gravity;
 					GameServer()->Collision()->MoveBox(&F->m_Pos, &F->m_Vel, 0, vec2(F->ms_PhysSize, F->ms_PhysSize), 0.5f);
+
 				}
 			}
 		}

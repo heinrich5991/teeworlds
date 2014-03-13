@@ -42,6 +42,7 @@ void CPickup::Tick()
 		else
 			return;
 	}
+
 	if(Active())
 	{
 		// Check if a player intersected us

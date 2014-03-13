@@ -73,16 +73,18 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_pPlayer = pPlayer;
 	m_Pos = Pos;
 
+	m_pWorld = GameServer()->m_TeamsCore.GetTeamWorld(m_pPlayer->GetDDRTeam());
+
 	m_Core.Reset();
-	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision());
+	m_Core.Init(m_pWorld.m_Core, GameServer()->Collision());
 	m_Core.m_Pos = m_Pos;
-	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
+	m_pWorld->m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core
 
 	m_ReckoningTick = 0;
 	mem_zero(&m_SendCore, sizeof(m_SendCore));
 	mem_zero(&m_ReckoningCore, sizeof(m_ReckoningCore));
 
-	GameServer()->m_World.InsertEntity(this);
+	m_pWorld->InsertEntity(this);
 	m_Alive = true;
 
 	GameServer()->m_pController->OnCharacterSpawn(this);
@@ -92,7 +94,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 
 void CCharacter::Destroy()
 {
-	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
+	m_pWorld->m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	m_Alive = false;
 }
 
@@ -170,7 +172,7 @@ void CCharacter::HandleNinja()
 			vec2 Dir = m_Pos - OldPos;
 			float Radius = m_ProximityRadius * 2.0f;
 			vec2 Center = OldPos + Dir * 0.5f;
-			int Num = GameServer()->m_World.FindEntities(Center, Radius, (CEntity**)aEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+			int Num = m_pWorld->FindEntities(Center, Radius, (CEntity**)aEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 
 			for (int i = 0; i < Num; ++i)
 			{
@@ -334,8 +336,7 @@ void CCharacter::FireWeapon()
 
 			CCharacter *apEnts[MAX_CLIENTS];
 			int Hits = 0;
-			int Num = GameServer()->m_World.FindEntities(HammerStartPos, m_ProximityRadius*0.5f, (CEntity**)apEnts,
-														MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+			int Num = m_pWorld->FindEntities(HammerStartPos, m_ProximityRadius*0.5f, (CEntity**)apEnts,MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 
 			for (int i = 0; i < Num; ++i)
 			{
@@ -789,8 +790,8 @@ void CCharacter::Die(int Killer, int Weapon)
 	// this is for auto respawn after 3 secs
 	m_pPlayer->m_DieTick = Server()->Tick();
 
-	GameServer()->m_World.RemoveEntity(this);
-	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
+	m_pWorld->RemoveEntity(this);
+	m_pWorld->m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID());
 }
 
@@ -923,7 +924,7 @@ void CCharacter::Snap(int SnappingClient)
 		return;
 
 	// write down the m_Core
-	if(!m_ReckoningTick || GameServer()->m_World.m_Paused)
+	if(!m_ReckoningTick || m_pWorld->m_Paused)
 	{
 		// no dead reckoning when paused because the client doesn't know
 		// how far to perform the reckoning

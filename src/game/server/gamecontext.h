@@ -11,6 +11,7 @@
 
 #include "eventhandler.h"
 #include "gameworld.h"
+#include "teamscore.h"
 
 /*
 	Tick
@@ -84,7 +85,8 @@ public:
 	class CPlayer *m_apPlayers[MAX_CLIENTS];
 
 	class IGameController *m_pController;
-	CGameWorld m_World;
+	//CGameWorld m_World;
+	CTeamsCore m_TeamsCore;
 
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientID);

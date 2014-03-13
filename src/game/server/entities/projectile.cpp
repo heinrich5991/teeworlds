@@ -73,6 +73,8 @@ void CProjectile::Tick()
 	vec2 CurPos = GetPos(Ct);
 	vec2 ColPos;
 	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &ColPos, 0, CCollision::COLFLAG_SOLID_PROJ);
+	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
+	CCharacter *TargetChr = GameWorld()->IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, OwnerChar);
 
 	if(m_Type == WEAPON_SHOTGUN)
 	{

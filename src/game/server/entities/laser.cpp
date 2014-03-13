@@ -26,7 +26,8 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 	CCharacter *pNotThis = 0;
 	if(m_Bounces == 0)
 		pNotThis = GameServer()->GetPlayerChar(m_Owner);
-	CCharacter *pHit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, pNotThis);
+	CCharacter *pHit = GameServer()->m_TeamsCore.GetTeamWorld(pOwnerChar->GetPlayer()->m_DDRTeam)->IntersectCharacter(m_Pos, To, 0.f, At, pNotThis);
+
 	if(!pHit)
 		return false;
 
@@ -46,7 +47,7 @@ void CLaser::DoBounce()
 
 	if(m_Energy < 0)
 	{
-		GameServer()->m_World.DestroyEntity(this);
+		GameServer()->m_TeamsCore.GetTeamWorld(GameServer()->m_apPlayers[m_Owner]->m_DDRTeam).DestroyEntity(this);
 		return;
 	}
 
@@ -89,7 +90,7 @@ void CLaser::DoBounce()
 
 void CLaser::Reset()
 {
-	GameServer()->m_World.DestroyEntity(this);
+	GameServer()->m_TeamsCore.GetTeamWorld(GameServer()->m_apPlayers[m_Owner]->m_DDRTeam).DestroyEntity(this);
 }
 
 void CLaser::Tick()

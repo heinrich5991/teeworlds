@@ -289,11 +289,13 @@ bool IGameController::OnEntity(int Index, int Flags, vec2 Pos, int SwitchGroup, 
 
 	if(Type != -1)
 	{
-		CPickup *pPickup = new CPickup(&GameServer()->m_World, Type, SwitchGroup, InvertSwitch);
-		pPickup->m_Pos = Pos;
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			CPickup *pPickup = new CPickup(GameServer()->m_TeamsCore.GetTeamWorld(i), Type);
+			pPickup->m_Pos = Pos;
+		}
 		return true;
 	}
-
 	return false;
 }
 
@@ -368,11 +370,11 @@ void IGameController::OnPlayerReadyChange(CPlayer *pPlayer)
 	}
 }
 
-void IGameController::OnReset()
+void IGameController::OnReset(int Team)
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(GameServer()->m_apPlayers[i])
+		if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetDDRTeam() == Team)
 		{
 			GameServer()->m_apPlayers[i]->m_RespawnDisabled = false;
 			GameServer()->m_apPlayers[i]->Respawn();
@@ -436,7 +438,7 @@ void IGameController::DoWincheckMatch()
 void IGameController::ResetGame()
 {
 	// reset the game
-	GameServer()->m_World.m_ResetRequested = true;
+	GameServer()->m_TeamsCore.m_ResetRequested = -1;
 	
 	SetGameState(IGS_GAME_RUNNING);
 	m_GameStartTick = Server()->Tick();
@@ -530,7 +532,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 		{
 			m_GameState = GameState;
 			m_GameStateTimer = 3*Server()->TickSpeed();
-			GameServer()->m_World.m_Paused = true;
+			GameServer()->m_TeamsCore.GetTeamWorld(0)->m_Paused = true;
 		}
 		break;
 	case IGS_GAME_RUNNING:
@@ -539,7 +541,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 			m_GameState = GameState;
 			m_GameStateTimer = TIMER_INFINITE;
 			SetPlayersReadyState(true);
-			GameServer()->m_World.m_Paused = false;
+			GameServer()->m_TeamsCore.GetTeamWorld(0)->m_Paused = false;
 		}
 		break;
 	case IGS_GAME_PAUSED:
@@ -562,7 +564,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 				}
 
 				m_GameState = GameState;
-				GameServer()->m_World.m_Paused = true;
+				GameServer()->m_TeamsCore.GetTeamWorld(0)->m_Paused = true;
 			}
 			else
 			{
@@ -579,7 +581,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 			m_GameState = GameState;
 			m_GameStateTimer = Timer*Server()->TickSpeed();
 			m_SuddenDeath = 0;
-			GameServer()->m_World.m_Paused = true;
+			GameServer()->m_TeamsCore.GetTeamWorld(0)->m_Paused = true;
 		}
 	}
 }
@@ -773,7 +775,7 @@ void IGameController::Tick()
 	DoActivityCheck();
 
 	// win check
-	if((m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED) && !GameServer()->m_World.m_ResetRequested)
+	if((m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED) && GameServer()->m_TeamsCore.m_ResetRequested == 0)
 	{
 		if(m_GameFlags&GAMEFLAG_SURVIVAL)
 			DoWincheckRound();
@@ -807,7 +809,7 @@ bool IGameController::IsPlayerReadyMode() const
 
 bool IGameController::IsTeamChangeAllowed() const
 {
-	return !GameServer()->m_World.m_Paused || (m_GameState == IGS_START_COUNTDOWN && m_GameStartTick == Server()->Tick());
+	return !GameServer()->m_TeamsCore.GetTeamWorld(0)->m_Paused || (m_GameState == IGS_START_COUNTDOWN && m_GameStartTick == Server()->Tick());
 }
 
 void IGameController::UpdateGameInfo(int ClientID)
@@ -919,10 +921,10 @@ void IGameController::CycleMap()
 }
 
 // spawn
-bool IGameController::CanSpawn(int Team, vec2 *pOutPos) const
+bool IGameController::CanSpawn(int Team, vec2 *pOutPos, int DDRTeam) const
 {
 	// spectators can't spawn
-	if(Team == TEAM_SPECTATORS || GameServer()->m_World.m_Paused || GameServer()->m_World.m_ResetRequested)
+	if(Team == TEAM_SPECTATORS || GameServer()->m_TeamsCore.GetTeamWorld(DDRTeam)->m_Paused || GameServer()->m_TeamsCore.m_ResetRequested != 0)
 		return false;
 
 	CSpawnEval Eval;
@@ -932,12 +934,12 @@ bool IGameController::CanSpawn(int Team, vec2 *pOutPos) const
 		Eval.m_FriendlyTeam = Team;
 
 		// first try own team spawn, then normal spawn and then enemy
-		EvaluateSpawnType(&Eval, 1+(Team&1));
+		EvaluateSpawnType(&Eval, 1+(Team&1), DDRTeam);
 		if(!Eval.m_Got)
 		{
-			EvaluateSpawnType(&Eval, 0);
+			EvaluateSpawnType(&Eval, 0, DDRTeam);
 			if(!Eval.m_Got)
-				EvaluateSpawnType(&Eval, 1+((Team+1)&1));
+				EvaluateSpawnType(&Eval, 1+((Team+1)&1), DDRTeam);
 		}
 	}
 	else
@@ -951,10 +953,10 @@ bool IGameController::CanSpawn(int Team, vec2 *pOutPos) const
 	return Eval.m_Got;
 }
 
-float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos) const
+float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos, int DDRTeam) const
 {
 	float Score = 0.0f;
-	CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER));
+	CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_TeamsCore.GetTeamWorld(DDRTeam)->FindFirst(CGameWorld::ENTTYPE_CHARACTER));
 	for(; pC; pC = (CCharacter *)pC->TypeNext())
 	{
 		// team mates are not as dangerous as enemies
@@ -969,14 +971,14 @@ float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos) const
 	return Score;
 }
 
-void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type) const
+void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type, int DDRTeam) const
 {
 	// get spawn point
 	for(int i = 0; i < m_aNumSpawnPoints[Type]; i++)
 	{
 		// check if the position is occupado
 		CCharacter *aEnts[MAX_CLIENTS];
-		int Num = GameServer()->m_World.FindEntities(m_aaSpawnPoints[Type][i], 64, (CEntity**)aEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+		int Num = GameServer()->m_TeamsCore.GetTeamWorld(DDRTeam)->FindEntities(m_aaSpawnPoints[Type][i], 64, (CEntity**)aEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 		vec2 Positions[5] = { vec2(0.0f, 0.0f), vec2(-32.0f, 0.0f), vec2(0.0f, -32.0f), vec2(32.0f, 0.0f), vec2(0.0f, 32.0f) };	// start, left, up, right, down
 		int Result = -1;
 		for(int Index = 0; Index < 5 && Result == -1; ++Index)
@@ -994,7 +996,7 @@ void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type) const
 			continue;	// try next spawn point
 
 		vec2 P = m_aaSpawnPoints[Type][i]+Positions[Result];
-		float S = EvaluateSpawnPos(pEval, P);
+		float S = EvaluateSpawnPos(pEval, P, DDRTeam);
 		if(!pEval->m_Got || pEval->m_Score > S)
 		{
 			pEval->m_Got = true;

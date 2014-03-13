@@ -18,6 +18,7 @@ CGameWorld::CGameWorld()
 
 	m_Paused = false;
 	m_ResetRequested = false;
+	m_Team = 0;
 	for(int i = 0; i < NUM_ENTTYPES; i++)
 		m_apFirstEntityTypes[i] = 0;
 }
@@ -34,6 +35,11 @@ void CGameWorld::SetGameServer(CGameContext *pGameServer)
 {
 	m_pGameServer = pGameServer;
 	m_pServer = m_pGameServer->Server();
+}
+
+void CGameWorld::SetTeam(int Team)
+{
+	m_Team = Team;
 }
 
 CEntity *CGameWorld::FindFirst(int Type)
@@ -153,7 +159,7 @@ void CGameWorld::Reset()
 		}
 	RemoveEntities();
 
-	GameServer()->m_pController->OnReset();
+	GameServer()->m_pController->OnReset(m_Team);
 	RemoveEntities();
 
 	m_ResetRequested = false;
@@ -269,7 +275,7 @@ CCharacter *CGameWorld::ClosestCharacter(vec2 Pos, float Radius, CEntity *pNotTh
 	float ClosestRange = Radius*2;
 	CCharacter *pClosest = 0;
 
-	CCharacter *p = (CCharacter *)GameServer()->m_World.FindFirst(ENTTYPE_CHARACTER);
+	CCharacter *p = (CCharacter *)FindFirst(ENTTYPE_CHARACTER);
 	for(; p; p = (CCharacter *)p->TypeNext())
  	{
 		if(p == pNotThis)

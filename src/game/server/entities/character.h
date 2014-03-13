@@ -67,6 +67,7 @@ public:
 private:
 	// player controlling this character
 	class CPlayer *m_pPlayer;
+	class CGameWorld *m_pWorld;
 
 	bool m_Alive;
 

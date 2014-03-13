@@ -43,7 +43,7 @@ void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 		if(Index > 128)
 			continue;		
 
-		switch(Index)
+		switch(Index%16)
 		{
 		case TILE_DEATH:
 			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_DEATH;
@@ -68,6 +68,41 @@ void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 			break;
 		default:
 			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = 0;
+		}
+
+		if(m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index&COLFLAG_SOLID)
+		{
+			int Flags = m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags;
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags = 0;
+
+			switch(Index/16)
+			{
+				case ROW_ONE_OPEN:
+					if(Flags&TILEFLAG_ROTATE)
+						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= Flags&TILEFLAG_HFLIP ? DIRFLAG_LEFT : DIRFLAG_RIGHT;
+					else
+						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= Flags&TILEFLAG_VFLIP ? DIRFLAG_DOWN : DIRFLAG_UP;
+					break;
+				case ROW_TWO_OPEN:
+					if(Flags&TILEFLAG_ROTATE)
+						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= DIRFLAG_LEFT|DIRFLAG_RIGHT;
+					else
+						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= DIRFLAG_DOWN|DIRFLAG_UP;
+					break;
+				case ROW_TWO_CORNER_OPEN:
+					m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= Flags&TILEFLAG_HFLIP ? DIRFLAG_LEFT : DIRFLAG_RIGHT;
+					if(Flags&TILEFLAG_ROTATE)
+						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= Flags&TILEFLAG_VFLIP ? DIRFLAG_UP : DIRFLAG_DOWN;
+					else
+						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= Flags&TILEFLAG_VFLIP ? DIRFLAG_DOWN : DIRFLAG_UP;
+					break;
+				case ROW_THREE_OPEN:
+					if(Flags&TILEFLAG_ROTATE)
+						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= DIRFLAG_UP|DIRFLAG_DOWN|(Flags&TILEFLAG_VFLIP ? DIRFLAG_LEFT : DIRFLAG_RIGHT);
+					else
+						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= DIRFLAG_RIGHT|DIRFLAG_LEFT|(Flags&TILEFLAG_VFLIP ? DIRFLAG_DOWN : DIRFLAG_UP);
+					break;
+			}
 		}
 	}
 
@@ -121,7 +156,13 @@ int CCollision::GetTile(int x, int y)
 	bool Switch = m_pSwitchStates[GetSwitchGroup(Index, GAMELAYERTYPE_VANILLA)];
 	bool Invert = m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Flags&TILEFLAG_INVERT_SWITCH;
 	return Switch != Invert || m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
+}
 
+int CCollision::GetTileFlags(int x, int y)
+{
+	ivec2 Pos = GetTilePos(x, y);
+	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
+	return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Flags;
 }
 
 int CCollision::GetSwitchGroup(int PosIndex, int Layer)
@@ -142,9 +183,12 @@ int CCollision::GetPosIndex(int x, int y, int Layer)
 	return y*m_aWidth[Layer]+x;
 }
 
-bool CCollision::IsTileSolid(int x, int y)
+bool CCollision::IsTileSolid(int x, int y, int DirFlags)
 {
-	return GetTile(x, y)&COLFLAG_SOLID;
+	int Flags = GetTileFlags(x, y);
+	if(GetTilePos(x,y) == ivec2(11,22))
+		dbg_msg("dbg", "%d %d", DirFlags, Flags);
+	return (GetTile(x, y)&COLFLAG_SOLID) && ((Flags&DirFlags) != DirFlags);
 }
 
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
@@ -239,16 +283,16 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 	}
 }
 
-bool CCollision::TestBox(vec2 Pos, vec2 Size)
+bool CCollision::TestBox(vec2 Pos, vec2 Size, int DirFlags)
 {
 	Size *= 0.5f;
-	if(CheckPoint(Pos.x-Size.x, Pos.y-Size.y))
+	if(CheckPoint(Pos.x-Size.x, Pos.y-Size.y, DirFlags))
 		return true;
-	if(CheckPoint(Pos.x+Size.x, Pos.y-Size.y))
+	if(CheckPoint(Pos.x+Size.x, Pos.y-Size.y, DirFlags))
 		return true;
-	if(CheckPoint(Pos.x-Size.x, Pos.y+Size.y))
+	if(CheckPoint(Pos.x-Size.x, Pos.y+Size.y, DirFlags))
 		return true;
-	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y))
+	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y, DirFlags))
 		return true;
 	return false;
 }
@@ -278,18 +322,20 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 
 			vec2 NewPos = Pos + Vel*Fraction; // TODO: this row is not nice
 
-			if(TestBox(vec2(NewPos.x, NewPos.y), Size))
+			int DirFlags = (Vel.x > 0.002 ? DIRFLAG_RIGHT:0)|(Vel.x < -0.002 ? DIRFLAG_LEFT:0)|(Vel.y > 0.002 ? DIRFLAG_DOWN:0)|(Vel.y < -0.002 ? DIRFLAG_UP:0);
+
+			if(TestBox(vec2(NewPos.x, NewPos.y), Size, DirFlags))
 			{
 				int Hits = 0;
 
-				if(TestBox(vec2(Pos.x, NewPos.y), Size))
+				if(TestBox(vec2(Pos.x, NewPos.y), Size, DirFlags&(DIRFLAG_UP|DIRFLAG_DOWN)))
 				{
 					NewPos.y = Pos.y;
 					Vel.y *= -Elasticity;
 					Hits++;
 				}
 
-				if(TestBox(vec2(NewPos.x, Pos.y), Size))
+				if(TestBox(vec2(NewPos.x, Pos.y), Size, DirFlags&(DIRFLAG_RIGHT|DIRFLAG_LEFT)))
 				{
 					NewPos.x = Pos.x;
 					Vel.x *= -Elasticity;
@@ -300,10 +346,17 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 				// this is a real _corner case_!
 				if(Hits == 0)
 				{
-					NewPos.y = Pos.y;
-					Vel.y *= -Elasticity;
-					NewPos.x = Pos.x;
-					Vel.x *= -Elasticity;
+					if(TestBox(vec2(NewPos.x, NewPos.y), Size, DirFlags&(DIRFLAG_UP|DIRFLAG_DOWN)))
+					{
+						NewPos.y = Pos.y;
+						Vel.y *= -Elasticity;
+					}
+
+					if(TestBox(vec2(NewPos.x, NewPos.y), Size, DirFlags&(DIRFLAG_RIGHT|DIRFLAG_LEFT)))
+					{
+						NewPos.x = Pos.x;
+						Vel.x *= -Elasticity;
+					}
 				}
 			}
 

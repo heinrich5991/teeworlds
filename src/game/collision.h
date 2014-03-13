@@ -11,6 +11,7 @@ class CCollision
 	class CTile *m_apTiles[NUM_GAMELAYERTYPES];
 	int m_aWidth[NUM_GAMELAYERTYPES];
 	int m_aHeight[NUM_GAMELAYERTYPES];
+	int m_pOpen;
 	class CLayers *m_pLayers;
 	bool *m_pSwitchStates;
 
@@ -18,9 +19,11 @@ class CCollision
 
 	int m_NumCheckpoints;
 
-	bool IsTileSolid(int x, int y);
+	bool IsTileSolid(int x, int y) { return IsTileSolid(x, y, 0); }
+	bool IsTileSolid(int x, int y, int OpenFlags);
 	int GetSwitchGroup(int PosIndex, int Layer);
 	int GetTile(int x, int y);
+	int GetTileFlags(int x, int y);
 	ivec2 GetTilePos(float x, float y);
 	int GetPosIndex(int x, int y, int Layer);
 
@@ -32,6 +35,11 @@ public:
 		COLFLAG_NOHOOK=4,
 		COLFLAG_SOLID_HOOK=8,
 		COLFLAG_SOLID_PROJ=16,
+
+		DIRFLAG_RIGHT=1,
+		DIRFLAG_LEFT=2,
+		DIRFLAG_UP=4,
+		DIRFLAG_DOWN=8,
 
 		FREEZEFLAG_FREEZE=1,
 		FREEZEFLAG_UNFREEZE=2,
@@ -77,7 +85,8 @@ public:
 	CCollision();
 	void Init(class CLayers *pLayers, bool *pSwitchStates);
 	int GetNumCheckpoints();
-	bool CheckPoint(float x, float y) { return IsTileSolid(round_to_int(x), round_to_int(y)); }
+	bool CheckPoint(float x, float y, int OpenFlags) { return IsTileSolid(round_to_int(x), round_to_int(y), OpenFlags); }
+	bool CheckPoint(float x, float y) { return CheckPoint(x, y, ~0); }
 	bool CheckPoint(vec2 Pos) { return CheckPoint(Pos.x, Pos.y); }
 	int GetCollisionAt(float x, float y) { return GetTile(round_to_int(x), round_to_int(y)); }
 	int GetCollisionAt(vec2 Pos) { return GetCollisionAt(Pos.x, Pos.y); }
@@ -92,7 +101,8 @@ public:
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces, int ColFlag);
 	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTriggers, vec2 Size, float Elasticity);
 	void HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers);
-	bool TestBox(vec2 Pos, vec2 Size);
+	bool TestBox(vec2 Pos, vec2 Size) { return TestBox(Pos, Size, ~0); }
+	bool TestBox(vec2 Pos, vec2 Size, int OpenFlags);
 };
 
 #endif

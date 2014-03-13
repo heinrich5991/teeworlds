@@ -108,6 +108,7 @@ void CGameWorld::SetSwitchState(bool State, int GroupID, int Duration)
 {
 	m_aSwitchStates[GroupID] = State;
 	m_aSwitchTicks[GroupID] = Duration * Server()->TickSpeed();
+	m_SwitchUsed = true;
 }
 
 //
@@ -182,6 +183,7 @@ void CGameWorld::Tick()
 
 	if(!m_Paused)
 	{
+		m_SwitchUsed = false;
 		// update switch states
 		for(int i = 0; i < 255; i++)
 		{
@@ -189,7 +191,10 @@ void CGameWorld::Tick()
 			{
 				m_aSwitchTicks[i]--;
 				if(m_aSwitchTicks[i] == 0)
+				{
 					m_aSwitchStates[i] = !m_aSwitchStates[i];
+					m_SwitchUsed = true;
+				}
 			}
 		}
 

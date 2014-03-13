@@ -45,6 +45,7 @@ public:
 	CWorldCore m_Core;
 	bool m_aSwitchStates[255];
 	int m_aSwitchTicks[255];
+	bool m_SwitchUsed;
 
 	void SetSwitchState(bool State, int GroupID, int Duration);
 

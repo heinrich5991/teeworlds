@@ -61,6 +61,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_LastAction = -1;
 	m_LastNoAmmoSound = -1;
 	m_LastNinjaSound = -1;
+	m_LastFreezeCrySound = -1;
 	m_ActiveWeapon = WEAPON_GUN;
 	m_LastWeapon = WEAPON_HAMMER;
 	m_QueuedWeapon = -1;
@@ -294,7 +295,15 @@ void CCharacter::FireWeapon()
 		
 	}
 	else if((m_LatestInput.m_Fire&1) && CountInput(m_LatestPrevInput.m_Fire, m_LatestInput.m_Fire).m_Presses)
+	{
 		m_UnfreezeFire = true;
+		if(m_LastFreezeCrySound+Server()->TickSpeed() <= Server()->Tick())
+		{
+			GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
+			m_LastFreezeCrySound = Server()->Tick();
+		}
+			
+	}
 	else if(!(m_LatestInput.m_Fire&1))
 		m_UnfreezeFire = false;
 

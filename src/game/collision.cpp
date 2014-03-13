@@ -118,8 +118,10 @@ int CCollision::GetTile(int x, int y)
 {
 	ivec2 Pos = GetTilePos(x, y);
 	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
+	bool Switch = m_pSwitchStates[GetSwitchGroup(Index, GAMELAYERTYPE_VANILLA)];
+	bool Invert = m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Flags&TILEFLAG_INVERT_SWITCH;
+	return Switch != Invert || m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
 
-	return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
 }
 
 int CCollision::GetSwitchGroup(int PosIndex, int Layer)
@@ -142,11 +144,7 @@ int CCollision::GetPosIndex(int x, int y, int Layer)
 
 bool CCollision::IsTileSolid(int x, int y)
 {
-	ivec2 Pos = GetTilePos(x, y);
-	int PosIndex = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
-	bool Switch = m_pSwitchStates[GetSwitchGroup(PosIndex, GAMELAYERTYPE_VANILLA)];
-	bool Invert = m_apTiles[GAMELAYERTYPE_VANILLA][PosIndex].m_Flags&TILEFLAG_INVERT_SWITCH;
-	return (GetTile(x, y)&COLFLAG_SOLID) && ((Switch && Invert) || (!Switch && !Invert));
+	return GetTile(x, y)&COLFLAG_SOLID;
 }
 
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)

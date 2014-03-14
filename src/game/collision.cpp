@@ -281,7 +281,21 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 	}
 }
 
-bool CCollision::TestBox(vec2 Pos, vec2 Size, vec2 OldPos)
+bool CCollision::TestBox(vec2 Pos, vec2 Size)
+{
+	Size *= 0.5f;
+	if(CheckPoint(Pos.x-Size.x, Pos.y-Size.y))
+		return true;
+	if(CheckPoint(Pos.x+Size.x, Pos.y-Size.y))
+		return true;
+	if(CheckPoint(Pos.x-Size.x, Pos.y+Size.y))
+		return true;
+	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y))
+		return true;
+	return false;
+}
+
+bool CCollision::TestBoxMove(vec2 Pos, vec2 Size, vec2 OldPos)
 {
 	Size *= 0.5f;
 	vec2 Vel = Pos - OldPos;
@@ -296,18 +310,32 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size, vec2 OldPos)
 	if(GetTilePos(OldPos.x-Size.x, OldPos.y+Size.y) != GetTilePos(Pos.x-Size.x, Pos.y+Size.y)
 		&& CheckPoint(Pos.x-Size.x, Pos.y+Size.y, DirFlags&(DIRFLAG_DOWN|DIRFLAG_LEFT)))
 		return true;
-	if(GetTilePos(OldPos.x+Size.x, OldPos.y+Size.y) != GetTilePos(Pos.x-Size.x, Pos.y+Size.y)
+	if(GetTilePos(OldPos.x+Size.x, OldPos.y+Size.y) != GetTilePos(Pos.x+Size.x, Pos.y+Size.y)
 		&& CheckPoint(Pos.x+Size.x, Pos.y+Size.y, DirFlags&(DIRFLAG_DOWN|DIRFLAG_RIGHT)))
 		return true;
 	
+	/*
 	ivec2 TilePos = GetTilePos(OldPos.x, OldPos.y);
 	vec2 Diff = Pos - vec2(TilePos.x, TilePos.y) * 32 - vec2(16, 16);
 	int DiffFlags = (Diff.x > 0 ? DIRFLAG_RIGHT : DIRFLAG_LEFT)|(Diff.y > 0 ? DIRFLAG_DOWN : DIRFLAG_UP);
-	dbg_msg("dbg", "Diff: %f, %f", Diff.x, Diff.y);
-	dbg_msg("dbg", "Flags: %d", DiffFlags);
 	bool stuck = CheckPoint(Pos.x, Pos.y, DIRFLAG_RIGHT) && CheckPoint(Pos.x, Pos.y, DIRFLAG_LEFT)
 				&& CheckPoint(Pos.x, Pos.y, DIRFLAG_UP) && CheckPoint(Pos.x, Pos.y, DIRFLAG_DOWN);
 	if(stuck && CheckPoint(Pos.x, Pos.y, DirFlags&~DiffFlags) || !stuck && CheckPoint(Pos.x, Pos.y, DirFlags))
+		return true;
+	*/
+	return false;
+}
+
+bool CCollision::TestHLineMove(vec2 Pos, float Length, vec2 OldPos)
+{
+	Length *= 0.5f;
+	vec2 Vel = Pos - OldPos;
+	int DirFlags = (Vel.y > 0.002 ? DIRFLAG_DOWN:0)|(Vel.y < -0.002 ? DIRFLAG_UP:0);
+	if(GetTilePos(Pos.x-Length, OldPos.y) != GetTilePos(Pos.x-Length, Pos.y)
+		&& CheckPoint(Pos.x-Length, Pos.y, DirFlags))
+		return true;
+	if(GetTilePos(Pos.x+Length, OldPos.y) != GetTilePos(Pos.x+Length, Pos.y)
+		&& CheckPoint(Pos.x+Length, Pos.y, DirFlags))
 		return true;
 	return false;
 }
@@ -337,18 +365,18 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 
 			vec2 NewPos = Pos + Vel*Fraction; // TODO: this row is not nice
 
-			if(TestBox(vec2(NewPos.x, NewPos.y), Size, Pos))
+			if(TestBoxMove(vec2(NewPos.x, NewPos.y), Size, Pos))
 			{
 				int Hits = 0;
 
-				if(TestBox(vec2(Pos.x, NewPos.y), Size, Pos))
+				if(TestBoxMove(vec2(Pos.x, NewPos.y), Size, Pos))
 				{
 					NewPos.y = Pos.y;
 					Vel.y *= -Elasticity;
 					Hits++;
 				}
 
-				if(TestBox(vec2(NewPos.x, Pos.y), Size, Pos))
+				if(TestBoxMove(vec2(NewPos.x, Pos.y), Size, Pos))
 				{
 					NewPos.x = Pos.x;
 					Vel.x *= -Elasticity;
@@ -359,13 +387,13 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 				// this is a real _corner case_!
 				if(Hits == 0)
 				{
-					if(TestBox(vec2(NewPos.x, NewPos.y), Size, vec2(NewPos.x, Pos.y)))
+					if(TestBoxMove(vec2(NewPos.x, NewPos.y), Size, vec2(NewPos.x, Pos.y)))
 					{
 						NewPos.y = Pos.y;
 						Vel.y *= -Elasticity;
 					}
 
-					if(TestBox(vec2(NewPos.x, NewPos.y), Size, vec2(Pos.x, NewPos.y)))
+					if(TestBoxMove(vec2(NewPos.x, NewPos.y), Size, vec2(Pos.x, NewPos.y)))
 					{
 						NewPos.x = Pos.x;
 						Vel.x *= -Elasticity;

@@ -83,9 +83,7 @@ void CCharacterCore::Tick(bool UseInput)
 
 	// get ground state
 	bool Grounded = false;
-	if(m_pCollision->CheckPoint(m_Pos.x+PhysSize/2, m_Pos.y+PhysSize/2+5, CCollision::DIRFLAG_DOWN))
-		Grounded = true;
-	if(m_pCollision->CheckPoint(m_Pos.x-PhysSize/2, m_Pos.y+PhysSize/2+5, CCollision::DIRFLAG_DOWN))
+	if(m_pCollision->TestHLineMove(m_Pos + vec2(0, 19), 28.0, m_Pos + vec2(0, 14)))
 		Grounded = true;
 
 	vec2 TargetDirection = normalize(vec2(m_Input.m_TargetX, m_Input.m_TargetY));

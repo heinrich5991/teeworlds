@@ -292,8 +292,8 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size, int DirFlags)
 		return true;
 	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y, DirFlags&(DIRFLAG_DOWN|DIRFLAG_RIGHT)))
 		return true;
-	if(!(CheckPoint(Pos.x, Pos.y, DIRFLAG_RIGHT)|CheckPoint(Pos.x, Pos.y, DIRFLAG_LEFT)
-				|CheckPoint(Pos.x, Pos.y, DIRFLAG_UP)|CheckPoint(Pos.x, Pos.y, DIRFLAG_DOWN))
+	if(!(CheckPoint(Pos.x, Pos.y, DIRFLAG_RIGHT) && CheckPoint(Pos.x, Pos.y, DIRFLAG_LEFT)
+				&& CheckPoint(Pos.x, Pos.y, DIRFLAG_UP) && CheckPoint(Pos.x, Pos.y, DIRFLAG_DOWN))
 			&& CheckPoint(Pos.x, Pos.y, DirFlags))
 		return true;
 	return false;

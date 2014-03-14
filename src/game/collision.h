@@ -101,8 +101,7 @@ public:
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces, int ColFlag);
 	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTriggers, vec2 Size, float Elasticity);
 	void HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers);
-	bool TestBox(vec2 Pos, vec2 Size) { return TestBox(Pos, Size, ~0); }
-	bool TestBox(vec2 Pos, vec2 Size, int OpenFlags);
+	bool TestBox(vec2 Pos, vec2 Size, vec2 OldPos);
 };
 
 #endif

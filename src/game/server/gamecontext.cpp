@@ -774,7 +774,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if(m_apPlayers[ClientID]->GetCharacter())
 			{
 			//if(*pMessage == '+')
-				m_apPlayers[ClientID]->GetCharacter()->SetRaceGroup((m_apPlayers[ClientID]->GetCharacter()->GetRaceGroup() + 1) % 16);
+			//	m_apPlayers[ClientID]->GetCharacter()->SetRaceGroup((m_apPlayers[ClientID]->GetCharacter()->GetRaceGroup() + 1) % 16);
 			//else if(*pMessage == '-')
 			//	m_apPlayers[ClientID]->GetCharacter()->SetRaceGroup((m_apPlayers[ClientID]->GetCharacter()->GetRaceGroup() + 16) % 16);
 			//else

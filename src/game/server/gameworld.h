@@ -43,9 +43,10 @@ public:
 	bool m_ResetRequested;
 	bool m_Paused;
 	CWorldCore m_Core;
+	bool m_aNextSwitchStates[255];
 	bool m_aSwitchStates[255];
 	int m_aSwitchTicks[255];
-	bool m_SwitchUsed;
+	bool m_SwitchStateChanged;
 
 	void SetSwitchState(bool State, int GroupID, int Duration);
 

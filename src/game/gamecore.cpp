@@ -313,7 +313,7 @@ void CCharacterCore::Tick(bool UseInput)
 		}
 
 		// for disappearing walls
-		if(!(m_pCollision->GetCollisionAt(m_HookPos)&CCollision::COLFLAG_SOLID_HOOK))
+		if(m_HookedPlayer == -1 && !(m_pCollision->GetCollisionAt(m_HookPos)&CCollision::COLFLAG_SOLID_HOOK))
 		{
 			m_HookState = HOOK_RETRACTED;
 			m_HookPos = m_Pos;

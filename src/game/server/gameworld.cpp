@@ -106,9 +106,8 @@ void CGameWorld::RemoveEntity(CEntity *pEnt)
 
 void CGameWorld::SetSwitchState(bool State, int GroupID, int Duration)
 {
-	m_aSwitchStates[GroupID] = State;
+	m_aNextSwitchStates[GroupID] = State;
 	m_aSwitchTicks[GroupID] = Duration * Server()->TickSpeed();
-	m_SwitchUsed = true;
 }
 
 //
@@ -183,21 +182,6 @@ void CGameWorld::Tick()
 
 	if(!m_Paused)
 	{
-		m_SwitchUsed = false;
-		// update switch states
-		for(int i = 0; i < 255; i++)
-		{
-			if(m_aSwitchTicks[i] > 0)
-			{
-				m_aSwitchTicks[i]--;
-				if(m_aSwitchTicks[i] == 0)
-				{
-					m_aSwitchStates[i] = !m_aSwitchStates[i];
-					m_SwitchUsed = true;
-				}
-			}
-		}
-
 		// update all objects
 		for(int i = 0; i < NUM_ENTTYPES; i++)
 			for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
@@ -214,6 +198,23 @@ void CGameWorld::Tick()
 				pEnt->TickDefered();
 				pEnt = m_pNextTraverseEntity;
 			}
+			
+		// update switch states
+		m_SwitchStateChanged = false;
+		for(int i = 0; i < 255; i++)
+		{
+			if(m_aSwitchTicks[i] > 0)
+			{
+				m_aSwitchTicks[i]--;
+				if(m_aSwitchTicks[i] == 0)
+					m_aNextSwitchStates[i] = !m_aSwitchStates[i];
+			}
+			if(m_aNextSwitchStates[i] != m_aSwitchStates[i])
+			{
+				m_aSwitchStates[i] = m_aNextSwitchStates[i];
+				m_SwitchStateChanged = true;
+			}
+		}
 	}
 	else if(GameServer()->m_pController->IsGamePaused())
 	{

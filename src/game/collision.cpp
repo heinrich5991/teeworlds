@@ -186,8 +186,6 @@ int CCollision::GetPosIndex(int x, int y, int Layer)
 bool CCollision::IsTileSolid(int x, int y, int DirFlags)
 {
 	int Flags = GetTileFlags(x, y);
-	if(GetTilePos(x,y) == ivec2(11,22))
-		dbg_msg("dbg", "%d %d", DirFlags, Flags);
 	return (GetTile(x, y)&COLFLAG_SOLID) && ((Flags&DirFlags) != DirFlags);
 }
 
@@ -286,13 +284,17 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 bool CCollision::TestBox(vec2 Pos, vec2 Size, int DirFlags)
 {
 	Size *= 0.5f;
-	if(CheckPoint(Pos.x-Size.x, Pos.y-Size.y, DirFlags))
+	if(CheckPoint(Pos.x-Size.x, Pos.y-Size.y, DirFlags&(DIRFLAG_UP|DIRFLAG_LEFT)))
 		return true;
-	if(CheckPoint(Pos.x+Size.x, Pos.y-Size.y, DirFlags))
+	if(CheckPoint(Pos.x+Size.x, Pos.y-Size.y, DirFlags&(DIRFLAG_UP|DIRFLAG_RIGHT)))
 		return true;
-	if(CheckPoint(Pos.x-Size.x, Pos.y+Size.y, DirFlags))
+	if(CheckPoint(Pos.x-Size.x, Pos.y+Size.y, DirFlags&(DIRFLAG_DOWN|DIRFLAG_LEFT)))
 		return true;
-	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y, DirFlags))
+	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y, DirFlags&(DIRFLAG_DOWN|DIRFLAG_RIGHT)))
+		return true;
+	if(!(CheckPoint(Pos.x, Pos.y, DIRFLAG_RIGHT)|CheckPoint(Pos.x, Pos.y, DIRFLAG_LEFT)
+				|CheckPoint(Pos.x, Pos.y, DIRFLAG_UP)|CheckPoint(Pos.x, Pos.y, DIRFLAG_DOWN))
+			&& CheckPoint(Pos.x, Pos.y, DirFlags))
 		return true;
 	return false;
 }

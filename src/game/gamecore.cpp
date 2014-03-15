@@ -83,7 +83,7 @@ void CCharacterCore::Tick(bool UseInput)
 
 	// get ground state
 	bool Grounded = false;
-	if(m_pCollision->TestHLineMove(m_Pos + vec2(0, 19), 28.0, m_Pos + vec2(0, 14)))
+	if(m_pCollision->TestHLineMove(m_Pos + vec2(0, 19), m_Pos + vec2(0, 14), 28.0))
 		Grounded = true;
 
 	vec2 TargetDirection = normalize(vec2(m_Input.m_TargetX, m_Input.m_TargetY));
@@ -204,7 +204,7 @@ void CCharacterCore::Tick(bool UseInput)
 		// make sure that the hook doesn't go though the ground
 		bool GoingToHitGround = false;
 		bool GoingToRetract = false;
-		int Hit = m_pCollision->IntersectLineHook(m_HookPos, NewPos, &NewPos, 0);
+		int Hit = m_pCollision->IntersectLine(m_HookPos, NewPos, &NewPos, 0, CCollision::COLFLAG_SOLID_HOOK);
 		if(Hit)
 		{
 			if(Hit&CCollision::COLFLAG_NOHOOK)

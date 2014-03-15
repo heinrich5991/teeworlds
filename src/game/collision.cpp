@@ -73,7 +73,7 @@ void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 		if(m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index&COLFLAG_SOLID)
 		{
 			int Flags = m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags;
-			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags = 0;
+			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags = Flags & TILEFLAG_INVERT_SWITCH;
 
 			switch(Index/16)
 			{
@@ -149,22 +149,6 @@ int CCollision::GetNumCheckpoints()
 	return m_NumCheckpoints;
 }
 
-int CCollision::GetTile(int x, int y)
-{
-	ivec2 Pos = GetTilePos(x, y);
-	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
-	bool Switch = m_pSwitchStates[GetSwitchGroup(Index, GAMELAYERTYPE_VANILLA)];
-	bool Invert = m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Flags&TILEFLAG_INVERT_SWITCH;
-	return Switch != Invert || m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index > 128 ? 0 : m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
-}
-
-int CCollision::GetTileFlags(int x, int y)
-{
-	ivec2 Pos = GetTilePos(x, y);
-	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
-	return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Flags;
-}
-
 int CCollision::GetSwitchGroup(int PosIndex, int Layer)
 {
 	return m_apTiles[Layer][PosIndex].m_Reserved;
@@ -183,25 +167,50 @@ int CCollision::GetPosIndex(int x, int y, int Layer)
 	return y*m_aWidth[Layer]+x;
 }
 
-bool CCollision::IsTileSolid(int x, int y, int DirFlags)
+int CCollision::GetDirFlags(ivec2 Dir)
 {
-	int Flags = GetTileFlags(x, y);
-	return (GetTile(x, y)&COLFLAG_SOLID) && ((Flags&DirFlags) != DirFlags);
+	int Flags = 0;
+	if(Dir.x > 0)
+		Flags |= DIRFLAG_RIGHT;
+	else if(Dir.x < 0)
+		Flags |= DIRFLAG_LEFT;
+
+	if(Dir.y > 0)
+		Flags |= DIRFLAG_DOWN;
+	else if(Dir.y < 0)
+		Flags |= DIRFLAG_UP;
+
+	return Flags;
 }
 
-int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
+int CCollision::GetCollisionAt(float x, float y)
 {
-	return IntersectLine(Pos0, Pos1, pOutCollision, pOutBeforeCollision, (int) COLFLAG_SOLID);
+	ivec2 Pos = GetTilePos(x, y);
+	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
+	bool Switch = m_pSwitchStates[GetSwitchGroup(Index, GAMELAYERTYPE_VANILLA)];
+	bool Invert = m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Flags&TILEFLAG_INVERT_SWITCH;
+	
+	if(Switch == Invert && m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index <= 128)
+		return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
+	else
+		return 0;
 }
 
-int CCollision::IntersectLineHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
+int CCollision::GetCollisionMove(float x, float y, float OldX, float OldY, int DirFlagsMask)
 {
-	return IntersectLine(Pos0, Pos1, pOutCollision, pOutBeforeCollision, (int) COLFLAG_SOLID_HOOK);
-}
+	ivec2 Pos = GetTilePos(x, y);
+	ivec2 OldPos = GetTilePos(OldX, OldY);
+	int DirFlags = GetDirFlags(Pos - OldPos)&DirFlagsMask;
 
-int CCollision::IntersectLineProj(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
-{
-	return IntersectLine(Pos0, Pos1, pOutCollision, pOutBeforeCollision, (int) COLFLAG_SOLID_PROJ);
+	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
+	bool Switch = m_pSwitchStates[GetSwitchGroup(Index, GAMELAYERTYPE_VANILLA)];
+	int Flags = m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Flags;
+	bool Invert = Flags&TILEFLAG_INVERT_SWITCH;
+	
+	if(Switch == Invert && m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index <= 128 && (Flags&DirFlags) != DirFlags)
+		return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
+	else
+		return 0;
 }
 
 // TODO: rewrite this smarter!
@@ -215,16 +224,14 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	{
 		float a = i/Distance;
 		vec2 Pos = mix(Pos0, Pos1, a);
-		vec2 Vel = Pos1 - Pos0;
-		int DirFlags = (Vel.x > 0 ? DIRFLAG_RIGHT:0)|(Vel.x < 0 ? DIRFLAG_LEFT:0)|(Vel.y > 0 ? DIRFLAG_DOWN:0)|(Vel.y < 0 ? DIRFLAG_UP:0);
-		int Flags = GetTileFlags(round_to_int(Pos.x), round_to_int(Pos.y));
-		if(GetCollisionAt(Pos.x, Pos.y)&ColFlag && ((Flags&DirFlags) != DirFlags))
+		int Col = GetCollisionMove(Pos, Last)&ColFlag;
+		if(Col)
 		{
 			if(pOutCollision)
 				*pOutCollision = Pos;
 			if(pOutBeforeCollision)
 				*pOutBeforeCollision = Last;
-			return GetCollisionAt(Pos.x, Pos.y);
+			return Col;
 		}
 		Last = Pos;
 	}
@@ -235,16 +242,6 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	return 0;
 }
 
-void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces)
-{
-	MovePoint(pInoutPos, pInoutVel, Elasticity, pBounces, COLFLAG_SOLID);
-}
-
-void CCollision::MovePointProj(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces)
-{
-	MovePoint(pInoutPos, pInoutVel, Elasticity, pBounces, COLFLAG_SOLID_PROJ);
-}
-
 // TODO: OPT: rewrite this smarter!
 void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces, int ColFlag)
 {
@@ -253,10 +250,10 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 
 	vec2 Pos = *pInoutPos;
 	vec2 Vel = *pInoutVel;
-	if(GetCollisionAt(Pos + Vel)&ColFlag)
+	if(GetCollisionMove(Pos + Vel, Pos)&ColFlag)
 	{
 		int Affected = 0;
-		if(GetCollisionAt(Pos.x + Vel.x, Pos.y)&ColFlag)
+		if(GetCollisionMove(Pos.x + Vel.x, Pos.y, Pos)&ColFlag)
 		{
 			pInoutVel->x *= -Elasticity;
 			if(pBounces)
@@ -264,7 +261,7 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 			Affected++;
 		}
 
-		if(GetCollisionAt(Pos.x, Pos.y + Vel.y)&ColFlag)
+		if(GetCollisionMove(Pos.x, Pos.y + Vel.y, Pos)&ColFlag)
 		{
 			pInoutVel->y *= -Elasticity;
 			if(pBounces)
@@ -274,8 +271,18 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 
 		if(Affected == 0)
 		{
-			pInoutVel->x *= -Elasticity;
-			pInoutVel->y *= -Elasticity;
+			if(GetCollisionMove(Pos + Vel, Pos.x, Pos.y + Vel.y)&ColFlag)
+			{
+				pInoutVel->x *= -Elasticity;
+				if(pBounces)
+					(*pBounces)++;
+			}
+			if(GetCollisionMove(Pos + Vel, Pos.x + Vel.x, Pos.y)&ColFlag)
+			{
+				pInoutVel->y *= -Elasticity;
+				if(pBounces)
+					(*pBounces)++;
+			}
 		}
 	}
 	else
@@ -287,58 +294,37 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 bool CCollision::TestBox(vec2 Pos, vec2 Size)
 {
 	Size *= 0.5f;
-	if(CheckPoint(Pos.x-Size.x, Pos.y-Size.y))
+	if(GetCollisionAt(Pos.x-Size.x, Pos.y-Size.y))
 		return true;
-	if(CheckPoint(Pos.x+Size.x, Pos.y-Size.y))
+	if(GetCollisionAt(Pos.x+Size.x, Pos.y-Size.y))
 		return true;
-	if(CheckPoint(Pos.x-Size.x, Pos.y+Size.y))
+	if(GetCollisionAt(Pos.x-Size.x, Pos.y+Size.y))
 		return true;
-	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y))
+	if(GetCollisionAt(Pos.x+Size.x, Pos.y+Size.y))
 		return true;
 	return false;
 }
 
-bool CCollision::TestBoxMove(vec2 Pos, vec2 Size, vec2 OldPos)
+bool CCollision::TestBoxMove(vec2 Pos, vec2 OldPos, vec2 Size)
 {
 	Size *= 0.5f;
-	vec2 Vel = Pos - OldPos;
-	int DirFlags = (Vel.x > 0.002 ? DIRFLAG_RIGHT:0)|(Vel.x < -0.002 ? DIRFLAG_LEFT:0)|(Vel.y > 0.002 ? DIRFLAG_DOWN:0)|(Vel.y < -0.002 ? DIRFLAG_UP:0);
-	
-	if(GetTilePos(OldPos.x-Size.x, OldPos.y-Size.y) != GetTilePos(Pos.x-Size.x, Pos.y-Size.y)
-		&& CheckPoint(Pos.x-Size.x, Pos.y-Size.y, DirFlags&(DIRFLAG_UP|DIRFLAG_LEFT)))
+	if(GetCollisionMove(Pos.x-Size.x, Pos.y-Size.y, OldPos.x-Size.x, OldPos.y-Size.y, DIRFLAG_UP|DIRFLAG_LEFT))
 		return true;
-	if(GetTilePos(OldPos.x+Size.x, OldPos.y-Size.y) != GetTilePos(Pos.x+Size.x, Pos.y-Size.y)
-		&& CheckPoint(Pos.x+Size.x, Pos.y-Size.y, DirFlags&(DIRFLAG_UP|DIRFLAG_RIGHT)))
+	if(GetCollisionMove(Pos.x+Size.x, Pos.y-Size.y, OldPos.x+Size.x, OldPos.y-Size.y, DIRFLAG_UP|DIRFLAG_RIGHT))
 		return true;
-	if(GetTilePos(OldPos.x-Size.x, OldPos.y+Size.y) != GetTilePos(Pos.x-Size.x, Pos.y+Size.y)
-		&& CheckPoint(Pos.x-Size.x, Pos.y+Size.y, DirFlags&(DIRFLAG_DOWN|DIRFLAG_LEFT)))
+	if(GetCollisionMove(Pos.x-Size.x, Pos.y+Size.y, OldPos.x-Size.x, OldPos.y+Size.y, DIRFLAG_DOWN|DIRFLAG_LEFT))
 		return true;
-	if(GetTilePos(OldPos.x+Size.x, OldPos.y+Size.y) != GetTilePos(Pos.x+Size.x, Pos.y+Size.y)
-		&& CheckPoint(Pos.x+Size.x, Pos.y+Size.y, DirFlags&(DIRFLAG_DOWN|DIRFLAG_RIGHT)))
+	if(GetCollisionMove(Pos.x+Size.x, Pos.y+Size.y, OldPos.x+Size.x, OldPos.y+Size.y, DIRFLAG_DOWN|DIRFLAG_RIGHT))
 		return true;
-	
-	/*
-	ivec2 TilePos = GetTilePos(OldPos.x, OldPos.y);
-	vec2 Diff = Pos - vec2(TilePos.x, TilePos.y) * 32 - vec2(16, 16);
-	int DiffFlags = (Diff.x > 0 ? DIRFLAG_RIGHT : DIRFLAG_LEFT)|(Diff.y > 0 ? DIRFLAG_DOWN : DIRFLAG_UP);
-	bool stuck = CheckPoint(Pos.x, Pos.y, DIRFLAG_RIGHT) && CheckPoint(Pos.x, Pos.y, DIRFLAG_LEFT)
-				&& CheckPoint(Pos.x, Pos.y, DIRFLAG_UP) && CheckPoint(Pos.x, Pos.y, DIRFLAG_DOWN);
-	if(stuck && CheckPoint(Pos.x, Pos.y, DirFlags&~DiffFlags) || !stuck && CheckPoint(Pos.x, Pos.y, DirFlags))
-		return true;
-	*/
 	return false;
 }
 
-bool CCollision::TestHLineMove(vec2 Pos, float Length, vec2 OldPos)
+bool CCollision::TestHLineMove(vec2 Pos, vec2 OldPos, float Length)
 {
 	Length *= 0.5f;
-	vec2 Vel = Pos - OldPos;
-	int DirFlags = (Vel.y > 0.002 ? DIRFLAG_DOWN:0)|(Vel.y < -0.002 ? DIRFLAG_UP:0);
-	if(GetTilePos(Pos.x-Length, OldPos.y) != GetTilePos(Pos.x-Length, Pos.y)
-		&& CheckPoint(Pos.x-Length, Pos.y, DirFlags))
+	if(GetCollisionMove(Pos.x-Length, Pos.y, OldPos.x-Length, OldPos.y, DIRFLAG_UP|DIRFLAG_DOWN))
 		return true;
-	if(GetTilePos(Pos.x+Length, OldPos.y) != GetTilePos(Pos.x+Length, Pos.y)
-		&& CheckPoint(Pos.x+Length, Pos.y, DirFlags))
+	if(GetCollisionMove(Pos.x+Length, Pos.y, OldPos.x+Length, OldPos.y, DIRFLAG_UP|DIRFLAG_DOWN))
 		return true;
 	return false;
 }
@@ -368,18 +354,18 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 
 			vec2 NewPos = Pos + Vel*Fraction; // TODO: this row is not nice
 
-			if(TestBoxMove(vec2(NewPos.x, NewPos.y), Size, Pos))
+			if(TestBoxMove(NewPos, Pos, Size))
 			{
 				int Hits = 0;
 
-				if(TestBoxMove(vec2(Pos.x, NewPos.y), Size, Pos))
+				if(TestBoxMove(vec2(Pos.x, NewPos.y), Pos, Size))
 				{
 					NewPos.y = Pos.y;
 					Vel.y *= -Elasticity;
 					Hits++;
 				}
 
-				if(TestBoxMove(vec2(NewPos.x, Pos.y), Size, Pos))
+				if(TestBoxMove(vec2(NewPos.x, Pos.y), Pos, Size))
 				{
 					NewPos.x = Pos.x;
 					Vel.x *= -Elasticity;
@@ -390,13 +376,13 @@ int CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTrigger
 				// this is a real _corner case_!
 				if(Hits == 0)
 				{
-					if(TestBoxMove(vec2(NewPos.x, NewPos.y), Size, vec2(NewPos.x, Pos.y)))
+					if(TestBoxMove(vec2(NewPos.x, NewPos.y), vec2(NewPos.x, Pos.y), Size))
 					{
 						NewPos.y = Pos.y;
 						Vel.y *= -Elasticity;
 					}
 
-					if(TestBoxMove(vec2(NewPos.x, NewPos.y), Size, vec2(Pos.x, NewPos.y)))
+					if(TestBoxMove(vec2(NewPos.x, NewPos.y), vec2(Pos.x, NewPos.y), Size))
 					{
 						NewPos.x = Pos.x;
 						Vel.x *= -Elasticity;

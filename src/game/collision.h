@@ -19,13 +19,10 @@ class CCollision
 
 	int m_NumCheckpoints;
 
-	bool IsTileSolid(int x, int y) { return IsTileSolid(x, y, 0); }
-	bool IsTileSolid(int x, int y, int OpenFlags);
 	int GetSwitchGroup(int PosIndex, int Layer);
-	int GetTile(int x, int y);
-	int GetTileFlags(int x, int y);
 	ivec2 GetTilePos(float x, float y);
 	int GetPosIndex(int x, int y, int Layer);
+	int GetDirFlags(ivec2 Dir);
 
 public:
 	enum
@@ -85,25 +82,21 @@ public:
 	CCollision();
 	void Init(class CLayers *pLayers, bool *pSwitchStates);
 	int GetNumCheckpoints();
-	bool CheckPoint(float x, float y, int OpenFlags) { return IsTileSolid(round_to_int(x), round_to_int(y), OpenFlags); }
-	bool CheckPoint(float x, float y) { return CheckPoint(x, y, ~0); }
-	bool CheckPoint(vec2 Pos) { return CheckPoint(Pos.x, Pos.y); }
-	int GetCollisionAt(float x, float y) { return GetTile(round_to_int(x), round_to_int(y)); }
+	int GetCollisionAt(float x, float y);
 	int GetCollisionAt(vec2 Pos) { return GetCollisionAt(Pos.x, Pos.y); }
+	int GetCollisionMove(float x, float y, float OldX, float OldY, int DirFlagsMask);
+	int GetCollisionMove(vec2 Pos, vec2 OldPos) { return GetCollisionMove(Pos.x, Pos.y, OldPos.x, OldPos.y, ~0); }
+	int GetCollisionMove(vec2 Pos, float OldX, float OldY) { return GetCollisionMove(Pos.x, Pos.y, OldX, OldY, ~0); }
+	int GetCollisionMove(float x, float y, vec2 OldPos) { return GetCollisionMove(x, y, OldPos.x, OldPos.y, ~0); }
 	int GetWidth() { return m_aWidth[GAMELAYERTYPE_VANILLA]; };
 	int GetHeight() { return m_aHeight[GAMELAYERTYPE_VANILLA]; };
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int ColFlag);
-	int IntersectLineHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
-	int IntersectLineProj(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
-	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
-	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces);
-	void MovePointProj(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces);
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces, int ColFlag);
 	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTriggers, vec2 Size, float Elasticity);
 	void HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers);
 	bool TestBox(vec2 Pos, vec2 Size);
-	bool TestBoxMove(vec2 Pos, vec2 Size, vec2 OldPos);
-	bool TestHLineMove(vec2 Pos, float Length, vec2 OldPos);
+	bool TestBoxMove(vec2 Pos, vec2 OldPos, vec2 Size);
+	bool TestHLineMove(vec2 Pos, vec2 OldPos, float Length);
 };
 
 #endif

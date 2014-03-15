@@ -72,7 +72,7 @@ void CProjectile::Tick()
 	vec2 PrevPos = GetPos(Pt);
 	vec2 CurPos = GetPos(Ct);
 	vec2 ColPos = CurPos;
-	int Collide = GameServer()->Collision()->IntersectLineProj(PrevPos, CurPos, 0, &ColPos);
+	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, 0, &ColPos, CCollision::COLFLAG_SOLID_PROJ);
 
 	if(m_Type == WEAPON_SHOTGUN)
 	{
@@ -80,12 +80,12 @@ void CProjectile::Tick()
 		{
 			vec2 Vel = CurPos - PrevPos;
 			int Hits = 0;
-			if(GameServer()->Collision()->IntersectLineProj(vec2(CurPos.x, ColPos.y), ColPos, 0, 0))
+			if(GameServer()->Collision()->IntersectLine(vec2(CurPos.x, ColPos.y), ColPos, 0, 0, CCollision::COLFLAG_SOLID_PROJ))
 			{
 				Vel.x *= -1;
 				Hits++;
 			}
-			if(GameServer()->Collision()->IntersectLineProj(vec2(ColPos.x, CurPos.y), ColPos, 0, 0))
+			if(GameServer()->Collision()->IntersectLine(vec2(ColPos.x, CurPos.y), ColPos, 0, 0, CCollision::COLFLAG_SOLID_PROJ))
 			{
 				Vel.y *= -1;
 				Hits++;

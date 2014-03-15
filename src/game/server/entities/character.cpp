@@ -114,9 +114,7 @@ void CCharacter::SetWeapon(int W)
 
 bool CCharacter::IsGrounded()
 {
-	if(GameServer()->Collision()->CheckPoint(m_Pos.x+m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5))
-		return true;
-	if(GameServer()->Collision()->CheckPoint(m_Pos.x-m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5))
+	if(GameServer()->Collision()->TestHLineMove(m_Pos + vec2(0, m_ProximityRadius / 2 + 5), m_Pos + vec2(0, m_ProximityRadius / 2), m_ProximityRadius))
 		return true;
 	return false;
 }

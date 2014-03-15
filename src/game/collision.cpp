@@ -151,7 +151,7 @@ int CCollision::GetNumCheckpoints()
 
 int CCollision::GetSwitchGroup(int PosIndex, int Layer)
 {
-	return m_apTiles[Layer][PosIndex].m_Reserved;
+	return m_apTiles[Layer][PosIndex].m_Reserved - 1;
 }
 
 ivec2 CCollision::GetTilePos(float x, float y)
@@ -187,8 +187,13 @@ int CCollision::GetCollisionAt(float x, float y)
 {
 	ivec2 Pos = GetTilePos(x, y);
 	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
-	bool Switch = m_pSwitchStates[GetSwitchGroup(Index, GAMELAYERTYPE_VANILLA)];
+	int SwitchGroup = GetSwitchGroup(Index, GAMELAYERTYPE_VANILLA);
 	bool Invert = m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Flags&TILEFLAG_INVERT_SWITCH;
+	bool Switch;
+	if(SwitchGroup != -1)
+		Switch = m_pSwitchStates[SwitchGroup];
+	else
+		Switch = Invert;
 	
 	if(Switch == Invert && m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index <= 128)
 		return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
@@ -203,9 +208,14 @@ int CCollision::GetCollisionMove(float x, float y, float OldX, float OldY, int D
 	int DirFlags = GetDirFlags(Pos - OldPos)&DirFlagsMask;
 
 	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
-	bool Switch = m_pSwitchStates[GetSwitchGroup(Index, GAMELAYERTYPE_VANILLA)];
 	int Flags = m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Flags;
 	bool Invert = Flags&TILEFLAG_INVERT_SWITCH;
+	int SwitchGroup = GetSwitchGroup(Index, GAMELAYERTYPE_VANILLA);
+	bool Switch;
+	if(SwitchGroup != -1)
+		Switch = m_pSwitchStates[SwitchGroup];
+	else
+		Switch = Invert;
 	
 	if(Switch == Invert && m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index <= 128 && (Flags&DirFlags) != DirFlags)
 		return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
@@ -491,7 +501,7 @@ void CCollision::HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers)
 	{
 		pOutTriggers->m_SwitchFlags |= TRIGGERFLAG_SWITCH;
 		pOutTriggers->m_SwitchState = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Flags&TILEFLAG_SWITCH_ON;
-		pOutTriggers->m_SwitchGroup = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Index;
+		pOutTriggers->m_SwitchGroup = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Index - 1;
 		pOutTriggers->m_SwitchDuration = m_apTiles[GAMELAYERTYPE_SWITCH][Index].m_Reserved;
 	}
 

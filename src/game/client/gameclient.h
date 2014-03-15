@@ -47,7 +47,6 @@ class CGameClient : public IGameClient
 
 	CLayers m_Layers;
 	class CCollision m_Collision;
-	bool m_aSwitchStates[255];
 	CUI m_UI;
 
 	void DispatchInput();
@@ -89,6 +88,8 @@ public:
 	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }
 
 	bool m_SuppressEvents;
+
+	bool m_aSwitchStates[255];
 
 	// TODO: move this
 	CTuningParams m_Tuning;

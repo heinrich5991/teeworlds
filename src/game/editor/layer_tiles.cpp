@@ -79,7 +79,7 @@ void CLayerTiles::Render(bool TileSetPicker)
 		}	
 		Graphics()->BlendNormal();
 		m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, Flags,
-							m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
+							m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset, 0);
 
 		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
@@ -114,10 +114,10 @@ void CLayerTiles::Render(bool TileSetPicker)
 
 		Graphics()->BlendNone();
 		m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_OPAQUE,
-							m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
+							m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset, 0);
 		Graphics()->BlendNormal();
 		m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_TRANSPARENT,
-							m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset);
+							m_pEditor->EnvelopeEval, m_pEditor, m_ColorEnv, m_ColorEnvOffset, 0);
 
 		float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 		Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);

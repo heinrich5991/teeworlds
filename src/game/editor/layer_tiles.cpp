@@ -308,7 +308,7 @@ void CLayerTiles::BrushFlipX()
 
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
-			if(!m_Game || (m_GameLayerType == GAMELAYERTYPE_VANILLA && m_pTiles[y*m_Width+x].m_Index == ENTITY_OFFSET + ENTITY_CRAZY_BULLET))
+			if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA)
 				m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_HFLIP : TILEFLAG_VFLIP;
 
 	if(m_GameLayerType == GAMELAYERTYPE_HSPEEDUP)
@@ -329,7 +329,7 @@ void CLayerTiles::BrushFlipY()
 
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
-			if(!m_Game || (m_GameLayerType == GAMELAYERTYPE_VANILLA && m_pTiles[y*m_Width+x].m_Index == ENTITY_OFFSET + ENTITY_CRAZY_BULLET))
+			if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA)
 				m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_VFLIP : TILEFLAG_HFLIP;
 
 	if(m_GameLayerType == GAMELAYERTYPE_VSPEEDUP)
@@ -356,8 +356,7 @@ void CLayerTiles::BrushRotate(float Amount)
 			for(int y = m_Height-1; y >= 0; --y, ++pDst)
 			{
 				*pDst = pTempData[y*m_Width+x];
-				if(!m_Game || m_GameLayerType == GAMELAYERTYPE_HSPEEDUP || m_GameLayerType == GAMELAYERTYPE_VSPEEDUP
-					|| (m_GameLayerType == GAMELAYERTYPE_VANILLA && m_pTiles[y*m_Width+x].m_Index == ENTITY_OFFSET + ENTITY_CRAZY_BULLET))
+				if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA || m_GameLayerType == GAMELAYERTYPE_HSPEEDUP || m_GameLayerType == GAMELAYERTYPE_VSPEEDUP)
 				{
 					if(pDst->m_Flags&TILEFLAG_ROTATE)
 						pDst->m_Flags ^= (TILEFLAG_HFLIP|TILEFLAG_VFLIP);

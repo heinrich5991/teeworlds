@@ -224,8 +224,8 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	{
 		float a = i/Distance;
 		vec2 Pos = mix(Pos0, Pos1, a);
-		int Col = GetCollisionMove(Pos, Last)&ColFlag;
-		if(Col)
+		int Col = GetCollisionMove(Pos, Last);
+		if(Col&ColFlag)
 		{
 			if(pOutCollision)
 				*pOutCollision = Pos;

@@ -86,9 +86,10 @@ public:
 	int GetCollisionAt(float x, float y);
 	int GetCollisionAt(vec2 Pos) { return GetCollisionAt(Pos.x, Pos.y); }
 	int GetCollisionMove(float x, float y, float OldX, float OldY, int DirFlagsMask);
-	int GetCollisionMove(vec2 Pos, vec2 OldPos) { return GetCollisionMove(Pos.x, Pos.y, OldPos.x, OldPos.y, ~0); }
-	int GetCollisionMove(vec2 Pos, float OldX, float OldY) { return GetCollisionMove(Pos.x, Pos.y, OldX, OldY, ~0); }
-	int GetCollisionMove(float x, float y, vec2 OldPos) { return GetCollisionMove(x, y, OldPos.x, OldPos.y, ~0); }
+	int GetCollisionMove(float x, float y, float OldX, float OldY) { return GetCollisionMove(x, y, OldX, OldY, ~0); }
+	int GetCollisionMove(vec2 Pos, vec2 OldPos) { return GetCollisionMove(Pos.x, Pos.y, OldPos.x, OldPos.y); }
+	int GetCollisionMove(vec2 Pos, float OldX, float OldY) { return GetCollisionMove(Pos.x, Pos.y, OldX, OldY); }
+	int GetCollisionMove(float x, float y, vec2 OldPos) { return GetCollisionMove(x, y, OldPos.x, OldPos.y); }
 	int GetWidth() { return m_aWidth[GAMELAYERTYPE_VANILLA]; };
 	int GetHeight() { return m_aHeight[GAMELAYERTYPE_VANILLA]; };
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int ColFlag);

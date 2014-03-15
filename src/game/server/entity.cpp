@@ -60,6 +60,6 @@ bool CEntity::GameLayerClipped(vec2 CheckPos)
 }
 bool CEntity::Active()
 {
-	return (GameWorld()->m_aSwitchStates[m_SwitchGroup] && m_InvertSwitch)
-			|| (!GameWorld()->m_aSwitchStates[m_SwitchGroup] && !m_InvertSwitch);
+	return (GameWorld()->m_aSwitchStates[m_SwitchGroup-1] && m_InvertSwitch)
+			|| (!GameWorld()->m_aSwitchStates[m_SwitchGroup-1] && !m_InvertSwitch);
 }

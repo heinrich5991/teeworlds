@@ -82,6 +82,7 @@ public:
 	CCollision();
 	void Init(class CLayers *pLayers, bool *pSwitchStates);
 	int GetNumCheckpoints();
+	int GetDirFlagsAt(float x, float y);
 	int GetCollisionAt(float x, float y);
 	int GetCollisionAt(vec2 Pos) { return GetCollisionAt(Pos.x, Pos.y); }
 	int GetCollisionMove(float x, float y, float OldX, float OldY, int DirFlagsMask);

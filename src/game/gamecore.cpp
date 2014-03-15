@@ -79,11 +79,12 @@ void CCharacterCore::Reset()
 void CCharacterCore::Tick(bool UseInput)
 {
 	float PhysSize = 28.0f;
+	bool ForceGrab = false;
 	m_TriggeredEvents = 0;
 
 	// get ground state
 	bool Grounded = false;
-	if(m_pCollision->TestHLineMove(m_Pos + vec2(0, 19), m_Pos + vec2(0, 14), 28.0))
+	if(m_pCollision->TestHLineMove(m_Pos + vec2(0, PhysSize / 2 + 5), m_Pos + vec2(0, PhysSize / 2),PhysSize))
 		Grounded = true;
 
 	vec2 TargetDirection = normalize(vec2(m_Input.m_TargetX, m_Input.m_TargetY));
@@ -145,6 +146,9 @@ void CCharacterCore::Tick(bool UseInput)
 			{
 				m_HookState = HOOK_FLYING;
 				m_HookPos = m_Pos+TargetDirection*PhysSize*1.5f;
+				// dirty fix
+				if(m_pCollision->IntersectLine(m_Pos, m_HookPos, 0, 0, CCollision::COLFLAG_SOLID_HOOK))
+					ForceGrab = true;
 				m_HookDir = TargetDirection;
 				m_HookedPlayer = -1;
 				m_HookTick = 0;
@@ -193,7 +197,7 @@ void CCharacterCore::Tick(bool UseInput)
 		m_HookState = HOOK_RETRACTED;
 	}
 	else if(m_HookState == HOOK_FLYING)
-	{
+	{	
 		vec2 NewPos = m_HookPos+m_HookDir*m_pWorld->m_Tuning.m_HookFireSpeed;
 		if(distance(m_Pos, NewPos) > m_pWorld->m_Tuning.m_HookLength)
 		{
@@ -204,8 +208,20 @@ void CCharacterCore::Tick(bool UseInput)
 		// make sure that the hook doesn't go though the ground
 		bool GoingToHitGround = false;
 		bool GoingToRetract = false;
+		// dirty fix part two
+		int StartHit = 0;
+		if(ForceGrab)
+			StartHit = m_pCollision->GetCollisionAt(m_HookPos);
 		int Hit = m_pCollision->IntersectLine(m_HookPos, NewPos, &NewPos, 0, CCollision::COLFLAG_SOLID_HOOK);
-		if(Hit)
+		if(StartHit)
+		{
+			NewPos = m_HookPos;
+			if(StartHit&CCollision::COLFLAG_NOHOOK)
+				GoingToRetract = true;
+			else
+				GoingToHitGround = true;
+		}
+		else if(Hit)
 		{
 			if(Hit&CCollision::COLFLAG_NOHOOK)
 				GoingToRetract = true;

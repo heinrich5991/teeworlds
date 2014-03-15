@@ -322,6 +322,8 @@ void CCharacter::FireWeapon()
 	}
 
 	vec2 ProjStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
+	// dirty fix
+	GameServer()->Collision()->IntersectLine(m_Pos, ProjStartPos, 0, &ProjStartPos, CCollision::COLFLAG_SOLID_PROJ);
 
 	switch(m_ActiveWeapon)
 	{

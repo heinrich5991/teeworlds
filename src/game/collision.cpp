@@ -215,7 +215,10 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	{
 		float a = i/Distance;
 		vec2 Pos = mix(Pos0, Pos1, a);
-		if(GetCollisionAt(Pos.x, Pos.y)&ColFlag)
+		vec2 Vel = Pos1 - Pos0;
+		int DirFlags = (Vel.x > 0 ? DIRFLAG_RIGHT:0)|(Vel.x < 0 ? DIRFLAG_LEFT:0)|(Vel.y > 0 ? DIRFLAG_DOWN:0)|(Vel.y < 0 ? DIRFLAG_UP:0);
+		int Flags = GetTileFlags(round_to_int(Pos.x), round_to_int(Pos.y));
+		if(GetCollisionAt(Pos.x, Pos.y)&ColFlag && ((Flags&DirFlags) != DirFlags))
 		{
 			if(pOutCollision)
 				*pOutCollision = Pos;

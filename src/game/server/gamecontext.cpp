@@ -1071,7 +1071,8 @@ void CGameContext::ExtendEmoticon(int ClientID, int Emoticon)
 			break;
 	}
 
-	m_apPlayers[ClientID]->GetCharacter()->SetEmote(Emote, Server()->Tick() + Server()->TickSpeed() * 1.8f);
+	if(m_apPlayers[ClientID]->GetCharacter())
+		m_apPlayers[ClientID]->GetCharacter()->SetEmote(Emote, Server()->Tick() + Server()->TickSpeed() * 1.8f);
 }
 
 void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData)

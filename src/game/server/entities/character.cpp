@@ -70,8 +70,6 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_LastCheckpoint = -1;
 	m_LastCorrectCheckpoint = -1;
 
-	m_RaceGroup = 0;
-
 	m_pPlayer = pPlayer;
 	m_Pos = Pos;
 
@@ -176,7 +174,7 @@ void CCharacter::HandleNinja()
 
 			for (int i = 0; i < Num; ++i)
 			{
-				if (aEnts[i] == this || aEnts[i]->m_RaceGroup != m_RaceGroup)
+				if (aEnts[i] == this)
 					continue;
 
 				// make sure we haven't Hit this object before
@@ -342,7 +340,7 @@ void CCharacter::FireWeapon()
 			{
 				CCharacter *pTarget = apEnts[i];
 
-				if (pTarget == this || pTarget->m_RaceGroup != m_RaceGroup)
+				if (pTarget == this)
 					continue;
 
 				// set his velocity to fast upward (for now)
@@ -728,17 +726,6 @@ void CCharacter::OnCheckpoint()
 	GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
 
 	// TODO store checkpoint time
-}
-
-void CCharacter::SetRaceGroup(int RaceGroup)
-{
-	m_RaceGroup = RaceGroup;
-	m_Core.m_CollisionGroup = RaceGroup;
-}
-
-int CCharacter::GetRaceGroup()
-{
-	return m_RaceGroup;
 }
 
 void CCharacter::TickPaused()

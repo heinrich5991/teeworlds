@@ -105,7 +105,7 @@ void CProjectile::Tick()
 
 		m_LifeSpan--;
 
-		if((TargetChr && TargetChr->GetRaceGroup() == OwnerChar->GetRaceGroup()) || Collide || m_LifeSpan < 0 || GameLayerClipped(CurPos))
+		if(TargetChr || Collide || m_LifeSpan < 0 || GameLayerClipped(CurPos))
 		{
 			if(m_LifeSpan >= 0 || m_Weapon == WEAPON_GRENADE)
 				GameServer()->CreateSound(CurPos, m_SoundImpact);
@@ -113,7 +113,7 @@ void CProjectile::Tick()
 			if(m_Explosive)
 				GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, true);
 
-			else if(TargetChr && TargetChr->GetRaceGroup() == OwnerChar->GetRaceGroup())
+			else if(TargetChr)
 				TargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Damage, m_Owner, m_Weapon);
 
 			GameServer()->m_World.DestroyEntity(this);

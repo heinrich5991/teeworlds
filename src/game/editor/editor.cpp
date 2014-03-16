@@ -1103,8 +1103,9 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 		TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
 		TB_Bottom.VSplitLeft(30.0f, &Button, &TB_Bottom);
+		
 		static int s_SwitchGroup = 0;
-		s_SwitchGroup = UiDoValueSelector(&s_SwitchGroup, &Button, "", s_SwitchGroup, 0, 255, 1, 10.0f, "Set the switch group. Use left mouse button to drag and change the value. Hold shift to be more precise.");
+		s_SwitchGroup = UiDoValueSelector(&s_SwitchGroup, &Button, "", s_SwitchGroup, 1, 255, 1, 10.0f, "Set the switch group. Use left mouse button to drag and change the value. Hold shift to be more precise.");
 
 
 		TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
@@ -1120,8 +1121,8 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
 		TB_Bottom.VSplitLeft(40.0f, &Button, &TB_Bottom);
 
-		static int s_IncreaseSwitchButton = 0;
-		if(DoButton_Ex(&s_IncreaseSwitchButton, "+SG", Enabled, &Button, 0, "[G] Increase switch group", CUI::CORNER_L) || Input()->KeyDown('g'))
+		static int s_IncreaseSwitchGroup = 0;
+		if(DoButton_Ex(&s_IncreaseSwitchGroup, "+SG", Enabled, &Button, 0, "[G] Increase switch group", CUI::CORNER_L) || Input()->KeyDown('g'))
 		{
 			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
 				m_Brush.m_lLayers[i]->BrushIncreaseSwitchGroup();
@@ -1129,11 +1130,46 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 		TB_Bottom.VSplitLeft(40.0f, &Button, &TB_Bottom);
 
-		static int s_DecreaseSwitchButton = 0;
-		if(DoButton_Ex(&s_DecreaseSwitchButton, "-SG", Enabled, &Button, 0, "[B] Decrease switch group", CUI::CORNER_R) || Input()->KeyDown('b'))
+		static int s_DecreaseSwitchGroup = 0;
+		if(DoButton_Ex(&s_DecreaseSwitchGroup, "-SG", Enabled, &Button, 0, "[B] Decrease switch group", CUI::CORNER_R) || Input()->KeyDown('b'))
 		{
 			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
 				m_Brush.m_lLayers[i]->BrushDecreaseSwitchGroup();
+		}
+
+		TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
+		TB_Bottom.VSplitLeft(30.0f, &Button, &TB_Bottom);
+		
+		static int s_SwitchDuration = 0;
+		s_SwitchDuration = UiDoValueSelector(&s_SwitchDuration, &Button, "", s_SwitchDuration, 0, 255, 1, 10.0f, "Set the switch duration (seconds). Use left mouse button to drag and change the value. Hold shift to be more precise.");
+
+		TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
+		TB_Bottom.VSplitLeft(40.0f, &Button, &TB_Bottom);
+
+		static int s_SetSwitchDuration = 0;
+		if(DoButton_Ex(&s_SetSwitchDuration, "SD", Enabled, &Button, 0, "[Q] Set switch duration", CUI::CORNER_ALL) || Input()->KeyDown('q'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushSetSwitchDuration(s_SwitchDuration);
+		}
+
+		TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
+		TB_Bottom.VSplitLeft(40.0f, &Button, &TB_Bottom);
+
+		static int s_IncreaseSwitchDuration = 0;
+		if(DoButton_Ex(&s_IncreaseSwitchDuration, "+SD", Enabled, &Button, 0, "[W] Increase switch group", CUI::CORNER_L) || Input()->KeyDown('w'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushIncreaseSwitchDuration();
+		}
+
+		TB_Bottom.VSplitLeft(40.0f, &Button, &TB_Bottom);
+
+		static int s_DecreaseSwitchDuration = 0;
+		if(DoButton_Ex(&s_DecreaseSwitchDuration, "-SD", Enabled, &Button, 0, "[E] Decrease switch group", CUI::CORNER_R) || Input()->KeyDown('e'))
+		{
+			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+				m_Brush.m_lLayers[i]->BrushDecreaseSwitchDuration();
 		}
 	}
 	// tele brush manipulation

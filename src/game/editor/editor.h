@@ -155,6 +155,9 @@ public:
 	virtual void BrushSetSwitchGroup(int sg) {}
 	virtual void BrushIncreaseSwitchGroup() {}
 	virtual void BrushDecreaseSwitchGroup() {}
+	virtual void BrushSetSwitchDuration(int duration) {}
+	virtual void BrushIncreaseSwitchDuration() {}
+	virtual void BrushDecreaseSwitchDuration() {}
 
 	virtual void BrushToggleTeleIO() {}
 	virtual void BrushToggleTeleCutOwn() {}
@@ -437,6 +440,9 @@ public:
 	virtual void BrushSetSwitchGroup(int sg);
 	virtual void BrushIncreaseSwitchGroup();
 	virtual void BrushDecreaseSwitchGroup();
+	virtual void BrushSetSwitchDuration(int duration);
+	virtual void BrushIncreaseSwitchDuration();
+	virtual void BrushDecreaseSwitchDuration();
 
 	virtual void BrushToggleTeleIO();
 	virtual void BrushToggleTeleCutOwn();
@@ -488,6 +494,9 @@ public:
 	virtual void BrushSetSwitchGroup(int sg);
 	virtual void BrushIncreaseSwitchGroup();
 	virtual void BrushDecreaseSwitchGroup();
+	virtual void BrushSetSwitchDuration(int duration);
+	virtual void BrushIncreaseSwitchDuration();
+	virtual void BrushDecreaseSwitchDuration();
 
 	virtual void BrushToggleTeleIO();
 	virtual void BrushToggleTeleCutOwn();

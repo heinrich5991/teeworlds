@@ -181,41 +181,45 @@ void CLayerQuads::BrushRotate(float Amount)
 
 void CLayerQuads::BrushToggleSwitch()
 {
-
 }
 
 void CLayerQuads::BrushIncreaseSwitchGroup()
 {
-
 }
 
 void CLayerQuads::BrushSetSwitchGroup(int sg)
 {
-
 }
 
 void CLayerQuads::BrushDecreaseSwitchGroup()
 {
+}
 
+void CLayerQuads::BrushIncreaseSwitchDuration()
+{
+}
+
+void CLayerQuads::BrushSetSwitchDuration(int duration)
+{
+}
+
+void CLayerQuads::BrushDecreaseSwitchDuration()
+{
 }
 
 void CLayerQuads::BrushToggleTeleIO()
 {
-
 }
 void CLayerQuads::BrushToggleTeleCutOwn()
 {
-
 }
 
 void CLayerQuads::BrushToggleTeleCutOther()
 {
-
 }
 
 void CLayerQuads::BrushToggleTeleResetVel()
 {
-
 }
 
 void CLayerQuads::GetSize(float *w, float *h)

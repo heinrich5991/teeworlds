@@ -45,7 +45,7 @@ void CLayerTiles::PrepareForSave()
 	if(!m_Game)
 		for(int y = 0; y < m_Height; y++)
 			for(int x = 0; x < m_Width; x++)
-				m_pTiles[y*m_Width+x].m_Flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE;
+				m_pTiles[y*m_Width+x].m_Flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE|TILEFLAG_INVERT_SWITCH;
 
 	if(m_Image != -1 && m_Color.a == 255)
 	{
@@ -101,6 +101,11 @@ void CLayerTiles::Render(bool TileSetPicker)
 					char aBuf[64];
 					str_format(aBuf, sizeof(aBuf), "%i", m_pTiles[c].m_Index);
 					m_pEditor->Graphics()->QuadsText(x*32+10, y*32+10, 12.0f, aBuf);
+					if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
+					{
+						str_format(aBuf, sizeof(aBuf), "%i", m_pTiles[c].m_Reserved);
+						m_pEditor->Graphics()->QuadsText(x*32+18, y*32+22, 12.0f, aBuf);
+					}
 				}
 				x += m_pTiles[c].m_Skip;
 			}
@@ -423,7 +428,32 @@ void CLayerTiles::BrushDecreaseSwitchGroup()
 	else if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
-				m_pTiles[y*m_Width+x].m_Index = max(m_pTiles[y*m_Width+x].m_Index - 1, 0);
+				m_pTiles[y*m_Width+x].m_Index = max(m_pTiles[y*m_Width+x].m_Index - 1, min((int)m_pTiles[y*m_Width+x].m_Index, 1));
+}
+
+void CLayerTiles::BrushSetSwitchDuration(int duration)
+{
+	if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
+		for(int x = 0; x < m_Width; x++)
+			for(int y = 0; y < m_Height; y++)
+				m_pTiles[y*m_Width+x].m_Reserved = duration;
+}
+
+void CLayerTiles::BrushIncreaseSwitchDuration()
+{
+	if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
+		for(int x = 0; x < m_Width; x++)
+			for(int y = 0; y < m_Height; y++)
+				if(m_pTiles[y*m_Width+x].m_Index)
+					m_pTiles[y*m_Width+x].m_Reserved = min(m_pTiles[y*m_Width+x].m_Reserved + 1, 255);
+}
+
+void CLayerTiles::BrushDecreaseSwitchDuration()
+{
+	if(m_GameLayerType == GAMELAYERTYPE_SWITCH)
+		for(int x = 0; x < m_Width; x++)
+			for(int y = 0; y < m_Height; y++)
+				m_pTiles[y*m_Width+x].m_Reserved = max(m_pTiles[y*m_Width+x].m_Reserved - 1, 0);
 }
 
 void CLayerTiles::BrushToggleTeleIO()

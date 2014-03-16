@@ -204,30 +204,6 @@ void IGameController::DoTeamBalance()
 // event
 int IGameController::OnCharacterDeath(CCharacter *pVictim, CPlayer *pKiller, int Weapon)
 {
-	// do scoreing
-	if(!pKiller || Weapon == WEAPON_GAME)
-		return 0;
-	if(pKiller == pVictim->GetPlayer())
-		pVictim->GetPlayer()->m_Score--; // suicide
-	else
-	{
-		if(IsTeamplay() && pVictim->GetPlayer()->GetTeam() == pKiller->GetTeam())
-			pKiller->m_Score--; // teamkill
-		else
-			pKiller->m_Score++; // normal kill
-	}
-	if(Weapon == WEAPON_SELF)
-		pVictim->GetPlayer()->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()*3.0f;
-
-
-	// update spectator modes for dead players in survival
-	if(m_GameFlags&GAMEFLAG_SURVIVAL)
-	{
-		for(int i = 0; i < MAX_CLIENTS; ++i)
-			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_DeadSpecMode)
-				GameServer()->m_apPlayers[i]->UpdateDeadSpecMode();
-	}
-
 	return 0;
 }
 
@@ -403,7 +379,7 @@ void IGameController::OnReset()
 			GameServer()->m_apPlayers[i]->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 			if(m_RoundCount == 0)
 			{
-				GameServer()->m_apPlayers[i]->m_Score = 0;
+				GameServer()->m_apPlayers[i]->m_Score = -1;
 				GameServer()->m_apPlayers[i]->m_ScoreStartTick = Server()->Tick();
 			}
 			GameServer()->m_apPlayers[i]->m_IsReadyToPlay = true;

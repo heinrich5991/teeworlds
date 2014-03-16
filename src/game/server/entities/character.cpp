@@ -704,14 +704,17 @@ void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 
 void CCharacter::OnFinish()
 {
-	float Time =  (Server()->Tick() - m_RaceStartTick) / (float) Server()->TickSpeed();
+	int ms = (Server()->Tick() - m_RaceStartTick) * 1000 / (float) Server()->TickSpeed();
 
 	// TODO this should be only for vanilla
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "'%s' finished in %.2f seconds!", Server()->ClientName(m_pPlayer->GetCID()), Time);
+	str_format(aBuf, sizeof(aBuf), "'%s' finished in %.2f seconds!", Server()->ClientName(m_pPlayer->GetCID()), ms / 1000.0);
 	GameServer()->SendChatOthers(aBuf, m_pPlayer->GetCID());
-	str_format(aBuf, sizeof(aBuf), "You finished in %.2f seconds!", Time);
+	str_format(aBuf, sizeof(aBuf), "You finished in %.2f seconds!", ms / 1000.0);
 	GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+
+	if(m_pPlayer->m_Score > ms || m_pPlayer->m_Score == -1)
+		m_pPlayer->m_Score = ms;
 
 	// TODO store finish time
 }

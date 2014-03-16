@@ -17,6 +17,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
 	m_RespawnTick = Server()->Tick();
 	m_DieTick = Server()->Tick();
 	m_ScoreStartTick = Server()->Tick();
+	m_Score = -1;
 	m_pCharacter = 0;
 	m_ClientID = ClientID;
 	m_Team = GameServer()->m_pController->GetStartTeam();

@@ -1104,7 +1104,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		TB_Bottom.VSplitLeft(10.0f, 0, &TB_Bottom);
 		TB_Bottom.VSplitLeft(30.0f, &Button, &TB_Bottom);
 		
-		static int s_SwitchGroup = 0;
+		static int s_SwitchGroup = 1;
 		s_SwitchGroup = UiDoValueSelector(&s_SwitchGroup, &Button, "", s_SwitchGroup, 1, 255, 1, 10.0f, "Set the switch group. Use left mouse button to drag and change the value. Hold shift to be more precise.");
 
 

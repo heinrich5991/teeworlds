@@ -232,7 +232,7 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 
 	for(int i = 0; i <= End; i++)
 	{
-		float a = i/(double)End;
+		float a = i/(float)End;
 		vec2 Pos = mix(Pos0, Pos1, a);
 		int Col = GetCollisionMove(Pos, Last);
 		if(Col&ColFlag)

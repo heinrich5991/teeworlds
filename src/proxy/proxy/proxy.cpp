@@ -78,10 +78,10 @@ IProxy *CreateProxy(int ServerVer, int ClientVer, IHacks *pHacks, PACKET_FUNC pf
 	dbg_assert(0 <= ServerVer && ServerVer < NUM_VERSIONS, "invalid server version");
 	dbg_assert(0 <= ClientVer && ClientVer < NUM_VERSIONS, "invalid client version");
 
-	static CSnapshotDelta *s_pSnapshotDelta[NUM_VERSIONS] = { 0 };
+	static CSnapshotDelta *s_apSnapshotDelta[NUM_VERSIONS] = { 0 };
 
 	// already initialised
-	if(!s_pSnapshotDelta[0])
+	if(!s_apSnapshotDelta[0])
 	{
 		for(int i = 0; i < NUM_VERSIONS; i++)
 		{
@@ -110,7 +110,7 @@ IProxy *CreateProxy(int ServerVer, int ClientVer, IHacks *pHacks, PACKET_FUNC pf
 				}
 			}
 			dbg_assert((bool)pSD, "not all versions covered");
-			s_pSnapshotDelta[i] = pSD;
+			s_apSnapshotDelta[i] = pSD;
 		}
 	}
 
@@ -119,8 +119,8 @@ IProxy *CreateProxy(int ServerVer, int ClientVer, IHacks *pHacks, PACKET_FUNC pf
 	CSnapshotDelta *pServerD = 0;
 	CSnapshotDelta *pClientD = 0;
 
-	pServerD = s_pSnapshotDelta[ClientVer];
-	pClientD = s_pSnapshotDelta[ServerVer];
+	pServerD = s_apSnapshotDelta[ClientVer];
+	pClientD = s_apSnapshotDelta[ServerVer];
 
 	if(ClientVer == ServerVer)
 	{

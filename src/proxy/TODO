@@ -1,0 +1,2 @@
+Fix server browser to check for 0.5 and 0.6 changes
+Hook into the game to check for dead reckoning fixes

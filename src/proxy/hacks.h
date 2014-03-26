@@ -18,9 +18,11 @@ public:
 	virtual void Init() = 0;
 
 	// called to check if more packets are to be sent
+	// returns nonzero if there is a packet
 	virtual int GetSendPacket(CNetChunk *pPacket) = 0;
 
 	// called to check if more packets are to be received
+	// returns nonzero if there is a packet
 	virtual int GetRecvPacket(CNetChunk *pPacket) = 0;
 
 	// called on packet arrival, returns nonzero if packet

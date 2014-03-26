@@ -319,7 +319,8 @@ void CCharacter::FireWeapon()
 		return;
 	}
 
-	vec2 ProjStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
+	vec2 HammerStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
+	vec2 ProjStartPos = HammerStartPos;
 	// dirty fix
 	GameServer()->Collision()->IntersectLine(m_Pos, ProjStartPos, 0, &ProjStartPos, CCollision::COLFLAG_SOLID_PROJ);
 
@@ -333,7 +334,7 @@ void CCharacter::FireWeapon()
 
 			CCharacter *apEnts[MAX_CLIENTS];
 			int Hits = 0;
-			int Num = GameServer()->m_World.FindEntities(ProjStartPos, m_ProximityRadius*0.5f, (CEntity**)apEnts,
+			int Num = GameServer()->m_World.FindEntities(HammerStartPos, m_ProximityRadius*0.5f, (CEntity**)apEnts,
 														MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 
 			for (int i = 0; i < Num; ++i)

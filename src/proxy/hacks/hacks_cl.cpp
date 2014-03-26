@@ -10,6 +10,7 @@
 
 #include <proxy/proxy/0.5/nethash.h>
 #include <proxy/proxy/0.6/nethash.h>
+#include <proxy/proxy/0.6/mastersrv.h>
 
 //#include <proxy/proxy/proxy.h>
 
@@ -43,8 +44,12 @@ public:
 
 	virtual const NETADDR *GetPeerAddress(int PeerID);
 
+	bool IsConnlessServerbrowse(CNetChunk *pPacket);
+
 	int Detect5(CNetChunk *pPacket);
 	int DetectHacks(CNetChunk *pPacket);
+
+	virtual int OnPacket(CNetChunk *pPacket, int Origin);
 
 	virtual int OnDisconnect(int PeerID);
 
@@ -91,6 +96,30 @@ int CHacksClient::GetOrigin(int Role)
 	case ROLE_CLIENT: return ORIGIN_OWN;
 	}
 	return 0;
+}
+
+int CHacksClient::OnPacket(CNetChunk *pPacket, int Origin)
+{
+	int PeerID = pPacket->m_ClientID;
+	dbg_assert(-1 <= PeerID && PeerID < MAX_CLIENTS, "pid out of range");
+
+	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
+	{
+		// browserhack begin
+		if(IsConnlessServerbrowse(pPacket))
+		{
+			InitCBData(Origin, PeerID);
+			// send packets in all versions
+			for(int i = 0; i < NUM_VERSIONS; i++)
+				if(m_apConnlessProxies[i])
+					m_apConnlessProxies[i]->TranslatePacket(pPacket, GetRole(Origin));
+			FinalizeCBData(Origin);
+			// return 0 to send the actual packet, other packets will be sent later
+			return 0;
+		}
+		// browserhack end
+	}
+	return CHacks::OnPacket(pPacket, Origin);
 }
 
 const NETADDR *CHacksClient::GetPeerAddress(int PeerID)
@@ -168,6 +197,19 @@ int CHacksClient::OnDisconnect(int PeerID)
 		return 1;
 	}
 	return CHacks::OnDisconnect(PeerID);
+}
+
+bool CHacksClient::IsConnlessServerbrowse(CNetChunk *pPacket)
+{
+	if(pPacket->m_DataSize == sizeof(Protocol6::SERVERBROWSE_GETLIST)
+		&& mem_comp(pPacket->m_pData, Protocol6::SERVERBROWSE_GETLIST,
+			    sizeof(Protocol6::SERVERBROWSE_GETLIST)) == 0)
+		return true;
+	if(pPacket->m_DataSize >= sizeof(Protocol6::SERVERBROWSE_GETINFO)
+		&& mem_comp(pPacket->m_pData, Protocol6::SERVERBROWSE_GETINFO,
+			    sizeof(Protocol6::SERVERBROWSE_GETINFO)) == 0)
+		return true;
+	return false;
 }
 
 int CHacksClient::Detect(CNetChunk *pPacket)

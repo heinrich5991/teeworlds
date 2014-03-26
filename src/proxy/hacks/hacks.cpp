@@ -149,6 +149,14 @@ int CHacks::GetConnlessVersion(CNetChunk *pPacket)
 		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_OLD_GETINFO,
 		            sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)) == 0)
 		return VERSION_05;
+	if(pPacket->m_DataSize >= sizeof(Protocol5::SERVERBROWSE_INFO)
+		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_INFO,
+			    sizeof(Protocol5::SERVERBROWSE_INFO)) == 0)
+		return VERSION_05;
+	if(pPacket->m_DataSize >= sizeof(Protocol5::SERVERBROWSE_OLD_INFO)
+		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_OLD_INFO,
+		            sizeof(Protocol5::SERVERBROWSE_OLD_INFO)) == 0)
+		return VERSION_05;
 	// 0.5 end
 
 	return VERSION_06;

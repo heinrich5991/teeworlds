@@ -68,15 +68,100 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 
 	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
 	{
-		if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_GETINFO) + 1
-			&& mem_comp(Unpacker.GetRaw(sizeof(Protocol5::SERVERBROWSE_GETINFO)), Protocol5::SERVERBROWSE_GETINFO,
+		// abuse the fact that all messages have the same length
+		const unsigned char *pRequest = Unpacker.GetRaw(sizeof(Protocol5::SERVERBROWSE_INFO));
+		if(pRequest && mem_comp(pRequest, Protocol5::SERVERBROWSE_INFO,
+			sizeof(Protocol5::SERVERBROWSE_INFO)) == 0)
+		{
+			Packer.AddRaw(Protocol6::SERVERBROWSE_INFO, sizeof(Protocol6::SERVERBROWSE_INFO));
+
+			const char *pString = Unpacker.GetString();
+			const char *pClientCount = 0;
+			int i = 0;
+			while(!Unpacker.Error())
+			{
+				//     i 5 6  desc
+				//     0 x x  token
+				//     1 m x  version
+				//     2 x x  name
+				//     3 x x  map
+				//     4 x x  gametype
+				//     5 x x  flags
+				//     6 x    progression
+				//         x  player count
+				//         x  max players
+				//     7 x x  client count
+				//     8 x x  max clients
+				// 2k+ 9 x x  k-th client's name
+				//         x  k-th client's clan
+				//         x  k-th client's country
+				// 2k+10 x x  k-th client's score
+				//         x  k-th client's team
+
+				if(i == 1) // version
+				{
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf), "0.6 %s", pString);
+					Packer.AddString(aBuf, 0);
+					//dbg_msg("packer", "adding '%s'", aBuf);
+				}
+				else if(i == 2) // server name
+				{
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf), "[0.5] %s", pString);
+					Packer.AddString(aBuf, 0);
+					//dbg_msg("packer", "adding '%s'", aBuf);
+				}
+				else if(i == 6) // progression
+				{
+					// nothing
+					//dbg_msg("packer", "dropping '%s'", pString);
+				}
+				else
+				{
+					Packer.AddString(pString, 0);
+					//dbg_msg("packer", "adding '%s'", pString);
+				}
+
+				if(i == 7)
+				{
+					pClientCount = pString;
+				}
+				if(i == 8)
+				{
+					//dbg_msg("packer", "inserting '%s'", pClientCount);
+					Packer.AddString(pClientCount, 0); // client_count
+					//dbg_msg("packer", "inserting '%s'", pString);
+					Packer.AddString(pString, 0); // max_clients
+				}
+				if(i >= 9 && i % 2 == 1) // add client's clan and country
+				{
+					//dbg_msg("packer", "inserting '%s'", "");
+					Packer.AddString("", 0); // clan
+					//dbg_msg("packer", "inserting '%s'", "-1");
+					Packer.AddString("-1", 0); // country
+				}
+				if(i >= 9 && i % 2 == 0) // add client's team
+				{
+					//dbg_msg("packer", "inserting '%s'", "0");
+					Packer.AddString("0", 0); // team
+				}
+
+				if(Unpacker.Remaining() <= 0)
+					break;
+				pString = Unpacker.GetString();
+				i++;
+			}
+		}
+		else if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_GETINFO) + 1
+			&& mem_comp(pRequest, Protocol5::SERVERBROWSE_GETINFO,
 				sizeof(Protocol5::SERVERBROWSE_GETINFO)) == 0)
 		{
 			Packer.AddRaw(Protocol6::SERVERBROWSE_GETINFO, sizeof(Protocol6::SERVERBROWSE_GETINFO));
 			Packer.AddRaw(Unpacker.GetRaw(1), 1); // token
 		}
 		else if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)
-			&& mem_comp(Unpacker.GetRaw(sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)), Protocol5::SERVERBROWSE_OLD_GETINFO,
+			&& mem_comp(pRequest, Protocol5::SERVERBROWSE_OLD_GETINFO,
 				sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)) == 0)
 		{
 			static const unsigned char Byte255 = 255; // just hope we never hit 255 refreshs
@@ -274,7 +359,7 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 	{
 		const unsigned char *pRequest = Unpacker.GetRaw(sizeof(Protocol6::SERVERBROWSE_INFO));
 		if(pRequest && mem_comp(pRequest, Protocol6::SERVERBROWSE_INFO,
-				sizeof(Protocol6::SERVERBROWSE_INFO)) == 0)
+			sizeof(Protocol6::SERVERBROWSE_INFO)) == 0)
 		{
 			const char *pString = Unpacker.GetString();
 			int i = 0;
@@ -341,8 +426,13 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 				i++;
 			}
 		}
-		else
-			return;
+		else if(pPacket->m_DataSize == sizeof(Protocol6::SERVERBROWSE_GETINFO) + 1
+			&& mem_comp(pRequest, Protocol6::SERVERBROWSE_GETINFO,
+				sizeof(Protocol6::SERVERBROWSE_GETINFO)) == 0)
+		{
+			Packer.AddRaw(Protocol5::SERVERBROWSE_GETINFO, sizeof(Protocol5::SERVERBROWSE_GETINFO));
+			Packer.AddRaw(Unpacker.GetRaw(1), 1); // token
+		}
 
 		CNetChunk Packet = *pPacket;
 		Packet.m_DataSize = Packer.Size();

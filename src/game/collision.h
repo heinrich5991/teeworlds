@@ -90,8 +90,8 @@ public:
 	int GetCollisionMove(vec2 Pos, vec2 OldPos) { return GetCollisionMove(Pos.x, Pos.y, OldPos.x, OldPos.y); }
 	int GetCollisionMove(vec2 Pos, float OldX, float OldY) { return GetCollisionMove(Pos.x, Pos.y, OldX, OldY); }
 	int GetCollisionMove(float x, float y, vec2 OldPos) { return GetCollisionMove(x, y, OldPos.x, OldPos.y); }
-	int GetWidth() { return m_aWidth[GAMELAYERTYPE_VANILLA]; };
-	int GetHeight() { return m_aHeight[GAMELAYERTYPE_VANILLA]; };
+	int GetWidth() { return m_aWidth[GAMELAYERTYPE_COLLISION]; };
+	int GetHeight() { return m_aHeight[GAMELAYERTYPE_COLLISION]; };
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int ColFlag);
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces, int ColFlag);
 	int MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, CTriggers *pOutTriggers, vec2 Size, float Elasticity);

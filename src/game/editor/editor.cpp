@@ -4204,7 +4204,7 @@ void CEditor::Init()
 	m_CursorTexture = Graphics()->LoadTexture("editor/cursor.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
 	mem_zero(m_aEntitiesTexture, sizeof(m_aEntitiesTexture));
-	m_aEntitiesTexture[GAMELAYERTYPE_VANILLA] = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_aEntitiesTexture[GAMELAYERTYPE_COLLISION] = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_aEntitiesTexture[GAMELAYERTYPE_FREEZE] = Graphics()->LoadTexture("editor/entities_freeze.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_aEntitiesTexture[GAMELAYERTYPE_SWITCH] = Graphics()->LoadTexture("editor/entities_switch.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_aEntitiesTexture[GAMELAYERTYPE_TELE] = Graphics()->LoadTexture("editor/entities_tele.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);

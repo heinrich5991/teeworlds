@@ -54,12 +54,14 @@ void CLayers::Init(class IKernel *pKernel, IMap *pMap)
 						}
 					}
 
-					int Type = (pTilemap->m_Flags>>GAMELAYERMASK_TYPE_SHIFT)&GAMELAYERMASK_TYPE;
+					int Type = (pTilemap->m_Flags>>GAMELAYERMASK_TYPE_SHIFT)&GAMELAYERMASK_TYPE - 1;
 					// known type? - if so, save this layer
 					if(0 <= Type && Type < NUM_GAMELAYERTYPES)
 						// only save if we haven't found one yet
 						if(!m_apGameLayers[Type])
 							m_apGameLayers[Type] = pTilemap;
+					//else if(Type == -1)
+						//TODO
 				}
 			}
 		}

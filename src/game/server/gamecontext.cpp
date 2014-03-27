@@ -1471,7 +1471,7 @@ void CGameContext::OnInit()
 		m_pController = new CGameControllerDM(this);
 
 	// create all entities from the game layer
-	CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer(GAMELAYERTYPE_VANILLA);
+	CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer(GAMELAYERTYPE_COLLISION);
 	CTile *pTiles = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Data);
 	for(int y = 0; y < pTileMap->m_Height; y++)
 	{

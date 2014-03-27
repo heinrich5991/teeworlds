@@ -36,9 +36,9 @@ void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 		m_apTiles[t] = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer(t)->m_Data));
 	}
 
-	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_VANILLA]*m_aHeight[GAMELAYERTYPE_VANILLA]; i++)
+	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_COLLISION]*m_aHeight[GAMELAYERTYPE_COLLISION]; i++)
 	{
-		int Index = m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index;
+		int Index = m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Index;
 
 		if(Index > 128)
 			continue;		
@@ -46,61 +46,61 @@ void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 		switch(Index%16)
 		{
 		case TILE_DEATH:
-			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_DEATH;
+			m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Index = COLFLAG_DEATH;
 			break;
 		case TILE_SOLID:
-			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_HOOK|COLFLAG_SOLID_PROJ;
+			m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_HOOK|COLFLAG_SOLID_PROJ;
 			break;
 		case TILE_NOHOOK:
-			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_HOOK|COLFLAG_SOLID_PROJ|COLFLAG_NOHOOK;
+			m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_HOOK|COLFLAG_SOLID_PROJ|COLFLAG_NOHOOK;
 			break;
 		case TILE_SEMISOLID_HOOK:
-			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_PROJ;
+			m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_PROJ;
 			break;
 		case TILE_SEMISOLID_PROJ:
-			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_HOOK;
+			m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_HOOK;
 			break;
 		case TILE_SEMISOLID_PROJ_NOHOOK:
-			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_HOOK|COLFLAG_NOHOOK;
+			m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Index = COLFLAG_SOLID|COLFLAG_SOLID_HOOK|COLFLAG_NOHOOK;
 			break;
 		case TILE_SEMISOLID_BOTH:
-			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = COLFLAG_SOLID;
+			m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Index = COLFLAG_SOLID;
 			break;
 		default:
-			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index = 0;
+			m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Index = 0;
 		}
 
-		if(m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Index&COLFLAG_SOLID)
+		if(m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Index&COLFLAG_SOLID)
 		{
-			int Flags = m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags;
-			m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags = Flags & TILEFLAG_INVERT_SWITCH;
+			int Flags = m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Flags;
+			m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Flags = Flags & TILEFLAG_INVERT_SWITCH;
 
 			switch(Index/16)
 			{
 				case ROW_ONE_OPEN:
 					if(Flags&TILEFLAG_ROTATE)
-						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= Flags&TILEFLAG_HFLIP ? DIRFLAG_LEFT : DIRFLAG_RIGHT;
+						m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Flags |= Flags&TILEFLAG_HFLIP ? DIRFLAG_LEFT : DIRFLAG_RIGHT;
 					else
-						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= Flags&TILEFLAG_VFLIP ? DIRFLAG_DOWN : DIRFLAG_UP;
+						m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Flags |= Flags&TILEFLAG_VFLIP ? DIRFLAG_DOWN : DIRFLAG_UP;
 					break;
 				case ROW_TWO_OPEN:
 					if(Flags&TILEFLAG_ROTATE)
-						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= DIRFLAG_LEFT|DIRFLAG_RIGHT;
+						m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Flags |= DIRFLAG_LEFT|DIRFLAG_RIGHT;
 					else
-						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= DIRFLAG_DOWN|DIRFLAG_UP;
+						m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Flags |= DIRFLAG_DOWN|DIRFLAG_UP;
 					break;
 				case ROW_TWO_CORNER_OPEN:
-					m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= Flags&TILEFLAG_HFLIP ? DIRFLAG_LEFT : DIRFLAG_RIGHT;
+					m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Flags |= Flags&TILEFLAG_HFLIP ? DIRFLAG_LEFT : DIRFLAG_RIGHT;
 					if(Flags&TILEFLAG_ROTATE)
-						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= Flags&TILEFLAG_VFLIP ? DIRFLAG_UP : DIRFLAG_DOWN;
+						m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Flags |= Flags&TILEFLAG_VFLIP ? DIRFLAG_UP : DIRFLAG_DOWN;
 					else
-						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= Flags&TILEFLAG_VFLIP ? DIRFLAG_DOWN : DIRFLAG_UP;
+						m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Flags |= Flags&TILEFLAG_VFLIP ? DIRFLAG_DOWN : DIRFLAG_UP;
 					break;
 				case ROW_THREE_OPEN:
 					if(Flags&TILEFLAG_ROTATE)
-						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= DIRFLAG_UP|DIRFLAG_DOWN|(Flags&TILEFLAG_VFLIP ? DIRFLAG_LEFT : DIRFLAG_RIGHT);
+						m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Flags |= DIRFLAG_UP|DIRFLAG_DOWN|(Flags&TILEFLAG_VFLIP ? DIRFLAG_LEFT : DIRFLAG_RIGHT);
 					else
-						m_apTiles[GAMELAYERTYPE_VANILLA][i].m_Flags |= DIRFLAG_RIGHT|DIRFLAG_LEFT|(Flags&TILEFLAG_VFLIP ? DIRFLAG_DOWN : DIRFLAG_UP);
+						m_apTiles[GAMELAYERTYPE_COLLISION][i].m_Flags |= DIRFLAG_RIGHT|DIRFLAG_LEFT|(Flags&TILEFLAG_VFLIP ? DIRFLAG_DOWN : DIRFLAG_UP);
 					break;
 			}
 		}
@@ -156,8 +156,8 @@ int CCollision::GetSwitchGroup(int PosIndex, int Layer)
 
 ivec2 CCollision::GetTilePos(float x, float y)
 {
-	int Nx = clamp(round_to_int(x)/32, 0, m_aWidth[GAMELAYERTYPE_VANILLA]-1);
-	int Ny = clamp(round_to_int(y)/32, 0, m_aHeight[GAMELAYERTYPE_VANILLA]-1);
+	int Nx = clamp(round_to_int(x)/32, 0, m_aWidth[GAMELAYERTYPE_COLLISION]-1);
+	int Ny = clamp(round_to_int(y)/32, 0, m_aHeight[GAMELAYERTYPE_COLLISION]-1);
 
 	return ivec2(Nx, Ny);
 }
@@ -186,17 +186,17 @@ int CCollision::GetDirFlags(ivec2 Dir)
 int CCollision::GetCollisionAt(float x, float y)
 {
 	ivec2 Pos = GetTilePos(x, y);
-	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
-	int SwitchGroup = GetSwitchGroup(Index, GAMELAYERTYPE_VANILLA);
-	bool Invert = m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Flags&TILEFLAG_INVERT_SWITCH;
+	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_COLLISION);
+	int SwitchGroup = GetSwitchGroup(Index, GAMELAYERTYPE_COLLISION);
+	bool Invert = m_apTiles[GAMELAYERTYPE_COLLISION][Index].m_Flags&TILEFLAG_INVERT_SWITCH;
 	bool Switch;
 	if(SwitchGroup != -1)
 		Switch = m_pSwitchStates[SwitchGroup];
 	else
 		Switch = Invert;
 	
-	if(Switch == Invert && m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index <= 128)
-		return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
+	if(Switch == Invert && m_apTiles[GAMELAYERTYPE_COLLISION][Index].m_Index <= 128)
+		return m_apTiles[GAMELAYERTYPE_COLLISION][Index].m_Index;
 	else
 		return 0;
 }
@@ -207,18 +207,18 @@ int CCollision::GetCollisionMove(float x, float y, float OldX, float OldY, int D
 	ivec2 OldPos = GetTilePos(OldX, OldY);
 	int DirFlags = GetDirFlags(Pos - OldPos)&DirFlagsMask;
 
-	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_VANILLA);
-	int Flags = m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Flags;
+	int Index = GetPosIndex(Pos.x, Pos.y, GAMELAYERTYPE_COLLISION);
+	int Flags = m_apTiles[GAMELAYERTYPE_COLLISION][Index].m_Flags;
 	bool Invert = Flags&TILEFLAG_INVERT_SWITCH;
-	int SwitchGroup = GetSwitchGroup(Index, GAMELAYERTYPE_VANILLA);
+	int SwitchGroup = GetSwitchGroup(Index, GAMELAYERTYPE_COLLISION);
 	bool Switch;
 	if(SwitchGroup != -1)
 		Switch = m_pSwitchStates[SwitchGroup];
 	else
 		Switch = Invert;
 	
-	if(Switch == Invert && m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index <= 128 && (Flags&DirFlags) != DirFlags)
-		return m_apTiles[GAMELAYERTYPE_VANILLA][Index].m_Index;
+	if(Switch == Invert && m_apTiles[GAMELAYERTYPE_COLLISION][Index].m_Index <= 128 && (Flags&DirFlags) != DirFlags)
+		return m_apTiles[GAMELAYERTYPE_COLLISION][Index].m_Index;
 	else
 		return 0;
 }

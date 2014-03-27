@@ -378,6 +378,7 @@ public:
 
 	// io
 	int Save(class IStorage *pStorage, const char *pFilename);
+	void WriteVanillaLayer(CDataFileWriter* pDataFileWriter, CLayerTiles* pCollisionLayer, int* pLayerCount);
 	int Load(class IStorage *pStorage, const char *pFilename, int StorageType);
 };
 
@@ -513,6 +514,8 @@ public:
 	int m_Image;
 	array<CQuad> m_lQuads;
 };
+
+extern const char *const s_apGameLayerTypeNames[];
 
 class CLayerGame : public CLayerTiles
 {

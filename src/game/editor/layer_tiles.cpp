@@ -313,7 +313,7 @@ void CLayerTiles::BrushFlipX()
 
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
-			if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA)
+			if(!m_Game || m_GameLayerType == GAMELAYERTYPE_COLLISION)
 				m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_HFLIP : TILEFLAG_VFLIP;
 
 	if(m_GameLayerType == GAMELAYERTYPE_HSPEEDUP)
@@ -334,7 +334,7 @@ void CLayerTiles::BrushFlipY()
 
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
-			if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA)
+			if(!m_Game || m_GameLayerType == GAMELAYERTYPE_COLLISION)
 				m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_VFLIP : TILEFLAG_HFLIP;
 
 	if(m_GameLayerType == GAMELAYERTYPE_VSPEEDUP)
@@ -361,7 +361,7 @@ void CLayerTiles::BrushRotate(float Amount)
 			for(int y = m_Height-1; y >= 0; --y, ++pDst)
 			{
 				*pDst = pTempData[y*m_Width+x];
-				if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA || m_GameLayerType == GAMELAYERTYPE_HSPEEDUP || m_GameLayerType == GAMELAYERTYPE_VSPEEDUP)
+				if(!m_Game || m_GameLayerType == GAMELAYERTYPE_COLLISION || m_GameLayerType == GAMELAYERTYPE_HSPEEDUP || m_GameLayerType == GAMELAYERTYPE_VSPEEDUP)
 				{
 					if(pDst->m_Flags&TILEFLAG_ROTATE)
 						pDst->m_Flags ^= (TILEFLAG_HFLIP|TILEFLAG_VFLIP);
@@ -384,7 +384,7 @@ void CLayerTiles::BrushRotate(float Amount)
 
 void CLayerTiles::BrushToggleSwitch()
 {
-	if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA)
+	if(!m_Game || m_GameLayerType == GAMELAYERTYPE_COLLISION)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
 				m_pTiles[y*m_Width+x].m_Flags ^= TILEFLAG_INVERT_SWITCH;
@@ -396,7 +396,7 @@ void CLayerTiles::BrushToggleSwitch()
 
 void CLayerTiles::BrushSetSwitchGroup(int sg)
 {
-	if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA)
+	if(!m_Game || m_GameLayerType == GAMELAYERTYPE_COLLISION)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
 				m_pTiles[y*m_Width+x].m_Reserved = sg;
@@ -408,7 +408,7 @@ void CLayerTiles::BrushSetSwitchGroup(int sg)
 
 void CLayerTiles::BrushIncreaseSwitchGroup()
 {
-	if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA)
+	if(!m_Game || m_GameLayerType == GAMELAYERTYPE_COLLISION)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
 				m_pTiles[y*m_Width+x].m_Reserved = min(m_pTiles[y*m_Width+x].m_Reserved + 1, 255);
@@ -421,7 +421,7 @@ void CLayerTiles::BrushIncreaseSwitchGroup()
 
 void CLayerTiles::BrushDecreaseSwitchGroup()
 {
-	if(!m_Game || m_GameLayerType == GAMELAYERTYPE_VANILLA)
+	if(!m_Game || m_GameLayerType == GAMELAYERTYPE_COLLISION)
 		for(int x = 0; x < m_Width; x++)
 			for(int y = 0; y < m_Height; y++)
 				m_pTiles[y*m_Width+x].m_Reserved = max(m_pTiles[y*m_Width+x].m_Reserved - 1, 0);
@@ -617,7 +617,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		int Result = m_pEditor->PopupSelectGameTileOpResult();
 		if(Result > -1)
 		{
-			CLayerTiles *gl = m_pEditor->m_Map.m_apGameLayers[GAMELAYERTYPE_VANILLA];
+			CLayerTiles *gl = m_pEditor->m_Map.m_apGameLayers[GAMELAYERTYPE_COLLISION];
 			int w = min(gl->m_Width, m_Width);
 			int h = min(gl->m_Height, m_Height);
 			for(int y = 0; y < h; y++)

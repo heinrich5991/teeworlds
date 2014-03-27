@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "editor.h"
 
-static const char *const s_apGameLayerTypeNames[] = {
+const char *const s_apGameLayerTypeNames[] = {
 	"Game",
 	"Freeze",
 	"Switches",

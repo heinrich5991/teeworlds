@@ -113,7 +113,7 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 			}
 
 			// search for unneeded game tiles
-			CLayerTiles *gl = pEditor->m_Map.m_apGameLayers[GAMELAYERTYPE_VANILLA];
+			CLayerTiles *gl = pEditor->m_Map.m_apGameLayers[GAMELAYERTYPE_COLLISION];
 			for(int y = 0; y < gl->m_Height; ++y)
 				for(int x = 0; x < gl->m_Width; ++x)
 				{

@@ -219,6 +219,9 @@ struct CMapItemLayerTilemap
 	int m_aName[3];
 } ;
 
+int TileMapFlagsToGameLayerType(int Flags);
+int GameLayerTypeToTileMapFlags(int GameLayerType);
+
 struct CMapItemLayerQuads
 {
 	CMapItemLayer m_Layer;

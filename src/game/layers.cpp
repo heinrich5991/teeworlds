@@ -54,7 +54,7 @@ void CLayers::Init(class IKernel *pKernel, IMap *pMap)
 						}
 					}
 
-					int Type = (pTilemap->m_Flags>>GAMELAYERMASK_TYPE_SHIFT)&GAMELAYERMASK_TYPE - 1;
+					int Type = TileMapFlagsToGameLayerType(pTilemap->m_Flags);
 					// known type? - if so, save this layer
 					if(0 <= Type && Type < NUM_GAMELAYERTYPES)
 						// only save if we haven't found one yet

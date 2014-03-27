@@ -339,7 +339,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 						GItem.m_NumLayers++;
 					}
 					CLayerGame *pLayerGame = (CLayerGame *)pLayer;
-					Item.m_Flags = TILESLAYERFLAG_GAME | (((pLayerGame->m_GameLayerType+1)&GAMELAYERMASK_TYPE)<<GAMELAYERMASK_TYPE_SHIFT);
+					Item.m_Flags = GameLayerTypeToTileMapFlags(pLayerGame->m_GameLayerType);
 				}
 				Item.m_Image = pLayer->m_Image;
 				Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);
@@ -448,7 +448,7 @@ void CEditorMap::WriteVanillaLayer(CDataFileWriter* pDataFileWriter, CLayerTiles
 
 	Item.m_Width = pCollisionLayer->m_Width;
 	Item.m_Height = pCollisionLayer->m_Height;
-	Item.m_Flags = TILESLAYERFLAG_GAME | ((GAMELAYERTYPE_VANILLA+1)<<GAMELAYERMASK_TYPE_SHIFT);
+	Item.m_Flags = GameLayerTypeToTileMapFlags(GAMELAYERTYPE_VANILLA);
 
 	Item.m_Image = pCollisionLayer->m_Image;
 	
@@ -654,7 +654,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						if(pTilemapItem->m_Flags&TILESLAYERFLAG_GAME)
 						{
 							// determine the game layer type
-							int Type = ((pTilemapItem->m_Flags>>GAMELAYERMASK_TYPE_SHIFT)&GAMELAYERMASK_TYPE) - 1;
+							int Type = TileMapFlagsToGameLayerType(pTilemapItem->m_Flags);
 							dbg_msg("dbg", "type=%d", Type);
 							if(!pGameGroup)
 							{

@@ -454,6 +454,7 @@ void CEditorMap::WriteVanillaLayer(CDataFileWriter* pDataFileWriter, CLayerTiles
 	
 	int Size = pCollisionLayer->m_Width * pCollisionLayer->m_Height;
 	CTile aTiles[Size];
+	mem_zero(aTiles, Size*sizeof(CTile));
 	for(int i = 0; i < Size; i++)
 	{
 		int Index = pCollisionLayer->m_pTiles[i].m_Index;

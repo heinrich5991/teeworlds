@@ -141,22 +141,25 @@ int CHacks::OnPacket(CNetChunk *pPacket, int Origin)
 int CHacks::GetConnlessVersion(CNetChunk *pPacket)
 {
 	// 0.5 begin
-	if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_GETINFO) + 1
-		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_GETINFO,
+	if((unsigned)pPacket->m_DataSize >= sizeof(Protocol5::SERVERBROWSE_GETINFO))
+	{
+		// abuse that all packets have the same minlength
+		if(mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_GETINFO,
 			    sizeof(Protocol5::SERVERBROWSE_GETINFO)) == 0)
-		return VERSION_05;
-	if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)
-		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_OLD_GETINFO,
-		            sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)) == 0)
-		return VERSION_05;
-	if((unsigned)pPacket->m_DataSize >= sizeof(Protocol5::SERVERBROWSE_INFO)
-		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_INFO,
+			return VERSION_05;
+		if(mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_OLD_GETINFO,
+			    sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)) == 0)
+			return VERSION_05;
+		if(mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_INFO,
 			    sizeof(Protocol5::SERVERBROWSE_INFO)) == 0)
-		return VERSION_05;
-	if((unsigned)pPacket->m_DataSize >= sizeof(Protocol5::SERVERBROWSE_OLD_INFO)
-		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_OLD_INFO,
-		            sizeof(Protocol5::SERVERBROWSE_OLD_INFO)) == 0)
-		return VERSION_05;
+			return VERSION_05;
+		if(mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_OLD_INFO,
+			    sizeof(Protocol5::SERVERBROWSE_OLD_INFO)) == 0)
+			return VERSION_05;
+		if(mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_LIST,
+			    sizeof(Protocol5::SERVERBROWSE_OLD_INFO)) == 0)
+			return VERSION_05;
+	}
 	// 0.5 end
 
 	return VERSION_06;

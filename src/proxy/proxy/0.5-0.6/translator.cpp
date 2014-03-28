@@ -70,7 +70,10 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 	{
 		// abuse the fact that all messages have the same length
 		const unsigned char *pRequest = Unpacker.GetRaw(sizeof(Protocol5::SERVERBROWSE_INFO));
-		if(pRequest && mem_comp(pRequest, Protocol5::SERVERBROWSE_INFO,
+		if(Unpacker.Error())
+			return;
+
+		if(mem_comp(pRequest, Protocol5::SERVERBROWSE_INFO,
 			sizeof(Protocol5::SERVERBROWSE_INFO)) == 0)
 		{
 			Packer.AddRaw(Protocol6::SERVERBROWSE_INFO, sizeof(Protocol6::SERVERBROWSE_INFO));
@@ -153,20 +156,63 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 				i++;
 			}
 		}
-		else if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_GETINFO) + 1
-			&& mem_comp(pRequest, Protocol5::SERVERBROWSE_GETINFO,
-				sizeof(Protocol5::SERVERBROWSE_GETINFO)) == 0)
+		else if(mem_comp(pRequest, Protocol5::SERVERBROWSE_GETINFO,
+			sizeof(Protocol5::SERVERBROWSE_GETINFO)) == 0)
 		{
 			Packer.AddRaw(Protocol6::SERVERBROWSE_GETINFO, sizeof(Protocol6::SERVERBROWSE_GETINFO));
 			Packer.AddRaw(Unpacker.GetRaw(1), 1); // token
 		}
-		else if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)
-			&& mem_comp(pRequest, Protocol5::SERVERBROWSE_OLD_GETINFO,
-				sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)) == 0)
+		else if(mem_comp(pRequest, Protocol5::SERVERBROWSE_OLD_GETINFO,
+			sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)) == 0)
 		{
 			static const unsigned char Byte255 = 255; // just hope we never hit 255 refreshs
 			Packer.AddRaw(Protocol6::SERVERBROWSE_GETINFO, sizeof(Protocol6::SERVERBROWSE_GETINFO));
 			Packer.AddRaw(&Byte255, 1);
+		}
+		else if(mem_comp(pRequest, Protocol5::SERVERBROWSE_LIST,
+			sizeof(Protocol5::SERVERBROWSE_LIST)) == 0)
+		{
+			static unsigned char IPV4Mapping[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF };
+			static const int MAX_SERVERS_PER_PACKET_6 = 75;
+
+			CNetChunk Packet = *pPacket;
+
+			int NumServers = 0;
+
+			Protocol5::MASTERSRV_ADDR *pAddr = (Protocol5::MASTERSRV_ADDR *)Unpacker.GetRaw(sizeof(Protocol5::MASTERSRV_ADDR));
+
+			for(int i = 0; !Unpacker.Error(); i++)
+			{
+				if(NumServers == 0)
+					Packer.AddRaw(Protocol6::SERVERBROWSE_LIST, sizeof(Protocol6::SERVERBROWSE_LIST));
+
+				Protocol6::CMastersrvAddr AddrT;
+				mem_zero(&AddrT, sizeof(AddrT));
+
+				mem_copy(&AddrT, IPV4Mapping, sizeof(IPV4Mapping));
+				for(unsigned k = 0; k < sizeof(pAddr->m_aIp); k++)
+					AddrT.m_aIp[sizeof(IPV4Mapping) + k] = pAddr->m_aIp[k];
+
+				// swapping is intentional, that changed from 0.5 to 0.6
+				AddrT.m_aPort[0] = pAddr->m_aPort[1];
+				AddrT.m_aPort[1] = pAddr->m_aPort[0];
+
+				Packer.AddRaw(&AddrT, sizeof(AddrT));
+
+				NumServers++;
+
+				pAddr = (Protocol5::MASTERSRV_ADDR *)Unpacker.GetRaw(sizeof(Protocol5::MASTERSRV_ADDR));
+
+				if(NumServers == MAX_SERVERS_PER_PACKET_6 || Unpacker.Error())
+				{
+					Packet.m_DataSize = Packer.Size();
+					Packet.m_pData = Packer.Data();
+					TranslatePacketCB(&Packet);
+
+					Packer.Reset();
+					NumServers = 0;
+				}
+			}
 		}
 		else
 			return;
@@ -358,7 +404,10 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
 	{
 		const unsigned char *pRequest = Unpacker.GetRaw(sizeof(Protocol6::SERVERBROWSE_INFO));
-		if(pRequest && mem_comp(pRequest, Protocol6::SERVERBROWSE_INFO,
+		if(Unpacker.Error())
+			return;
+
+		if(mem_comp(pRequest, Protocol6::SERVERBROWSE_INFO,
 			sizeof(Protocol6::SERVERBROWSE_INFO)) == 0)
 		{
 			const char *pString = Unpacker.GetString();
@@ -426,13 +475,19 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 				i++;
 			}
 		}
-		else if(pPacket->m_DataSize == sizeof(Protocol6::SERVERBROWSE_GETINFO) + 1
-			&& mem_comp(pRequest, Protocol6::SERVERBROWSE_GETINFO,
-				sizeof(Protocol6::SERVERBROWSE_GETINFO)) == 0)
+		else if(mem_comp(pRequest, Protocol6::SERVERBROWSE_GETINFO,
+			sizeof(Protocol6::SERVERBROWSE_GETINFO)) == 0)
 		{
 			Packer.AddRaw(Protocol5::SERVERBROWSE_GETINFO, sizeof(Protocol5::SERVERBROWSE_GETINFO));
 			Packer.AddRaw(Unpacker.GetRaw(1), 1); // token
 		}
+		else if(mem_comp(pRequest, Protocol6::SERVERBROWSE_GETLIST,
+			sizeof(Protocol6::SERVERBROWSE_GETLIST)) == 0)
+		{
+			Packer.AddRaw(Protocol5::SERVERBROWSE_GETLIST, sizeof(Protocol5::SERVERBROWSE_GETLIST));
+		}
+		else
+			return;
 
 		CNetChunk Packet = *pPacket;
 		Packet.m_DataSize = Packer.Size();

@@ -728,6 +728,7 @@ int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 			Protocol5::CNetObj_Game *pData = (Protocol5::CNetObj_Game *)pItem->Data();
 			Protocol6::CNetObj_GameInfo DataT;
 
+			DataT.m_RoundStartTick = pData->m_RoundStartTick;
 			DataT.m_GameFlags = pData->m_Flags;
 			DataT.m_GameStateFlags = 0;
 			if(pData->m_GameOver)

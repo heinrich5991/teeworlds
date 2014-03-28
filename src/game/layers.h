@@ -14,6 +14,7 @@ class CLayers
 	int m_LayersStart;
 	CMapItemGroup *m_pGameGroup;
 	CMapItemLayerTilemap *m_apGameLayers[NUM_GAMELAYERTYPES];
+	CMapItemLayerTilemap *m_pVanillaLayer;
 	class IMap *m_pMap;
 
 public:
@@ -24,6 +25,7 @@ public:
 	class IMap *Map() const { return m_pMap; };
 	CMapItemGroup *GameGroup() const { return m_pGameGroup; };
 	CMapItemLayerTilemap *GameLayer(int GameLayerType) const { return m_apGameLayers[GameLayerType]; };
+	CMapItemLayerTilemap *VanillaLayer() const { return m_pVanillaLayer; };
 	CMapItemGroup *GetGroup(int Index) const;
 	CMapItemLayer *GetLayer(int Index) const;
 };

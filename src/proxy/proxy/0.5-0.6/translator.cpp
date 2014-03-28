@@ -644,16 +644,12 @@ int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 		CSnapshotItem *pItem = pSnap->GetItem(i);
 		if(pItem->Type() == Protocol5::NETOBJTYPE_FLAG)
 		{
-			Protocol6::CNetObj_Flag *pData = (Protocol6::CNetObj_Flag *)pItem->Data();
-			Protocol5::CNetObj_Flag DataT;
+			Protocol5::CNetObj_Flag *pData = (Protocol5::CNetObj_Flag *)pItem->Data();
 
-			DataT.m_X = pData->m_X;
-			DataT.m_Y = pData->m_Y;
-			DataT.m_Team = pData->m_Team;
 			if(pData->m_Team == 0)
 			{
 				if(!FoundRedFlag)
-					RedFlagCarriedBy = DataT.m_CarriedBy;
+					RedFlagCarriedBy = pData->m_CarriedBy;
 				else
 					RedFlagCarriedBy = -1;
 				FoundRedFlag = true;
@@ -661,7 +657,7 @@ int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 			else if(pData->m_Team == 1)
 			{
 				if(!FoundBlueFlag)
-					BlueFlagCarriedBy = DataT.m_CarriedBy;
+					BlueFlagCarriedBy = pData->m_CarriedBy;
 				else
 					RedFlagCarriedBy = -1;
 				FoundBlueFlag = true;
@@ -701,6 +697,17 @@ int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_CHATTING;
 			else
 				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_PLAYING;
+			void *pWrite = Builder.NewItem(NewType, ID, sizeof(DataT));
+			mem_copy(pWrite, &DataT, sizeof(DataT));
+		}
+		else if(Type == Protocol5::NETOBJTYPE_PLAYERINFO)
+		{
+			Protocol5::CNetObj_PlayerInfo *pData = (Protocol5::CNetObj_PlayerInfo *)pItem->Data();
+			Protocol6::CNetObj_PlayerInfo DataT;
+			// 0.6 only got the last field removed, simply mem_copy it
+			mem_zero(&DataT, sizeof(DataT));
+			mem_copy(&DataT, pData, sizeof(DataT));
+
 			void *pWrite = Builder.NewItem(NewType, ID, sizeof(DataT));
 			mem_copy(pWrite, &DataT, sizeof(DataT));
 		}
@@ -750,7 +757,7 @@ int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 			void *pWrite = Builder.NewItem(Protocol6::NETOBJTYPE_GAMEINFO, ID, sizeof(DataT));
 			mem_copy(pWrite, &DataT, sizeof(DataT));
 		}
-		else if(Type == Protocol6::NETOBJTYPE_CLIENTINFO)
+		else if(Type == Protocol5::NETOBJTYPE_CLIENTINFO)
 		{
 			Protocol5::CNetObj_ClientInfo *pData = (Protocol5::CNetObj_ClientInfo *)pItem->Data();
 			Protocol6::CNetObj_ClientInfo DataT;

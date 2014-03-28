@@ -631,7 +631,7 @@ void *CClient::SnapFindItem(int SnapID, int Type, int ID)
 	if(!m_aSnapshots[SnapID])
 		return 0x0;
 
-	for(i = 0; i < m_aSnapshots[SnapID]->m_pSnap->NumItems(); i++)
+	for(i = 0; i < m_aSnapshots[SnapID]->m_pAltSnap->NumItems(); i++)
 	{
 		CSnapshotItem *pItem = m_aSnapshots[SnapID]->m_pAltSnap->GetItem(i);
 		if(pItem->Type() == Type && pItem->ID() == ID)
@@ -645,7 +645,7 @@ int CClient::SnapNumItems(int SnapID)
 	dbg_assert(SnapID >= 0 && SnapID < NUM_SNAPSHOT_TYPES, "invalid SnapID");
 	if(!m_aSnapshots[SnapID])
 		return 0;
-	return m_aSnapshots[SnapID]->m_pSnap->NumItems();
+	return m_aSnapshots[SnapID]->m_pAltSnap->NumItems();
 }
 
 void CClient::SnapSetStaticsize(int ItemType, int Size)
@@ -1347,7 +1347,10 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					m_SnapshotStorage.Add(GameTick, time_get(), SnapSize, pTmpBuffer3, 1);
 
 					if(Hacks())
+					{
 						Hacks()->OnSnap(0, pTmpBuffer3, &SnapSize);
+						Hacks()->PostSnapshotStorageAddClient(0, &m_SnapshotStorage, pTmpBuffer3, SnapSize);
+					}
 
 					// add snapshot to demo
 					if(m_DemoRecorder.IsRecording())

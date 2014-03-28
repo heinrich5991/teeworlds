@@ -149,11 +149,11 @@ int CHacks::GetConnlessVersion(CNetChunk *pPacket)
 		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_OLD_GETINFO,
 		            sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)) == 0)
 		return VERSION_05;
-	if(pPacket->m_DataSize >= sizeof(Protocol5::SERVERBROWSE_INFO)
+	if((unsigned)pPacket->m_DataSize >= sizeof(Protocol5::SERVERBROWSE_INFO)
 		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_INFO,
 			    sizeof(Protocol5::SERVERBROWSE_INFO)) == 0)
 		return VERSION_05;
-	if(pPacket->m_DataSize >= sizeof(Protocol5::SERVERBROWSE_OLD_INFO)
+	if((unsigned)pPacket->m_DataSize >= sizeof(Protocol5::SERVERBROWSE_OLD_INFO)
 		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_OLD_INFO,
 		            sizeof(Protocol5::SERVERBROWSE_OLD_INFO)) == 0)
 		return VERSION_05;
@@ -273,3 +273,38 @@ void *CHacks::EmptyDeltaClient(int PeerID)
 	return m_SnapshotDelta.EmptyDelta();
 }
 
+void CHacks::PostSnapshotStorageAddClient(int PeerID, CSnapshotStorage *pStorage, CSnapshot *pAltSnap, int AltSize)
+{
+	if(m_aPeers[PeerID].m_pProxy)
+	{
+		CSnapshotStorage::CHolder *pHolder = pStorage->m_pLast;
+
+		if(!pHolder->m_pAltSnap)
+			return;
+
+		int Size = 0;
+		Size += sizeof(CSnapshotStorage::CHolder);
+		Size += pHolder->m_SnapSize;
+		Size += AltSize;
+
+		CSnapshotStorage::CHolder *pNewHolder = (CSnapshotStorage::CHolder *)mem_alloc(Size, 1);
+
+		mem_copy(pNewHolder, pHolder, sizeof(CSnapshotStorage::CHolder));
+
+		// fix pointers
+		pNewHolder->m_pSnap = (CSnapshot*)(&pNewHolder[1]);
+		pNewHolder->m_pAltSnap = (CSnapshot*)(((char *)pNewHolder->m_pSnap) + pNewHolder->m_SnapSize);
+		if(pNewHolder->m_pPrev)
+			pNewHolder->m_pPrev->m_pNext = pNewHolder;
+		if(pStorage->m_pFirst == pHolder)
+			pStorage->m_pFirst = pNewHolder;
+		pStorage->m_pLast = pNewHolder;
+
+		mem_copy(pNewHolder->m_pSnap, pHolder->m_pSnap, pNewHolder->m_SnapSize);
+		mem_copy(pNewHolder->m_pAltSnap, pAltSnap, AltSize);
+
+		mem_free(pHolder);
+		pHolder = 0;
+	}
+	return;
+}

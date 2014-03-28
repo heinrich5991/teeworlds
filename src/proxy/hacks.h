@@ -6,6 +6,7 @@
 
 class CNetChunk;
 class CSnapshot;
+class CSnapshotStorage;
 
 class IHacks : public IInterface
 {
@@ -49,6 +50,9 @@ public:
 	virtual int CreateDeltaServer(int PeerID, CSnapshot *pFrom, CSnapshot *pTo, void *pDelta) = 0;
 	virtual int UnpackDeltaClient(int PeerID, CSnapshot *pFrom, CSnapshot *pTo, void *pDelta, int DeltaSize) = 0;
 	virtual void *EmptyDeltaClient(int PeerID) = 0; // returns pointer to CSnapshotDelta::CData
+
+	// intended to be called after the CSnapshotStorage::Add call on the client
+	virtual void PostSnapshotStorageAddClient(int PeerID, CSnapshotStorage *pStorage, CSnapshot *pAltSnap, int AltSize) = 0;
 
 	virtual void SetNet(void *pNet) = 0;
 };

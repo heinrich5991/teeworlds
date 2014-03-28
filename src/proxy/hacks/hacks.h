@@ -46,6 +46,8 @@ public:
 	virtual int UnpackDeltaClient(int PeerID, CSnapshot *pFrom, CSnapshot *pTo, void *pDelta, int DeltaSize);
 	virtual void *EmptyDeltaClient(int PeerID);
 
+	virtual void PostSnapshotStorageAddClient(int PeerID, CSnapshotStorage *pStorage, CSnapshot *pAltSnap, int AltSize);
+
 	virtual int GetPacket(CNetChunk *pPacket, int Origin);
 	virtual int OnPacket(CNetChunk *pPacket, int Origin);
 

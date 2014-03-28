@@ -776,9 +776,9 @@ int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 			DataT.m_Skin4 = pData->m_Skin4;
 			DataT.m_Skin5 = pData->m_Skin5;
 			DataT.m_Country = -1;
-			DataT.m_Clan0 = 0;
-			DataT.m_Clan1 = 0;
-			DataT.m_Clan2 = 0;
+			DataT.m_Clan0 = 0x80808080; // empty string
+			DataT.m_Clan1 = 0x80808080;
+			DataT.m_Clan2 = 0x80808080;
 			DataT.m_UseCustomColor = pData->m_UseCustomColor;
 			DataT.m_ColorBody = pData->m_ColorBody;
 			DataT.m_ColorFeet = pData->m_ColorFeet;
@@ -925,8 +925,8 @@ int CTranslator_06_05::TranslateSnap(CSnapshot *pSnap)
 			DataT.m_Name1 = pData->m_Name1;
 			DataT.m_Name2 = pData->m_Name2;
 			DataT.m_Name3 = pData->m_Name3;
-			DataT.m_Name4 = 0;
-			DataT.m_Name5 = 0;
+			DataT.m_Name4 = 0x80808080;
+			DataT.m_Name5 = 0x80808080;
 			DataT.m_Skin0 = pData->m_Skin0;
 			DataT.m_Skin1 = pData->m_Skin1;
 			DataT.m_Skin2 = pData->m_Skin2;

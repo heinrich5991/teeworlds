@@ -47,6 +47,7 @@ public:
 	virtual void *EmptyDeltaClient(int PeerID);
 
 	virtual void PostSnapshotStorageAddClient(int PeerID, CSnapshotStorage *pStorage, CSnapshot *pAltSnap, int AltSize);
+	virtual bool OverrideStandardMapCheckClient(int PeerID);
 
 	virtual int GetPacket(CNetChunk *pPacket, int Origin);
 	virtual int OnPacket(CNetChunk *pPacket, int Origin);

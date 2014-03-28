@@ -54,6 +54,10 @@ public:
 	// intended to be called after the CSnapshotStorage::Add call on the client
 	virtual void PostSnapshotStorageAddClient(int PeerID, CSnapshotStorage *pStorage, CSnapshot *pAltSnap, int AltSize) = 0;
 
+	// intended to be called after the standard map check,
+	// returns true if the result is to be ignored
+	virtual bool OverrideStandardMapCheckClient(int PeerID) = 0;
+
 	virtual void SetNet(void *pNet) = 0;
 };
 

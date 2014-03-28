@@ -311,3 +311,8 @@ void CHacks::PostSnapshotStorageAddClient(int PeerID, CSnapshotStorage *pStorage
 	}
 	return;
 }
+
+bool CHacks::OverrideStandardMapCheckClient(int PeerID)
+{
+	return (bool)m_aPeers[PeerID].m_pProxy;
+}

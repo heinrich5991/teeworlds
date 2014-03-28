@@ -1021,7 +1021,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				return;
 
 			// check for valid standard map
-			if(!m_MapChecker.IsMapValid(pMap, MapCrc, MapSize))
+			if(!m_MapChecker.IsMapValid(pMap, MapCrc, MapSize) && (!Hacks() || !Hacks()->OverrideStandardMapCheckClient(0)))
 				pError = "invalid standard map";
 
 			for(int i = 0; pMap[i]; i++) // protect the player from nasty map names

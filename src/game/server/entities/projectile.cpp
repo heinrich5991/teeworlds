@@ -79,9 +79,9 @@ void CProjectile::Tick()
 		if(Collide)
 		{
 			vec2 Vel = CurPos - PrevPos;
-			if(GameServer()->Collision()->IntersectLine(PrevPos, vec2(PrevPos.x, ColPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
-				Vel.x *= -1;
 			if(GameServer()->Collision()->IntersectLine(PrevPos, vec2(ColPos.x, PrevPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
+				Vel.x *= -1;
+			if(GameServer()->Collision()->IntersectLine(PrevPos, vec2(PrevPos.x, ColPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
 				Vel.y *= -1;
 			m_Pos = ColPos;
 			m_Direction = normalize(Vel);

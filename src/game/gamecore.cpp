@@ -70,6 +70,7 @@ void CCharacterCore::Reset()
 	m_HookTick = 0;
 	m_HookState = HOOK_IDLE;
 	m_HookedPlayer = -1;
+	m_Endless = false;
 	m_CollisionGroup = 0;
 	m_Jumped = 0;
 	m_FreezeTick = 0;
@@ -319,7 +320,11 @@ void CCharacterCore::Tick(bool UseInput)
 		}
 
 		// release hook (max hook time is 1.2)
-		m_HookTick++;
+		if(m_Endless)
+			m_HookTick == 0;
+		else
+			m_HookTick++;
+
 		if(m_FreezeTick != 0 || m_HookedPlayer != -1 && (m_HookTick > SERVER_TICK_SPEED+SERVER_TICK_SPEED/5 || !m_pWorld->m_apCharacters[m_HookedPlayer]
 									|| m_pWorld->m_apCharacters[m_HookedPlayer]->m_CollisionGroup != m_CollisionGroup))
 		{
@@ -508,6 +513,11 @@ void CCharacterCore::HandleTriggers(CCollision::CTriggers Triggers)
 
 	if(Triggers.m_SpeedupFlags&CCollision::TRIGGERFLAG_SPEEDUP)
 		m_TriggeredEvents |= COREEVENTFLAG_SPEEDUP;
+
+	if(Triggers.m_Endless == CCollision::PROPERTEE_ON)
+		m_Endless = true;
+	else if(Triggers.m_Endless == CCollision::PROPERTEE_OFF)
+		m_Endless = false;
 }
 
 void CCharacterCore::Freeze()

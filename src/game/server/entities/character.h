@@ -118,6 +118,8 @@ private:
 
 	int m_Health;
 	int m_Armor;
+	
+	bool m_Nohit;
 
 	bool m_UnfreezeFire;
 

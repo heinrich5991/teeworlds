@@ -10,6 +10,7 @@ const char *const s_apGameLayerTypeNames[] = {
 	"H-Speedup",
 	"V-Speedup",
 	"Race",
+	"Propertee",
 };
 
 CLayerGame::CLayerGame(int w, int h, int Type)

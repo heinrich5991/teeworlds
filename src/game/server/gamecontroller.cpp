@@ -283,7 +283,7 @@ bool IGameController::OnEntity(int Index, int Flags, vec2 Pos, int SwitchGroup, 
 		else
 			Dir.y = Flags&TILEFLAG_VFLIP ? 1.0 : -1.0;
 		new CProjectile(&GameServer()->m_World, WEAPON_SHOTGUN, -1, Pos, Dir, 0,
-				0, false, 0, SOUND_GUN_FIRE, WEAPON_SHOTGUN, SwitchGroup, InvertSwitch);
+				0, false, 0, SOUND_GUN_FIRE, WEAPON_SHOTGUN, SwitchGroup, InvertSwitch, false);
 		break;
 	}
 

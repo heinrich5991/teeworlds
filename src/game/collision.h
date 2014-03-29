@@ -56,6 +56,9 @@ public:
 		TRIGGERFLAG_STOP_NINJA=8,
 
 		TRIGGERFLAG_SPEEDUP=1,
+
+		PROPERTEE_ON=1,
+		PROPERTEE_OFF=-1,
 	};
 
 	struct CTriggers
@@ -75,8 +78,12 @@ public:
 
 		int m_Checkpoint;
 
+		int m_Endless;
+		int m_Solo;
+		int m_Nohit;
+
 		CTriggers() : m_FreezeFlags(), m_SwitchFlags(), m_SwitchState(), m_SwitchGroup(), m_SwitchDuration(), m_TeleFlags(), m_TeleInPos(vec2(0.0f, 0.0f)),
-			m_TeleOutPos(vec2(0.0f, 0.0f)), m_SpeedupFlags(), m_Checkpoint() {}
+			m_TeleOutPos(vec2(0.0f, 0.0f)), m_SpeedupFlags(), m_Checkpoint(), m_Endless(), m_Solo(), m_Nohit() {}
 	};
 
 	CCollision();

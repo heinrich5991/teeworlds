@@ -517,4 +517,31 @@ void CCollision::HandleTriggerTiles(int x, int y, CTriggers *pOutTriggers)
 	}
 	else
 		pOutTriggers->m_Checkpoint = -1;
+
+	
+	Index = GetPosIndex(x, y, GAMELAYERTYPE_PROPERTEE);
+	pOutTriggers->m_Endless = 0;
+	pOutTriggers->m_Solo = 0;
+	pOutTriggers->m_Nohit = 0;
+	switch(m_apTiles[GAMELAYERTYPE_PROPERTEE][Index].m_Index)
+	{
+		case TILE_PROPERTEE_ENDLESS_ON:
+			pOutTriggers->m_Endless = PROPERTEE_ON;
+			break;
+		case TILE_PROPERTEE_ENDLESS_OFF:
+			pOutTriggers->m_Endless = PROPERTEE_OFF;
+			break;
+		case TILE_PROPERTEE_SOLO_ON:
+			pOutTriggers->m_Solo = PROPERTEE_ON;
+			break;
+		case TILE_PROPERTEE_SOLO_OFF:
+			pOutTriggers->m_Solo = PROPERTEE_OFF;
+			break;
+		case TILE_PROPERTEE_NOHIT_ON:
+			pOutTriggers->m_Nohit = PROPERTEE_ON;
+			break;
+		case TILE_PROPERTEE_NOHIT_OFF:
+			pOutTriggers->m_Nohit = PROPERTEE_OFF;
+			break;
+	}
 }

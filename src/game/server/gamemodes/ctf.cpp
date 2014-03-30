@@ -252,7 +252,7 @@ void CGameControllerCTF::Tick()
 					GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
 					F->Reset();
 				}
-				else
+				else {
 					F->m_Vel.y += GameServer()->m_TeamsCore.GetTeamWorld(0)->m_Core.m_Tuning.m_Gravity;
 					GameServer()->Collision()->MoveBox(&F->m_Pos, &F->m_Vel, 0, vec2(F->ms_PhysSize, F->ms_PhysSize), 0.5f);
 

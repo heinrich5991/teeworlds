@@ -468,7 +468,7 @@ void CGameContext::OnTick()
 	// copy tuning
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		m_TeamsCore.GetTeamWorld(i)->m_Core.m_Tuning = m_Tuning
+		m_TeamsCore.GetTeamWorld(i)->m_Core.m_Tuning = m_Tuning;
 	}
 
 	m_TeamsCore.Tick();
@@ -584,7 +584,7 @@ void CGameContext::OnClientDirectInput(int ClientID, void *pInput)
 
 void CGameContext::OnClientPredictedInput(int ClientID, void *pInput)
 {
-	if(!m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->m_DDRTeam)-m_Paused)
+	if(!m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->GetDDRTeam())->m_Paused)
 	{
 		int NumCorrections = m_NetObjHandler.NumObjCorrections();
 		if(m_NetObjHandler.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == 0)
@@ -922,7 +922,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				m_pController->DoTeamChange(pPlayer, pMsg->m_Team);
 			}
 		}
-		else if (MsgID == NETMSGTYPE_CL_SETSPECTATORMODE && !m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->m_DDRTeam)-m_Paused)
+		else if (MsgID == NETMSGTYPE_CL_SETSPECTATORMODE && !m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->GetDDRTeam())->m_Paused)
 		{
 			CNetMsg_Cl_SetSpectatorMode *pMsg = (CNetMsg_Cl_SetSpectatorMode *)pRawMsg;
 
@@ -933,7 +933,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if(!pPlayer->SetSpectatorID(pMsg->m_SpectatorID))
 				SendGameMsg(GAMEMSG_SPEC_INVALIDID, ClientID);
 		}
-		else if (MsgID == NETMSGTYPE_CL_EMOTICON && !m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->m_DDRTeam)-m_Paused)
+		else if (MsgID == NETMSGTYPE_CL_EMOTICON && !m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->GetDDRTeam())->m_Paused)
 		{
 			CNetMsg_Cl_Emoticon *pMsg = (CNetMsg_Cl_Emoticon *)pRawMsg;
 
@@ -946,7 +946,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 			ExtendEmoticon(ClientID, pMsg->m_Emoticon);
 		}
-		else if (MsgID == NETMSGTYPE_CL_KILL && !m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->m_DDRTeam)-m_Paused)
+		else if (MsgID == NETMSGTYPE_CL_KILL && !m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->GetDDRTeam())->m_Paused)
 		{
 			if(pPlayer->m_LastKill && pPlayer->m_LastKill+Server()->TickSpeed()*3 > Server()->Tick())
 				return;
@@ -1458,7 +1458,7 @@ void CGameContext::OnInit()
 		Server()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
 
 	m_Layers.Init(Kernel());
-	m_Collision.Init(&m_Layers, m_World.m_aSwitchStates);
+	m_Collision.Init(&m_Layers, m_TeamsCore.GetTeamWorld(0)->m_aSwitchStates);
 
 	// select gametype
 	if(str_comp_nocase(g_Config.m_SvGametype, "mod") == 0)

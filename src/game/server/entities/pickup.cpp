@@ -48,9 +48,9 @@ void CPickup::Tick()
 		// Check if a player intersected us
 		CCharacter *pChr;
 		if(m_Type == PICKUP_HEALTH || m_Type == PICKUP_ARMOR)
-			pChr = GameServer()->m_World.ClosestCharacter(m_Pos, 20.0f, 0);
+			pChr = GameWorld()->ClosestCharacter(m_Pos, 20.0f, 0);
 		else
-			pChr = (CCharacter *)GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER);
+			pChr = (CCharacter *)GameWorld()->FindFirst(CGameWorld::ENTTYPE_CHARACTER);
 
 		for(; pChr; pChr = (CCharacter *)pChr->TypeNext())
 	 	{
@@ -111,7 +111,7 @@ void CPickup::Tick()
 							pChr->GiveNinja();
 
 							// loop through all players, setting their emotes
-							CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER));
+							CCharacter *pC = static_cast<CCharacter *>(GameWorld()->FindFirst(CGameWorld::ENTTYPE_CHARACTER));
 							for(; pC; pC = (CCharacter *)pC->TypeNext())
 							{
 								if (pC != pChr)

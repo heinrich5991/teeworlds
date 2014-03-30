@@ -282,8 +282,8 @@ bool IGameController::OnEntity(int Index, int Flags, vec2 Pos, int SwitchGroup, 
 			Dir.x = Flags&TILEFLAG_HFLIP ? -1.0 : 1.0;
 		else
 			Dir.y = Flags&TILEFLAG_VFLIP ? 1.0 : -1.0;
-		new CProjectile(&GameServer()->m_World, WEAPON_SHOTGUN, -1, Pos, Dir, 0,
-				0, false, 0, SOUND_GUN_FIRE, WEAPON_SHOTGUN, SwitchGroup, InvertSwitch);
+		for(int i = 0; i < MAX_CLIENTS; i++)
+			new CProjectile(GameServer()->m_TeamsCore.GetTeamWorld(i), WEAPON_SHOTGUN, -1, Pos, Dir, 0,0, false, 0, SOUND_GUN_FIRE, WEAPON_SHOTGUN, SwitchGroup, InvertSwitch);
 		break;
 	}
 
@@ -291,7 +291,7 @@ bool IGameController::OnEntity(int Index, int Flags, vec2 Pos, int SwitchGroup, 
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			CPickup *pPickup = new CPickup(GameServer()->m_TeamsCore.GetTeamWorld(i), Type);
+			CPickup *pPickup = new CPickup(GameServer()->m_TeamsCore.GetTeamWorld(i), Type, SwitchGroup, InvertSwitch);
 			pPickup->m_Pos = Pos;
 		}
 		return true;
@@ -944,9 +944,9 @@ bool IGameController::CanSpawn(int Team, vec2 *pOutPos, int DDRTeam) const
 	}
 	else
 	{
-		EvaluateSpawnType(&Eval, 0);
-		EvaluateSpawnType(&Eval, 1);
-		EvaluateSpawnType(&Eval, 2);
+		EvaluateSpawnType(&Eval, 0, DDRTeam);
+		EvaluateSpawnType(&Eval, 1, DDRTeam);
+		EvaluateSpawnType(&Eval, 2, DDRTeam);
 	}
 
 	*pOutPos = Eval.m_Pos;

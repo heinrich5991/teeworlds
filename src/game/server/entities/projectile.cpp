@@ -35,7 +35,7 @@ void CProjectile::Reset()
 		m_StartTick = Server()->Tick();
 	}	
 	else
-		GameServer()->m_World.DestroyEntity(this);
+		GameWorld()->DestroyEntity(this);
 }
 
 vec2 CProjectile::GetPos(float Time)
@@ -90,7 +90,7 @@ void CProjectile::Tick()
 			m_StartTick = Server()->Tick();
 		}
 
-		CCharacter *pChr = (CCharacter *)GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER);
+		CCharacter *pChr = (CCharacter *)GameWorld()->FindFirst(CGameWorld::ENTTYPE_CHARACTER);
 		if(Active()){
 			for(; pChr; pChr = (CCharacter *)pChr->TypeNext())
 		 	{
@@ -102,8 +102,6 @@ void CProjectile::Tick()
 	else
 	{
 		CurPos = ColPos;
-		CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
-		CCharacter *TargetChr = GameServer()->m_World.IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, OwnerChar);
 
 		m_LifeSpan--;
 
@@ -118,7 +116,7 @@ void CProjectile::Tick()
 			else if(TargetChr)
 				TargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Damage, m_Owner, m_Weapon);
 
-			GameServer()->m_World.DestroyEntity(this);
+			GameWorld()->DestroyEntity(this);
 		}
 	}
 }

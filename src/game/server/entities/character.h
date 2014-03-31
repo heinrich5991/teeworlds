@@ -61,6 +61,8 @@ public:
 	void DeepFreeze();
 	void DeepUnfreeze();
 
+	CGameWorld *GameWorld() const { return m_pWorld; }
+
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 
@@ -119,6 +121,8 @@ private:
 
 	int m_Health;
 	int m_Armor;
+	
+	bool m_Nohit;
 
 	bool m_UnfreezeFire;
 

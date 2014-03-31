@@ -6,7 +6,7 @@
 #include "projectile.h"
 
 CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, vec2 Dir, int Span,
-		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon, int SwitchGroup, bool InvertSwitch)
+		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon, int SwitchGroup, bool InvertSwitch, bool OnlySelf)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_PROJECTILE, SwitchGroup, InvertSwitch)
 {
 	m_Type = Type;
@@ -22,6 +22,7 @@ CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, 
 	m_Weapon = Weapon;
 	m_StartTick = Server()->Tick();
 	m_Explosive = Explosive;
+	m_OnlySelf = OnlySelf;
 
 	GameWorld()->InsertEntity(this);
 }
@@ -73,17 +74,15 @@ void CProjectile::Tick()
 	vec2 CurPos = GetPos(Ct);
 	vec2 ColPos;
 	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &ColPos, 0, CCollision::COLFLAG_SOLID_PROJ);
-	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
-	CCharacter *TargetChr = GameWorld()->IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, OwnerChar);
 
 	if(m_Type == WEAPON_SHOTGUN)
 	{
 		if(Collide)
 		{
 			vec2 Vel = CurPos - PrevPos;
-			if(GameServer()->Collision()->IntersectLine(PrevPos, vec2(PrevPos.x, ColPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
-				Vel.x *= -1;
 			if(GameServer()->Collision()->IntersectLine(PrevPos, vec2(ColPos.x, PrevPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
+				Vel.x *= -1;
+			if(GameServer()->Collision()->IntersectLine(PrevPos, vec2(PrevPos.x, ColPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
 				Vel.y *= -1;
 			m_Pos = ColPos;
 			m_Direction = normalize(Vel);
@@ -102,19 +101,25 @@ void CProjectile::Tick()
 	else
 	{
 		CurPos = ColPos;
+		CCharacter *pOwnerChar = GameServer()->GetPlayerChar(m_Owner);
+		CCharacter *pTargetChr;
+		if(m_OnlySelf)
+			pTargetChr = 0;
+		else
+			pTargetChr = pOwnerChar->GameWorld()->IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, pOwnerChar);
 
 		m_LifeSpan--;
 
-		if(TargetChr || Collide || m_LifeSpan < 0 || GameLayerClipped(CurPos))
+		if(pTargetChr || Collide || m_LifeSpan < 0 || GameLayerClipped(CurPos))
 		{
 			if(m_LifeSpan >= 0 || m_Weapon == WEAPON_GRENADE)
 				GameServer()->CreateSound(CurPos, m_SoundImpact);
 
 			if(m_Explosive)
-				GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, true);
+				GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, true, m_OnlySelf);
 
-			else if(TargetChr)
-				TargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Damage, m_Owner, m_Weapon);
+			else if(pTargetChr)
+				pTargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Damage, m_Owner, m_Weapon);
 
 			GameWorld()->DestroyEntity(this);
 		}

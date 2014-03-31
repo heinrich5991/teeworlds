@@ -197,12 +197,17 @@ void CMapLayers::OnRender()
 			bool Render = false;
 			bool IsGameLayer = false;
 
-			for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
+			if(pLayer == (CMapItemLayer*)pLayers->VanillaLayer())
+				IsGameLayer = true;
+			else
 			{
-				if(pLayer == (CMapItemLayer*)pLayers->GameLayer(t))
+				for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
 				{
-					IsGameLayer = true;
-					PassedGameLayer = 1;
+					if(pLayer == (CMapItemLayer*)pLayers->GameLayer(t))
+					{
+						IsGameLayer = true;
+						PassedGameLayer = 1;
+					}
 				}
 			}
 

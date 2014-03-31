@@ -4209,6 +4209,7 @@ void CEditor::Init()
 	m_aEntitiesTexture[GAMELAYERTYPE_SWITCH] = Graphics()->LoadTexture("editor/entities_switch.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_aEntitiesTexture[GAMELAYERTYPE_TELE] = Graphics()->LoadTexture("editor/entities_tele.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_aEntitiesTexture[GAMELAYERTYPE_RACE] = Graphics()->LoadTexture("editor/entities_race.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_aEntitiesTexture[GAMELAYERTYPE_PROPERTEE] = Graphics()->LoadTexture("editor/entities_propertee.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	mem_zero(m_aAltEntitiesTexture, sizeof(m_aAltEntitiesTexture));
 	m_aAltEntitiesTexture[GAMELAYERTYPE_SWITCH] = Graphics()->LoadTexture("editor/switch_combos.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_aAltEntitiesTexture[GAMELAYERTYPE_TELE] = Graphics()->LoadTexture("editor/tele_combos.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);

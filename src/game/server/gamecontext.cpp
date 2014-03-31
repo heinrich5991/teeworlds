@@ -122,7 +122,7 @@ void CGameContext::CreateHammerHit(vec2 Pos)
 }
 
 
-void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage)
+void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, bool OnlySelf)
 {
 	// create the event
 	CNetEvent_Explosion *pEvent = (CNetEvent_Explosion *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(CNetEvent_Explosion));
@@ -136,9 +136,14 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 	CCharacter *apEnts[MAX_CLIENTS];
 	float Radius = 135.0f;
 	float InnerRadius = 48.0f;
-	int Num = m_TeamsCore.GetTeamWorld(Owner)->FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+	CCharacter *pOwnerChar = GetPlayerChar(Owner);
+	int DDRaceTeam = m_apPlayers[Owner]->GetDDRTeam();
+	int Num = m_TeamsCore.GetTeamWorld(DDRaceTeam)->FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 	for(int i = 0; i < Num; i++)
 	{
+		if(OnlySelf && ((CCharacter*) apEnts[i] != pOwnerChar))
+			continue;
+
 		vec2 Diff = apEnts[i]->m_Pos - Pos;
 		vec2 ForceDir(0,1);
 		float l = length(Diff);

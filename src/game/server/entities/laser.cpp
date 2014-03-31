@@ -6,7 +6,7 @@
 #include "laser.h"
 #include <game/server/player.h>
 
-CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, bool Pull)
+CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, bool Pull, bool OnlySelf)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_LASER, 0, false)
 {
 	m_Pos = Pos;
@@ -16,6 +16,7 @@ CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEner
 	m_Bounces = 0;
 	m_EvalTick = 0;
 	m_Pull = Pull;
+	m_OnlySelf = OnlySelf;
 	GameWorld()->InsertEntity(this);
 	DoBounce();
 }
@@ -24,10 +25,16 @@ CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEner
 bool CLaser::HitCharacter(vec2 From, vec2 To)
 {
 	vec2 At;
-	CCharacter *pNotThis = 0;
-	if(m_Bounces == 0)
-		pNotThis = GameServer()->GetPlayerChar(m_Owner);
-	CCharacter *pHit = GameServer()->m_TeamsCore.GetTeamWorld(pNotThis->GetPlayer()->GetDDRTeam())->IntersectCharacter(m_Pos, To, 0.f, At, pNotThis);
+	CCharacter *pHit;
+	CCharacter *pOwnerChar = GameServer()->GetPlayerChar(m_Owner);
+	if(m_OnlySelf && m_Bounces == 0)
+		return false;
+	else if(m_OnlySelf)
+		pHit = pOwnerChar->GameWorld()->IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar, true);
+	else if(m_Bounces == 0)
+		pHit = pOwnerChar->GameWorld()->IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar, false);
+	else
+		pHit = pOwnerChar->GameWorld()->IntersectCharacter(m_Pos, To, 0.f, At, 0, false);
 
 	if(!pHit)
 		return false;
@@ -48,7 +55,7 @@ void CLaser::DoBounce()
 
 	if(m_Energy < 0)
 	{
-		GameServer()->m_TeamsCore.GetTeamWorld(GameServer()->m_apPlayers[m_Owner]->GetDDRTeam())->DestroyEntity(this);
+		GameServer()->GetPlayerChar(m_Owner)->GameWorld()->DestroyEntity(this);
 		return;
 	}
 

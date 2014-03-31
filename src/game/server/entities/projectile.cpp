@@ -106,7 +106,7 @@ void CProjectile::Tick()
 		if(m_OnlySelf)
 			pTargetChr = 0;
 		else
-			pTargetChr = pOwnerChar->GameWorld()->IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, pOwnerChar);
+			pTargetChr = GameWorld()->IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, pOwnerChar);
 
 		m_LifeSpan--;
 

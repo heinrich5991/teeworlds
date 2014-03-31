@@ -61,15 +61,12 @@ public:
 	void DeepFreeze();
 	void DeepUnfreeze();
 
-	CGameWorld *GameWorld() const { return m_pWorld; }
-
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 
 private:
 	// player controlling this character
 	class CPlayer *m_pPlayer;
-	class CGameWorld *m_pWorld;
 
 	bool m_Alive;
 

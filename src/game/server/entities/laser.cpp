@@ -30,11 +30,11 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 	if(m_OnlySelf && m_Bounces == 0)
 		return false;
 	else if(m_OnlySelf)
-		pHit = pOwnerChar->GameWorld()->IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar, true);
+		pHit = GameWorld()->IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar, true);
 	else if(m_Bounces == 0)
-		pHit = pOwnerChar->GameWorld()->IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar, false);
+		pHit = GameWorld()->IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar, false);
 	else
-		pHit = pOwnerChar->GameWorld()->IntersectCharacter(m_Pos, To, 0.f, At, 0, false);
+		pHit = GameWorld()->IntersectCharacter(m_Pos, To, 0.f, At, 0, false);
 
 	if(!pHit)
 		return false;
@@ -55,7 +55,7 @@ void CLaser::DoBounce()
 
 	if(m_Energy < 0)
 	{
-		GameServer()->GetPlayerChar(m_Owner)->GameWorld()->DestroyEntity(this);
+		GameWorld()->DestroyEntity(this);
 		return;
 	}
 
@@ -98,7 +98,7 @@ void CLaser::DoBounce()
 
 void CLaser::Reset()
 {
-	GameServer()->m_TeamsCore.GetTeamWorld(GameServer()->m_apPlayers[m_Owner]->GetDDRTeam())->DestroyEntity(this);
+	GameWorld()->DestroyEntity(this);
 }
 
 void CLaser::Tick()

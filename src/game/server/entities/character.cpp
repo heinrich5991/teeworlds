@@ -482,7 +482,6 @@ bool CCharacter::GiveWeapon(int Weapon)
 
 void CCharacter::GiveNinja()
 {
-	m_Ninja.m_ActivationTick = Server()->Tick();
 	if(!m_aWeapons[WEAPON_NINJA].m_Got)
 		m_Ninja.m_CurrentMoveTime = -1;
 	m_aWeapons[WEAPON_NINJA].m_Got = true;

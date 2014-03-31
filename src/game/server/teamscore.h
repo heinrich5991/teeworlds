@@ -26,14 +26,14 @@ public:
 	CTeamsCore();
 	int GetTeamMode(int Team) const { return m_aTeams[Team].m_Mode; }
 	int GetTeamState(int Team) const { return m_aTeams[Team].m_State; }
-	CGameWorld *GetTeamWorld(int Team) const { return &m_aTeams[Team].m_TeamWorld;}
+	CGameWorld *GetTeamWorld(int Team) { return &m_aTeams[Team].m_TeamWorld;}
 	void SetTeamMode(int Team, int Mode);
 	void SetTeamState(int Team, int State);
 	void SetGameServer(CGameContext *pGameServer);
 	void Tick();
 	void Snap(int SnappingClient);
 	void PostSnap();
-	void Reset();
+	void Reset(int Team);
 
 	CGameContext *m_pGameServer;
 private:

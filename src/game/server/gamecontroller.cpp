@@ -775,13 +775,13 @@ void IGameController::Tick()
 	DoActivityCheck();
 
 	// win check
-	if((m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED) && GameServer()->m_TeamsCore.m_ResetRequested == 0)
-	{
-		if(m_GameFlags&GAMEFLAG_SURVIVAL)
-			DoWincheckRound();
-		else
-			DoWincheckMatch();
-	}
+	//if((m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED) && GameServer()->m_TeamsCore.m_ResetRequested == 0)
+	//{
+	//	if(m_GameFlags&GAMEFLAG_SURVIVAL)
+	//		DoWincheckRound();
+	//	else
+	//		DoWincheckMatch();
+	//}
 }
 
 // info
@@ -924,7 +924,7 @@ void IGameController::CycleMap()
 bool IGameController::CanSpawn(int Team, vec2 *pOutPos, int DDRTeam) const
 {
 	// spectators can't spawn
-	if(Team == TEAM_SPECTATORS || GameServer()->m_TeamsCore.GetTeamWorld(DDRTeam)->m_Paused || GameServer()->m_TeamsCore.m_ResetRequested != 0)
+	if(Team == TEAM_SPECTATORS || GameServer()->m_TeamsCore.GetTeamWorld(DDRTeam)->m_Paused || GameServer()->m_TeamsCore.GetTeamWorld(DDRTeam)->m_ResetRequested)
 		return false;
 
 	CSpawnEval Eval;

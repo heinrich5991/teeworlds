@@ -359,6 +359,14 @@ void CPlayer::SetTeam(int Team, bool DoChatMsg)
 	}
 }
 
+void CPlayer::SetDDRTeam(int Team)
+{
+	if(Team == m_DDRTeam)
+		return;
+	m_DDRTeam = Team;
+	KillCharacter();
+}
+
 void CPlayer::TryRespawn()
 {
 	vec2 SpawnPos;

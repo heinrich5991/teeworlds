@@ -1452,6 +1452,7 @@ void CGameContext::OnInit()
 	m_pServer = Kernel()->RequestInterface<IServer>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_TeamsCore.SetGameServer(this);
+	dbg_msg("SIZE", "%d", sizeof(Team));
 	m_Events.SetGameServer(this);
 
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)

@@ -24,9 +24,9 @@ class CTeamsCore
 {
 public:
 	CTeamsCore();
-	int GetTeamMode(int Team) const { return m_apTeams[Team]->m_Mode; }
-	int GetTeamState(int Team) const { return m_apTeams[Team]->m_State; }
-	CGameWorld *GetTeamWorld(int Team) const { return &m_apTeams[Team]->m_TeamWorld;}
+	int GetTeamMode(int Team) const { return m_aTeams[Team].m_Mode; }
+	int GetTeamState(int Team) const { return m_aTeams[Team].m_State; }
+	CGameWorld *GetTeamWorld(int Team) const { return &m_aTeams[Team].m_TeamWorld;}
 	void SetTeamMode(int Team, int Mode);
 	void SetTeamState(int Team, int State);
 	void SetGameServer(CGameContext *pGameServer);
@@ -37,7 +37,6 @@ public:
 	int m_ResetRequested;
 	CGameContext *m_pGameServer;
 private:
-	int m_TeamCount;
-	Team *m_apTeams[MAX_CLIENTS];
+	Team m_aTeams[MAX_CLIENTS];
 };
 #endif

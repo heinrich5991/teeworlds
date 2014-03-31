@@ -438,7 +438,7 @@ void IGameController::DoWincheckMatch()
 void IGameController::ResetGame()
 {
 	// reset the game
-	GameServer()->m_TeamsCore.m_ResetRequested = -1;
+	GameServer()->m_TeamsCore.Reset(-1);
 	
 	SetGameState(IGS_GAME_RUNNING);
 	m_GameStartTick = Server()->Tick();

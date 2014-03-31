@@ -33,8 +33,8 @@ public:
 	void Tick();
 	void Snap(int SnappingClient);
 	void PostSnap();
+	void Reset();
 
-	int m_ResetRequested;
 	CGameContext *m_pGameServer;
 private:
 	Team m_aTeams[MAX_CLIENTS];

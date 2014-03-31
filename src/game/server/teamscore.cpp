@@ -39,3 +39,13 @@ void CTeamsCore::PostSnap()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		m_aTeams[i].m_TeamWorld.PostSnap();
 }
+
+void CTeamsCore::Reset(int Team)
+{
+	if(Team >= 0 && Team < MAX_CLIENTS)
+		m_aTeams[Team].m_TeamWorld.m_ResetRequested = true;
+	else if(Team == -1) {
+		for(int i = 0; i < MAX_CLIENTS; i++)
+			m_aTeams[i].m_TeamWorld.m_ResetRequested = true;
+	}
+}

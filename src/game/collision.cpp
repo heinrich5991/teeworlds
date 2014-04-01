@@ -144,6 +144,27 @@ void CCollision::Init(class CLayers *pLayers, bool *pSwitchStates)
 		m_NumCheckpoints = max(m_apTiles[GAMELAYERTYPE_RACE][i].m_Index - 2, m_NumCheckpoints);
 }
 
+void CCollision::Init(class CCollision *pOther, bool *pSwitchStates)
+{
+	m_pSwitchStates = pSwitchStates;
+	m_pLayers = pOther->m_pLayers;
+
+	for(int t = 0; t < NUM_GAMELAYERTYPES; t++)
+	{
+		m_aWidth[t] = pOther->m_aWidth[t];
+		m_aHeight[t] = pOther->m_aHeight[t];
+		m_apTiles[t] = pOther->m_apTiles[t];
+	}
+
+	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_TELE]*m_aHeight[GAMELAYERTYPE_TELE]; i++)
+		if(m_apTiles[GAMELAYERTYPE_TELE][i].m_Index > 0)
+			if(!(m_apTiles[GAMELAYERTYPE_TELE][i].m_Flags&TELEFLAG_IN))
+				m_aTeleTargets[m_apTiles[GAMELAYERTYPE_TELE][i].m_Index] = vec2((i%m_aWidth[GAMELAYERTYPE_TELE]+0.5f)*32, (i/m_aWidth[GAMELAYERTYPE_TELE]+0.5f)*32);
+
+	for(int i = 0; i < m_aWidth[GAMELAYERTYPE_RACE]*m_aHeight[GAMELAYERTYPE_RACE]; i++)
+		m_NumCheckpoints = max(m_apTiles[GAMELAYERTYPE_RACE][i].m_Index - 2, m_NumCheckpoints);
+}
+
 int CCollision::GetNumCheckpoints()
 {
 	return m_NumCheckpoints;

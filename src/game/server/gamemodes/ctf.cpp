@@ -162,7 +162,7 @@ void CGameControllerCTF::Tick()
 			continue;
 
 		// flag hits death-tile or left the game layer, reset it
-		if(GameServer()->Collision()->GetCollisionAt(F->m_Pos.x, F->m_Pos.y)&CCollision::COLFLAG_DEATH || F->GameLayerClipped(F->m_Pos))
+		if(GameServer()->GetTeamCollision(F->GameWorld()->DDRTeam())->GetCollisionAt(F->m_Pos.x, F->m_Pos.y)&CCollision::COLFLAG_DEATH || F->GameLayerClipped(F->m_Pos))
 		{
 			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "flag_return");
 			GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
@@ -202,7 +202,7 @@ void CGameControllerCTF::Tick()
 			int Num = GameServer()->m_TeamsCore.GetTeamWorld(0)->FindEntities(F->m_Pos, CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 			for(int i = 0; i < Num; i++)
 			{
-				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == TEAM_SPECTATORS || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL, CCollision::COLFLAG_SOLID))
+				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == TEAM_SPECTATORS || GameServer()->GetTeamCollision(F->GameWorld()->DDRTeam())->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL, CCollision::COLFLAG_SOLID))
 					continue;
 
 				if(apCloseCCharacters[i]->GetPlayer()->GetTeam() == F->m_Team)
@@ -254,7 +254,7 @@ void CGameControllerCTF::Tick()
 				}
 				else {
 					F->m_Vel.y += GameServer()->m_TeamsCore.GetTeamWorld(0)->m_Core.m_Tuning.m_Gravity;
-					GameServer()->Collision()->MoveBox(&F->m_Pos, &F->m_Vel, 0, vec2(F->ms_PhysSize, F->ms_PhysSize), 0.5f);
+					GameServer()->GetTeamCollision(F->GameWorld()->DDRTeam())->MoveBox(&F->m_Pos, &F->m_Vel, 0, vec2(F->ms_PhysSize, F->ms_PhysSize), 0.5f);
 
 				}
 			}

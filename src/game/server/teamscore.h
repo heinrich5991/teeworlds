@@ -16,6 +16,7 @@ enum
 
 struct Team {
 	CGameWorld m_TeamWorld;
+	CCollision m_Collision;
 	int m_State;
 	int m_Mode;
 };
@@ -24,9 +25,11 @@ class CTeamsCore
 {
 public:
 	CTeamsCore();
+	void InitCollision(class CLayers *pLayers);
 	int GetTeamMode(int Team) const { return m_aTeams[Team].m_Mode; }
 	int GetTeamState(int Team) const { return m_aTeams[Team].m_State; }
 	CGameWorld *GetTeamWorld(int Team) { return &m_aTeams[Team].m_TeamWorld;}
+	CCollision *GetTeamCollision(int Team) { return &m_aTeams[Team].m_Collision;}
 	void SetTeamMode(int Team, int Mode);
 	void SetTeamState(int Team, int State);
 	void SetGameServer(CGameContext *pGameServer);

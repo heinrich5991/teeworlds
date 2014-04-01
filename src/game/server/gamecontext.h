@@ -39,7 +39,6 @@ class CGameContext : public IGameServer
 	IServer *m_pServer;
 	class IConsole *m_pConsole;
 	CLayers m_Layers;
-	CCollision m_Collision;
 	CNetObjHandler m_NetObjHandler;
 	CTuningParams m_Tuning;
 
@@ -73,7 +72,7 @@ class CGameContext : public IGameServer
 public:
 	IServer *Server() const { return m_pServer; }
 	class IConsole *Console() { return m_pConsole; }
-	CCollision *Collision() { return &m_Collision; }
+	CCollision *GetTeamCollision(int DDRTeam) { return m_TeamsCore.GetTeamCollision(DDRTeam); }
 	CTuningParams *Tuning() { return &m_Tuning; }
 
 	CGameContext();

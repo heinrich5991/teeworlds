@@ -757,6 +757,8 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			const char *pEnd = 0;
 			if(p[0] == '+')
 				pPlayer->SetDDRTeam((pPlayer->DDRTeam()+1)%MAX_CLIENTS);
+			else if(p[0] == '-')
+				pPlayer->SetDDRTeam((pPlayer->DDRTeam()+15)%MAX_CLIENTS);
 			while(*p)
  			{
 				const char *pStrOld = p;
@@ -1474,7 +1476,7 @@ void CGameContext::OnInit()
 		Server()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
 
 	m_Layers.Init(Kernel());
-	m_Collision.Init(&m_Layers, m_TeamsCore.GetTeamWorld(0)->m_aSwitchStates);
+	m_TeamsCore.InitCollision(&m_Layers);
 
 	// select gametype
 	if(str_comp_nocase(g_Config.m_SvGametype, "mod") == 0)

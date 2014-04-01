@@ -74,7 +74,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_Pos = Pos;
 
 	m_Core.Reset();
-	m_Core.Init(&GameWorld()->m_Core, GameServer()->Collision());
+	m_Core.Init(&GameWorld()->m_Core, GameServer()->GetTeamCollision(GameWorld()->DDRTeam()));
 	m_Core.m_Pos = m_Pos;
 	GameWorld()->m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
 
@@ -114,7 +114,7 @@ void CCharacter::SetWeapon(int W)
 
 bool CCharacter::IsGrounded()
 {
-	if(GameServer()->Collision()->TestHLineMove(m_Pos + vec2(0, m_ProximityRadius / 2 + 5), m_Pos + vec2(0, m_ProximityRadius / 2), m_ProximityRadius))
+	if(GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->TestHLineMove(m_Pos + vec2(0, m_ProximityRadius / 2 + 5), m_Pos + vec2(0, m_ProximityRadius / 2), m_ProximityRadius))
 		return true;
 	return false;
 }
@@ -157,7 +157,7 @@ void CCharacter::HandleNinja()
 		vec2 OldPos = m_Pos;
 
 		CCollision::CTriggers aTriggers[4 * (int)((MAX_SPEED + 15) / 16) + 2];
-		int Size = GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, aTriggers, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
+		int Size = GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, aTriggers, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
 		for(int i = 0; i < Size; i++)
 		{
 			m_Core.HandleTriggers(aTriggers[i]);
@@ -324,7 +324,7 @@ void CCharacter::FireWeapon()
 	vec2 HammerStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
 	vec2 ProjStartPos = HammerStartPos;
 	// dirty fix
-	GameServer()->Collision()->IntersectLine(m_Pos, ProjStartPos, 0, &ProjStartPos, CCollision::COLFLAG_SOLID_PROJ);
+	GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->IntersectLine(m_Pos, ProjStartPos, 0, &ProjStartPos, CCollision::COLFLAG_SOLID_PROJ);
 
 	switch(m_ActiveWeapon)
 	{
@@ -554,10 +554,10 @@ void CCharacter::Tick()
 	m_Core.Tick(true);
 
 	// handle death-tiles and leaving gamelayer
-	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+	if(GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+		GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+		GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+		GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
 		GameLayerClipped(m_Pos))
 	{
 		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
@@ -576,7 +576,7 @@ void CCharacter::TickDefered()
 	// advance the dummy
 	{
 		CWorldCore TempWorld;
-		m_ReckoningCore.Init(&TempWorld, GameServer()->Collision());
+		m_ReckoningCore.Init(&TempWorld, GameServer()->GetTeamCollision(GameWorld()->DDRTeam()));
 		m_ReckoningCore.Tick(false);
 		m_ReckoningCore.Move();
 		m_ReckoningCore.Quantize();
@@ -585,16 +585,16 @@ void CCharacter::TickDefered()
 	//lastsentcore
 	vec2 StartPos = m_Core.m_Pos;
 	vec2 StartVel = m_Core.m_Vel;
-	bool StuckBefore = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
+	bool StuckBefore = GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 
 	CCollision::CTriggers aTriggers[4 * (int)((MAX_SPEED + 15) / 16) + 2];
 	int Size = m_Core.Move(aTriggers);
 	for(int i = 0; i < Size; i++)
 		HandleTriggers(aTriggers[i]);
 
-	bool StuckAfterMove = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
+	bool StuckAfterMove = GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Core.Quantize();
-	bool StuckAfterQuant = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
+	bool StuckAfterQuant = GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Pos = m_Core.m_Pos;
 
 	if(!StuckBefore && (StuckAfterMove || StuckAfterQuant))
@@ -675,7 +675,7 @@ void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 		m_LastCheckpoint = Checkpoint - 1;
 		if(Checkpoint - 2 == m_LastCorrectCheckpoint)
 		{
-			if(Checkpoint == GameServer()->Collision()->GetNumCheckpoints() + 1)
+			if(Checkpoint == GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->GetNumCheckpoints() + 1)
 			{
 				OnFinish();
 				m_LastCheckpoint = -1;

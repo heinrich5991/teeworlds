@@ -8,6 +8,13 @@ CTeamsCore::CTeamsCore()
 		m_aTeams[i].m_TeamWorld.SetDDRTeam(i);
 }
 
+void CTeamsCore::InitCollision(class CLayers *pLayers)
+{
+	m_aTeams[0].m_Collision.Init(pLayers, m_aTeams[0].m_TeamWorld.m_aSwitchStates);
+	for(int i = 1; i < MAX_CLIENTS; i++)
+		m_aTeams[i].m_Collision.Init(&m_aTeams[0].m_Collision, m_aTeams[i].m_TeamWorld.m_aSwitchStates);
+}
+
 void CTeamsCore::Tick()
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)

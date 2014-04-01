@@ -21,9 +21,6 @@ void CItems::OnReset()
 
 void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
-	if(pCurrent->m_Type == WEAPON_SHOTGUN && !pCurrent->m_LocalWorld)
-		return;
-
 	float Opacity = 0.3f;
 	if(pCurrent->m_LocalWorld)
 		Opacity = 1.0f;

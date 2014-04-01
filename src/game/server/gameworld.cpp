@@ -131,12 +131,16 @@ void CGameWorld::Snap(int SnappingClient)
 			pEnt = m_pNextTraverseEntity;
 		}
 
-	// snap switch states
-	CNetObj_SwitchStates *pSwitchStates = static_cast<CNetObj_SwitchStates *>(Server()->SnapNewItem(NETOBJTYPE_SWITCHSTATES, 0, sizeof(CNetObj_SwitchStates)));
-	if(pSwitchStates)
+	if(GameServer()->GetPlayerDDRTeam(SnappingClient) == m_DDRTeam)
 	{
-		for(int i = 0; i < 255; i++)
-			pSwitchStates->m_aStates[i/8] |= m_aSwitchStates[i] << (i % 8);
+		// snap switch states
+		CNetObj_SwitchStates *pSwitchStates = static_cast<CNetObj_SwitchStates *>(Server()->SnapNewItem(NETOBJTYPE_SWITCHSTATES, 0, sizeof(CNetObj_SwitchStates)));
+		if(pSwitchStates)
+		{
+			for(int i = 0; i < 255; i++)
+				pSwitchStates->m_aStates[i/8] |= m_aSwitchStates[i] << (i % 8);
+			pSwitchStates->m_LocalWorld = false;
+		}
 	}
 }
 
@@ -217,7 +221,10 @@ void CGameWorld::Tick()
 			{
 				m_aSwitchTicks[i]--;
 				if(m_aSwitchTicks[i] == 0)
+				{
 					m_aNextSwitchStates[i] = !m_aSwitchStates[i];
+					m_SwitchStateChanged = true;
+				}
 			}
 			if(m_aNextSwitchStates[i] != m_aSwitchStates[i])
 			{

@@ -73,16 +73,16 @@ void CProjectile::Tick()
 	vec2 PrevPos = GetPos(Pt);
 	vec2 CurPos = GetPos(Ct);
 	vec2 ColPos;
-	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &ColPos, 0, CCollision::COLFLAG_SOLID_PROJ);
+	int Collide = GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->IntersectLine(PrevPos, CurPos, &ColPos, 0, CCollision::COLFLAG_SOLID_PROJ);
 
 	if(m_Type == WEAPON_SHOTGUN)
 	{
 		if(Collide)
 		{
 			vec2 Vel = CurPos - PrevPos;
-			if(GameServer()->Collision()->IntersectLine(PrevPos, vec2(ColPos.x, PrevPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
+			if(GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->IntersectLine(PrevPos, vec2(ColPos.x, PrevPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
 				Vel.x *= -1;
-			if(GameServer()->Collision()->IntersectLine(PrevPos, vec2(PrevPos.x, ColPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
+			if(GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->IntersectLine(PrevPos, vec2(PrevPos.x, ColPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
 				Vel.y *= -1;
 			m_Pos = ColPos;
 			m_Direction = normalize(Vel);
@@ -148,8 +148,13 @@ void CProjectile::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
 
+	bool LocalWorld = GameServer()->GetPlayerDDRTeam(SnappingClient) == GameWorld()->DDRTeam();
+	if(m_Type == WEAPON_SHOTGUN && !LocalWorld)
+		return;
+
+
 	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, m_ID, sizeof(CNetObj_Projectile)));
 	if(pProj)
 		FillInfo(pProj);
-	pProj->m_LocalWorld = GameServer()->GetPlayerDDRTeam(SnappingClient) == GameWorld()->DDRTeam();
+	pProj->m_LocalWorld = LocalWorld;
 }

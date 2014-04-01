@@ -985,7 +985,7 @@ void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type, int DDRTeam
 		{
 			Result = Index;
 			for(int c = 0; c < Num; ++c)
-				if(GameServer()->Collision()->GetCollisionAt(m_aaSpawnPoints[Type][i]+Positions[Index]) ||
+				if(GameServer()->GetTeamCollision(DDRTeam)->GetCollisionAt(m_aaSpawnPoints[Type][i]+Positions[Index]) ||
 					distance(aEnts[c]->m_Pos, m_aaSpawnPoints[Type][i]+Positions[Index]) <= aEnts[c]->m_ProximityRadius)
 				{
 					Result = -1;

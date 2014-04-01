@@ -377,5 +377,5 @@ void CPlayer::TryRespawn()
 	m_Spawning = false;
 	m_pCharacter = new(m_ClientID) CCharacter(GameServer()->m_TeamsCore.GetTeamWorld(m_WorldID));
 	m_pCharacter->Spawn(this, SpawnPos);
-	GameServer()->CreatePlayerSpawn(SpawnPos, m_WorldID);
+	GameServer()->CreatePlayerSpawn(GameServer()->m_TeamsCore.GetTeamEvents(m_WorldID), SpawnPos);
 }

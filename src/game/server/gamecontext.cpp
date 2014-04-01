@@ -99,7 +99,12 @@ int CGameContext::GetPlayerWorldID(int ClientID)
 	return m_apPlayers[ClientID]->WorldID();
 }
 
-void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount, int WorldID)
+void CGameContext::ResetController(CGameWorld *pWorld)
+{
+	m_pController->OnReset(m_TeamsCore.GetTeamWorldID(pWorld));
+}
+
+void CGameContext::CreateDamageInd(CEventHandler *pEvents, vec2 Pos, float Angle, int Amount)
 {
 	float a = 3 * 3.14159f / 2 + Angle;
 	//float a = get_angle(dir);
@@ -108,50 +113,49 @@ void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount, int WorldI
 	for(int i = 0; i < Amount; i++)
 	{
 		float f = mix(s, e, float(i+1)/float(Amount+2));
-		CNetEvent_DamageInd *pEvent = (CNetEvent_DamageInd *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(CNetEvent_DamageInd));
+		CNetEvent_DamageInd *pEvent = (CNetEvent_DamageInd *)pEvents->Create(NETEVENTTYPE_DAMAGEIND, sizeof(CNetEvent_DamageInd));
 		if(pEvent)
 		{
 			pEvent->m_X = (int)Pos.x;
 			pEvent->m_Y = (int)Pos.y;
 			pEvent->m_Angle = (int)(f*256.0f);
-			pEvent->m_World = WorldID;
+			pEvent->m_World = -1;
 		}
 	}
 }
 
-void CGameContext::CreateHammerHit(vec2 Pos, int WorldID)
+void CGameContext::CreateHammerHit(CEventHandler *pEvents, vec2 Pos)
 {
 	// create the event
-	CNetEvent_HammerHit *pEvent = (CNetEvent_HammerHit *)m_Events.Create(NETEVENTTYPE_HAMMERHIT, sizeof(CNetEvent_HammerHit));
+	CNetEvent_HammerHit *pEvent = (CNetEvent_HammerHit *)pEvents->Create(NETEVENTTYPE_HAMMERHIT, sizeof(CNetEvent_HammerHit));
 	if(pEvent)
 	{
 		pEvent->m_X = (int)Pos.x;
 		pEvent->m_Y = (int)Pos.y;
-		pEvent->m_World = WorldID;
+		pEvent->m_World = -1;
 	}
 }
 
 
-void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, bool OnlySelf, int WorldID)
+void CGameContext::CreateExplosion(CEventHandler *pEvents, CGameWorld *pWorld, vec2 Pos, int Owner, int Weapon, bool NoDamage, bool OnlySelf)
 {
 	// create the event
-	CNetEvent_Explosion *pEvent = (CNetEvent_Explosion *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(CNetEvent_Explosion));
+	CNetEvent_Explosion *pEvent = (CNetEvent_Explosion *)pEvents->Create(NETEVENTTYPE_EXPLOSION, sizeof(CNetEvent_Explosion));
 	if(pEvent)
 	{
 		pEvent->m_X = (int)Pos.x;
 		pEvent->m_Y = (int)Pos.y;
-		pEvent->m_World = WorldID;
+		pEvent->m_World = -1;
 	}
 
 	// deal damage
 	CCharacter *apEnts[MAX_CLIENTS];
 	float Radius = 135.0f;
 	float InnerRadius = 48.0f;
-	CCharacter *pOwnerChar = GetPlayerChar(Owner);
-	int Num = m_TeamsCore.GetTeamWorld(WorldID)->FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+	int Num = pWorld->FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 	for(int i = 0; i < Num; i++)
 	{
-		if(OnlySelf && ((CCharacter*) apEnts[i] != pOwnerChar))
+		if(OnlySelf && ((CCharacter *)apEnts[i])->GetPlayer()->GetCID() != Owner)
 			continue;
 
 		vec2 Diff = apEnts[i]->m_Pos - Pos;
@@ -166,56 +170,56 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 	}
 }
 
-void CGameContext::CreatePlayerSpawn(vec2 Pos, int WorldID)
+void CGameContext::CreatePlayerSpawn(CEventHandler *pEvents, vec2 Pos)
 {
 	// create the event
-	CNetEvent_Spawn *ev = (CNetEvent_Spawn *)m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(CNetEvent_Spawn));
+	CNetEvent_Spawn *ev = (CNetEvent_Spawn *)pEvents->Create(NETEVENTTYPE_SPAWN, sizeof(CNetEvent_Spawn));
 	if(ev)
 	{
 		ev->m_X = (int)Pos.x;
 		ev->m_Y = (int)Pos.y;
-		ev->m_World = WorldID;
+		ev->m_World = -1;
 	}
 }
 
-void CGameContext::CreatePlayerTeleport(vec2 Pos, int WorldID)
+void CGameContext::CreatePlayerTeleport(CEventHandler *pEvents, vec2 Pos)
 {
 	// create the event
-	CNetEvent_Teleport *ev = (CNetEvent_Teleport *)m_Events.Create(NETEVENTTYPE_TELEPORT, sizeof(CNetEvent_Teleport));
+	CNetEvent_Teleport *ev = (CNetEvent_Teleport *)pEvents->Create(NETEVENTTYPE_TELEPORT, sizeof(CNetEvent_Teleport));
 	if(ev)
 	{
 		ev->m_X = (int)Pos.x;
 		ev->m_Y = (int)Pos.y;
-		ev->m_World = WorldID;
+		ev->m_World = -1;
 	}
 }
 
-void CGameContext::CreateDeath(vec2 Pos, int ClientID, int WorldID)
+void CGameContext::CreateDeath(CEventHandler *pEvents, vec2 Pos, int ClientID)
 {
 	// create the event
-	CNetEvent_Death *pEvent = (CNetEvent_Death *)m_Events.Create(NETEVENTTYPE_DEATH, sizeof(CNetEvent_Death));
+	CNetEvent_Death *pEvent = (CNetEvent_Death *)pEvents->Create(NETEVENTTYPE_DEATH, sizeof(CNetEvent_Death));
 	if(pEvent)
 	{
 		pEvent->m_X = (int)Pos.x;
 		pEvent->m_Y = (int)Pos.y;
 		pEvent->m_ClientID = ClientID;
-		pEvent->m_World = WorldID;
+		pEvent->m_World = -1;
 	}
 }
 
-void CGameContext::CreateSound(vec2 Pos, int Sound, int WorldID, int Mask)
+void CGameContext::CreateSound(CEventHandler *pEvents, vec2 Pos, int Sound, int Mask)
 {
 	if (Sound < 0)
 		return;
 
 	// create a sound
-	CNetEvent_SoundWorld *pEvent = (CNetEvent_SoundWorld *)m_Events.Create(NETEVENTTYPE_SOUNDWORLD, sizeof(CNetEvent_SoundWorld), Mask);
+	CNetEvent_SoundWorld *pEvent = (CNetEvent_SoundWorld *)pEvents->Create(NETEVENTTYPE_SOUNDWORLD, sizeof(CNetEvent_SoundWorld), Mask);
 	if(pEvent)
 	{
 		pEvent->m_X = (int)Pos.x;
 		pEvent->m_Y = (int)Pos.y;
 		pEvent->m_SoundID = Sound;
-		pEvent->m_World = WorldID;
+		pEvent->m_World = -1;
 	}
 }
 
@@ -1475,8 +1479,6 @@ void CGameContext::OnInit()
 	m_pServer = Kernel()->RequestInterface<IServer>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_TeamsCore.SetGameServer(this);
-	dbg_msg("SIZE", "%d", sizeof(Team));
-	m_Events.SetGameServer(this);
 
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)
 		Server()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
@@ -1548,7 +1550,6 @@ void CGameContext::OnSnap(int ClientID)
 
 	m_TeamsCore.Snap(ClientID);
 	m_pController->Snap(ClientID);
-	m_Events.Snap(ClientID);
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -1560,7 +1561,6 @@ void CGameContext::OnPreSnap() {}
 void CGameContext::OnPostSnap()
 {
 	m_TeamsCore.PostSnap();
-	m_Events.Clear();
 }
 
 bool CGameContext::IsClientReady(int ClientID)

@@ -34,11 +34,15 @@ private:
 	CEntity *m_apFirstEntityTypes[NUM_ENTTYPES];
 
 	class CGameContext *m_pGameServer;
+	class CCollision *m_pCollision;
+	class CEventHandler *m_pEvents;
+
 	class IServer *m_pServer;
-	int m_ID;
 
 public:
 	class CGameContext *GameServer() { return m_pGameServer; }
+	class CCollision *Collision() { return m_pCollision; }
+	class CEventHandler *Events() { return m_pEvents; }
 	class IServer *Server() { return m_pServer; }
 
 	bool m_ResetRequested;
@@ -55,9 +59,8 @@ public:
 	~CGameWorld();
 
 	void SetGameServer(CGameContext *pGameServer);
-
-	void SetID(int ID);
-	int ID();
+	void SetCollision(CCollision *pCollision);
+	void SetEvents(CEventHandler *pEvents);
 
 	CEntity *FindFirst(int Type);
 
@@ -143,8 +146,9 @@ public:
 		Arguments:
 			snapping_client - ID of the client which snapshot
 			is being created.
+			world_id - ID that this world should be identified with
 	*/
-	void Snap(int SnappingClient);
+	void Snap(int SnappingClient, int WorldID);
 	
 	void PostSnap();
 

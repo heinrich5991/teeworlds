@@ -80,7 +80,6 @@ public:
 
 	void Clear();
 
-	CEventHandler m_Events;
 	class CPlayer *m_apPlayers[MAX_CLIENTS];
 
 	class IGameController *m_pController;
@@ -90,6 +89,8 @@ public:
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientID);
 	int GetPlayerWorldID(int ClientID);
+
+	void ResetController(CGameWorld *pWorld);
 
 	int m_LockTeams;
 
@@ -125,13 +126,13 @@ public:
 	CVoteOptionServer *m_pVoteOptionLast;
 
 	// helper functions
-	void CreateDamageInd(vec2 Pos, float AngleMod, int Amount, int WorldID);
-	void CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, bool OnlySelf, int WorldID);
-	void CreateHammerHit(vec2 Pos, int WorldID);
-	void CreatePlayerSpawn(vec2 Pos, int WorldID);
-	void CreatePlayerTeleport(vec2 Pos, int WorldID);
-	void CreateDeath(vec2 Pos, int Who, int WorldID);
-	void CreateSound(vec2 Pos, int Sound, int WorldID, int Mask=-1);
+	static void CreateDamageInd(CEventHandler *pEvents, vec2 Pos, float AngleMod, int Amount);
+	static void CreateExplosion(CEventHandler *pEvents, CGameWorld *pWorld, vec2 Pos, int Owner, int Weapon, bool NoDamage, bool OnlySelf);
+	static void CreateHammerHit(CEventHandler *pEvents, vec2 Pos);
+	static void CreatePlayerSpawn(CEventHandler *pEvents, vec2 Pos);
+	static void CreatePlayerTeleport(CEventHandler *pEvents, vec2 Pos);
+	static void CreateDeath(CEventHandler *pEvents, vec2 Pos, int Who);
+	static void CreateSound(CEventHandler *pEvents, vec2 Pos, int Sound, int Mask=-1);
 
 
 	enum

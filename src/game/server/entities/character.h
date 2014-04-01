@@ -21,7 +21,7 @@ public:
 	virtual void Tick();
 	virtual void TickDefered();
 	virtual void TickPaused();
-	virtual void Snap(int SnappingClient);
+	virtual void Snap(int SnappingClient, int World);
 	virtual void PostSnap();
 
 	bool IsGrounded();
@@ -67,6 +67,8 @@ public:
 private:
 	// player controlling this character
 	class CPlayer *m_pPlayer;
+
+	int m_LastSnapWorld;
 
 	bool m_Alive;
 

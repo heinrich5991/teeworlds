@@ -106,7 +106,7 @@ void CCharacter::SetWeapon(int W)
 	m_LastWeapon = m_ActiveWeapon;
 	m_QueuedWeapon = -1;
 	m_ActiveWeapon = W;
-	GameServer()->CreateSound(m_Pos, SOUND_WEAPON_SWITCH, GameWorld()->ID());
+	CGameContext::CreateSound(Events(), m_Pos, SOUND_WEAPON_SWITCH);
 
 	if(m_ActiveWeapon < 0 || m_ActiveWeapon >= NUM_WEAPONS)
 		m_ActiveWeapon = 0;
@@ -194,7 +194,7 @@ void CCharacter::HandleNinja()
 					continue;
 
 				// Hit a player, give him damage and stuffs...
-				GameServer()->CreateSound(aEnts[i]->m_Pos, SOUND_NINJA_HIT, GameWorld()->ID());
+				CGameContext::CreateSound(Events(), aEnts[i]->m_Pos, SOUND_NINJA_HIT);
 				// set his velocity to fast upward (for now)
 				if(m_NumObjectsHit < 10)
 					m_apHitObjects[m_NumObjectsHit++] = aEnts[i];
@@ -297,7 +297,7 @@ void CCharacter::FireWeapon()
 		m_UnfreezeFire = true;
 		if(m_LastFreezeCrySound+Server()->TickSpeed() <= Server()->Tick())
 		{
-			GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG, GameWorld()->ID());
+			CGameContext::CreateSound(Events(), m_Pos, SOUND_PLAYER_PAIN_LONG);
 			m_LastFreezeCrySound = Server()->Tick();
 		}
 			
@@ -315,7 +315,7 @@ void CCharacter::FireWeapon()
 		m_ReloadTimer = 125 * Server()->TickSpeed() / 1000;
 		if(m_LastNoAmmoSound+Server()->TickSpeed() <= Server()->Tick())
 		{
-			GameServer()->CreateSound(m_Pos, SOUND_WEAPON_NOAMMO, GameWorld()->ID());
+			CGameContext::CreateSound(Events(), m_Pos, SOUND_WEAPON_NOAMMO);
 			m_LastNoAmmoSound = Server()->Tick();
 		}
 		return;
@@ -332,7 +332,7 @@ void CCharacter::FireWeapon()
 		{
 			// reset objects Hit
 			m_NumObjectsHit = 0;
-			GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE, GameWorld()->ID());
+			CGameContext::CreateSound(Events(), m_Pos, SOUND_HAMMER_FIRE);
 
 			CCharacter *apEnts[MAX_CLIENTS];
 			int Hits = 0;
@@ -348,9 +348,9 @@ void CCharacter::FireWeapon()
 
 					// set his velocity to fast upward (for now)
 					if(length(pTarget->m_Pos-ProjStartPos) > 0.0f)
-						GameServer()->CreateHammerHit(pTarget->m_Pos-normalize(pTarget->m_Pos-ProjStartPos)*m_ProximityRadius*0.5f, GameWorld()->ID());
+						CGameContext::CreateHammerHit(Events(), pTarget->m_Pos-normalize(pTarget->m_Pos-ProjStartPos)*m_ProximityRadius*0.5f);
 					else
-						GameServer()->CreateHammerHit(ProjStartPos, GameWorld()->ID());
+						CGameContext::CreateHammerHit(Events(), ProjStartPos);
 
 					vec2 Dir;
 					if (length(pTarget->m_Pos - m_Pos) > 0.0f)
@@ -381,7 +381,7 @@ void CCharacter::FireWeapon()
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;
-			pProj->FillInfo(&p);
+			pProj->FillInfo(&p, m_LastSnapWorld);
 
 			CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
 			Msg.AddInt(1);
@@ -390,13 +390,13 @@ void CCharacter::FireWeapon()
 
 			Server()->SendMsg(&Msg, 0, m_pPlayer->GetCID());
 
-			GameServer()->CreateSound(m_Pos, SOUND_GUN_FIRE, GameWorld()->ID());
+			CGameContext::CreateSound(Events(), m_Pos, SOUND_GUN_FIRE);
 		} break;
 
 		case WEAPON_SHOTGUN:
 		{
 			new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), true, m_Nohit);
-			GameServer()->CreateSound(m_Pos, SOUND_SHOTGUN_FIRE, GameWorld()->ID());
+			CGameContext::CreateSound(Events(), m_Pos, SOUND_SHOTGUN_FIRE);
 		} break;
 
 		case WEAPON_GRENADE:
@@ -410,7 +410,7 @@ void CCharacter::FireWeapon()
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;
-			pProj->FillInfo(&p);
+			pProj->FillInfo(&p, m_LastSnapWorld);
 
 			CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
 			Msg.AddInt(1);
@@ -418,13 +418,13 @@ void CCharacter::FireWeapon()
 				Msg.AddInt(((int *)&p)[i]);
 			Server()->SendMsg(&Msg, 0, m_pPlayer->GetCID());
 
-			GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE, GameWorld()->ID());
+			CGameContext::CreateSound(Events(), m_Pos, SOUND_GRENADE_FIRE);
 		} break;
 
 		case WEAPON_LASER:
 		{
 			new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), false, m_Nohit);
-			GameServer()->CreateSound(m_Pos, SOUND_LASER_FIRE, GameWorld()->ID());
+			CGameContext::CreateSound(Events(), m_Pos, SOUND_LASER_FIRE);
 		} break;
 
 		case WEAPON_NINJA:
@@ -436,7 +436,7 @@ void CCharacter::FireWeapon()
 			m_Ninja.m_CurrentMoveTime = g_pData->m_Weapons.m_Ninja.m_Movetime * Server()->TickSpeed() / 1000;
 			m_Ninja.m_OldVelAmount = length(m_Core.m_Vel);
 
-			GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE, GameWorld()->ID());
+			CGameContext::CreateSound(Events(), m_Pos, SOUND_NINJA_FIRE);
 		} break;
 
 	}
@@ -491,7 +491,7 @@ void CCharacter::GiveNinja()
 
 	if(m_Ninja.m_ActivationTick < Server()->Tick()-1 && m_LastNinjaSound < Server()->Tick() - Server()->TickSpeed() * 0.7f)
 	{
-		GameServer()->CreateSound(m_Pos, SOUND_PICKUP_NINJA, GameWorld()->ID());
+		CGameContext::CreateSound(Events(), m_Pos, SOUND_PICKUP_NINJA);
 		m_LastNinjaSound = Server()->Tick();
 	}
 	m_Ninja.m_ActivationTick = Server()->Tick();
@@ -657,8 +657,8 @@ void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 
 	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_TELEPORT)
 	{
-		GameServer()->CreatePlayerTeleport(Triggers.m_TeleInPos, GameWorld()->ID());
-		GameServer()->CreatePlayerTeleport(Triggers.m_TeleOutPos, GameWorld()->ID());
+		CGameContext::CreatePlayerTeleport(Events(), Triggers.m_TeleInPos);
+		CGameContext::CreatePlayerTeleport(Events(), Triggers.m_TeleOutPos);
 	}
 	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_STOP_NINJA)
 		m_Ninja.m_CurrentMoveTime = -1;
@@ -796,14 +796,14 @@ void CCharacter::Die(int Killer, int Weapon)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 
 	// a nice sound
-	GameServer()->CreateSound(m_Pos, SOUND_PLAYER_DIE, GameWorld()->ID());
+	CGameContext::CreateSound(Events(), m_Pos, SOUND_PLAYER_DIE);
 
 	// this is for auto respawn after 3 secs
 	m_pPlayer->m_DieTick = Server()->Tick();
 
 	GameWorld()->RemoveEntity(this);
 	GameWorld()->m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
-	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID(), GameWorld()->ID());
+	CGameContext::CreateDeath(Events(), m_Pos, m_pPlayer->GetCID());
 }
 
 bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
@@ -826,12 +826,12 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	if(Server()->Tick() < m_DamageTakenTick+25)
 	{
 		// make sure that the damage indicators doesn't group together
-		GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, Dmg, GameWorld()->ID());
+		CGameContext::CreateDamageInd(Events(), m_Pos, m_DamageTaken*0.25f, Dmg);
 	}
 	else
 	{
 		m_DamageTaken = 0;
-		GameServer()->CreateDamageInd(m_Pos, 0, Dmg, GameWorld()->ID());
+		CGameContext::CreateDamageInd(Events(), m_Pos, 0, Dmg);
 	}
 
 	if(Dmg)
@@ -872,7 +872,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 				Mask |= CmaskOne(i);
 		}
 		if(Dmg > 0)
-			GameServer()->CreateSound(GameServer()->m_apPlayers[From]->m_ViewPos, SOUND_HIT, GameWorld()->ID(), Mask);
+			CGameContext::CreateSound(Events(), GameServer()->m_apPlayers[From]->m_ViewPos, SOUND_HIT, Mask);
 	}
 
 	// check for death
@@ -895,9 +895,9 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	}
 
 	if (Dmg > 2)
-		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG, GameWorld()->ID());
+		CGameContext::CreateSound(Events(), m_Pos, SOUND_PLAYER_PAIN_LONG);
 	else if (Dmg > 0)
-		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT, GameWorld()->ID());
+		CGameContext::CreateSound(Events(), m_Pos, SOUND_PLAYER_PAIN_SHORT);
 
 	m_EmoteType = EMOTE_PAIN;
 	m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;
@@ -925,8 +925,10 @@ void CCharacter::DeepUnfreeze()
 	m_Core.DeepUnfreeze();
 }
 
-void CCharacter::Snap(int SnappingClient)
+void CCharacter::Snap(int SnappingClient, int World)
 {
+	m_LastSnapWorld = World;
+
 	if(NetworkClipped(SnappingClient))
 		return;
 
@@ -967,7 +969,7 @@ void CCharacter::Snap(int SnappingClient)
 
 	pCharacter->m_Direction = m_Input.m_Direction;
 
-	pCharacter->m_World = GameWorld()->ID();
+	pCharacter->m_World = World;
 
 	if(m_pPlayer->GetCID() == SnappingClient || SnappingClient == -1 ||
 		(!g_Config.m_SvStrictSpectateMode && m_pPlayer->GetCID() == GameServer()->m_apPlayers[SnappingClient]->GetSpectatorID()))

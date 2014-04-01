@@ -15,6 +15,8 @@ CGameWorld::CGameWorld()
 {
 	m_pGameServer = 0x0;
 	m_pServer = 0x0;
+	m_pCollision = 0;
+	m_pEvents = 0;
 
 	m_Paused = false;
 	m_ResetRequested = false;
@@ -36,14 +38,13 @@ void CGameWorld::SetGameServer(CGameContext *pGameServer)
 	m_pServer = m_pGameServer->Server();
 }
 
-void CGameWorld::SetID(int ID)
+void CGameWorld::SetCollision(CCollision *pCollision)
 {
-	m_ID = ID;
+	m_pCollision = pCollision;
 }
-
-int CGameWorld::ID()
+void CGameWorld::SetEvents(CEventHandler *pEvents)
 {
-	return m_ID;
+	m_pEvents = pEvents;
 }
 
 CEntity *CGameWorld::FindFirst(int Type)
@@ -121,18 +122,18 @@ void CGameWorld::SetSwitchState(bool State, int GroupID, int Duration)
 }
 
 //
-void CGameWorld::Snap(int SnappingClient)
+void CGameWorld::Snap(int SnappingClient, int WorldID)
 {
 	for(int i = 0; i < NUM_ENTTYPES; i++)
 		for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
 		{
 			m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
-			pEnt->Snap(SnappingClient);
+			pEnt->Snap(SnappingClient, WorldID);
 			pEnt = m_pNextTraverseEntity;
 		}
 
 	// snap switch states
-	CNetObj_SwitchStates *pSwitchStates = static_cast<CNetObj_SwitchStates *>(Server()->SnapNewItem(NETOBJTYPE_SWITCHSTATES, m_ID, sizeof(CNetObj_SwitchStates)));
+	CNetObj_SwitchStates *pSwitchStates = static_cast<CNetObj_SwitchStates *>(Server()->SnapNewItem(NETOBJTYPE_SWITCHSTATES, WorldID, sizeof(CNetObj_SwitchStates)));
 	if(pSwitchStates)
 	{
 		for(int i = 0; i < 255; i++)
@@ -163,7 +164,7 @@ void CGameWorld::Reset()
 		}
 	RemoveEntities();
 
-	GameServer()->m_pController->OnReset(m_ID);
+	GameServer()->ResetController(this);
 	RemoveEntities();
 
 	m_ResetRequested = false;

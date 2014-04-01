@@ -113,10 +113,10 @@ void CProjectile::Tick()
 		if(pTargetChr || Collide || m_LifeSpan < 0 || GameLayerClipped(CurPos))
 		{
 			if(m_LifeSpan >= 0 || m_Weapon == WEAPON_GRENADE)
-				GameServer()->CreateSound(CurPos, m_SoundImpact, GameWorld()->ID());
+				CGameContext::CreateSound(Events(), CurPos, m_SoundImpact);
 
 			if(m_Explosive)
-				GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, true, m_OnlySelf, GameWorld()->ID());
+				CGameContext::CreateExplosion(Events(), GameWorld(), CurPos, m_Owner, m_Weapon, true, m_OnlySelf);
 
 			else if(pTargetChr)
 				pTargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Damage, m_Owner, m_Weapon);
@@ -131,7 +131,7 @@ void CProjectile::TickPaused()
 	++m_StartTick;
 }
 
-void CProjectile::FillInfo(CNetObj_Projectile *pProj)
+void CProjectile::FillInfo(CNetObj_Projectile *pProj, int World)
 {
 	pProj->m_X = (int)m_Pos.x;
 	pProj->m_Y = (int)m_Pos.y;
@@ -139,20 +139,17 @@ void CProjectile::FillInfo(CNetObj_Projectile *pProj)
 	pProj->m_VelY = (int)(m_Direction.y*100.0f);
 	pProj->m_StartTick = m_StartTick;
 	pProj->m_Type = m_Type;
-	pProj->m_World = GameWorld()->ID();
+	pProj->m_World = World;
 }
 
-void CProjectile::Snap(int SnappingClient)
+void CProjectile::Snap(int SnappingClient, int World)
 {
 	float Ct = (Server()->Tick()-m_StartTick)/(float)Server()->TickSpeed();
 
 	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
 
-	if(m_Type == WEAPON_SHOTGUN && GameServer()->GetPlayerWorldID(SnappingClient) != GameWorld()->ID())
-		return;
-
 	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, m_ID, sizeof(CNetObj_Projectile)));
 	if(pProj)
-		FillInfo(pProj);
+		FillInfo(pProj, World);
 }

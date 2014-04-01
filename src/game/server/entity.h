@@ -23,6 +23,7 @@ class CEntity
 	CEntity *m_pNextTypeEntity;
 
 	class CGameWorld *m_pGameWorld;
+	class CEventHandler *m_pEvents;
 
 protected:
 	bool m_MarkedForDestroy;
@@ -35,7 +36,8 @@ public:
 	virtual ~CEntity();
 
 	class CGameWorld *GameWorld() { return m_pGameWorld; }
-	class CCollision *Collision() { return m_pGameWorld->GameServer()->GetCollision(m_pGameWorld->ID()); }
+	class CCollision *Collision() { return m_pGameWorld->Collision(); }
+	class CEventHandler *Events() { return m_pGameWorld->Events(); }
 	class CGameContext *GameServer() { return GameWorld()->GameServer(); }
 	class IServer *Server() { return GameWorld()->Server(); }
 
@@ -85,8 +87,9 @@ public:
 				being generated. Could be -1 to create a complete
 				snapshot of everything in the game for demo
 				recording.
+			world - ID of the world the entity lives in
 	*/
-	virtual void Snap(int SnappingClient) {}
+	virtual void Snap(int SnappingClient, int World) {}
 
 	virtual void PostSnap() {}
 

@@ -1,6 +1,7 @@
 #ifndef GAME_SERVER_TEAMSCORE_H
 #define GAME_SERVER_TEAMSCORE_H
 
+#include "eventhandler.h"
 #include "gameworld.h"
 
 enum
@@ -14,9 +15,11 @@ enum
 	TEAMMODE_PRIVATE
 };
 
-struct Team {
+struct CTeam
+{
 	CGameWorld m_TeamWorld;
 	CCollision m_Collision;
+	CEventHandler m_Events;
 	int m_State;
 	int m_Mode;
 };
@@ -28,8 +31,9 @@ public:
 	void InitCollision(class CLayers *pLayers);
 	int GetTeamMode(int Team) const { return m_aTeams[Team].m_Mode; }
 	int GetTeamState(int Team) const { return m_aTeams[Team].m_State; }
-	CGameWorld *GetTeamWorld(int Team) { return &m_aTeams[Team].m_TeamWorld;}
-	CCollision *GetTeamCollision(int Team) { return &m_aTeams[Team].m_Collision;}
+	CGameWorld *GetTeamWorld(int Team) { return &m_aTeams[Team].m_TeamWorld; }
+	CCollision *GetTeamCollision(int Team) { return &m_aTeams[Team].m_Collision; }
+	CEventHandler *GetTeamEvents(int Team) { return &m_aTeams[Team].m_Events; }
 	void SetTeamMode(int Team, int Mode);
 	void SetTeamState(int Team, int State);
 	void SetGameServer(CGameContext *pGameServer);
@@ -38,8 +42,10 @@ public:
 	void PostSnap();
 	void Reset(int Team);
 
+	int GetTeamWorldID(CGameWorld *pWorld);
+
 	CGameContext *m_pGameServer;
 private:
-	Team m_aTeams[MAX_CLIENTS];
+	CTeam m_aTeams[MAX_CLIENTS];
 };
 #endif

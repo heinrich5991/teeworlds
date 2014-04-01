@@ -82,7 +82,7 @@ void CLaser::DoBounce()
 			if(m_Bounces > GameServer()->Tuning()->m_LaserBounceNum)
 				m_Energy = -1;
 
-			GameServer()->CreateSound(m_Pos, SOUND_LASER_BOUNCE, GameWorld()->ID());
+			CGameContext::CreateSound(Events(), m_Pos, SOUND_LASER_BOUNCE);
 		}
 	}
 	else
@@ -112,7 +112,7 @@ void CLaser::TickPaused()
 	++m_EvalTick;
 }
 
-void CLaser::Snap(int SnappingClient)
+void CLaser::Snap(int SnappingClient, int World)
 {
 	if(NetworkClipped(SnappingClient))
 		return;
@@ -126,5 +126,5 @@ void CLaser::Snap(int SnappingClient)
 	pObj->m_FromX = (int)m_From.x;
 	pObj->m_FromY = (int)m_From.y;
 	pObj->m_StartTick = m_EvalTick;
-	pObj->m_World = GameWorld()->ID();
+	pObj->m_World = World;
 }

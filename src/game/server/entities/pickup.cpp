@@ -37,7 +37,7 @@ void CPickup::Tick()
 			m_SpawnTick = -1;
 
 			if(m_Type == PICKUP_GRENADE || m_Type == PICKUP_SHOTGUN || m_Type == PICKUP_LASER)
-				GameServer()->CreateSound(m_Pos, SOUND_WEAPON_SPAWN, GameWorld()->ID());
+				CGameContext::CreateSound(Events(), m_Pos, SOUND_WEAPON_SPAWN);
 		}
 		else
 			return;
@@ -64,7 +64,7 @@ void CPickup::Tick()
 						if(pChr->IncreaseHealth(1))
 						{
 							Gave = true;
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH, GameWorld()->ID());
+							CGameContext::CreateSound(Events(), m_Pos, SOUND_PICKUP_HEALTH);
 						}
 						break;
 
@@ -72,7 +72,7 @@ void CPickup::Tick()
 						if(pChr->IncreaseArmor(1))
 						{
 							Gave = true;
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_ARMOR, GameWorld()->ID());
+							CGameContext::CreateSound(Events(), m_Pos, SOUND_PICKUP_ARMOR);
 						}
 						break;
 
@@ -80,7 +80,7 @@ void CPickup::Tick()
 						if(pChr->GiveWeapon(WEAPON_GRENADE))
 						{
 							Gave = true;
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE, GameWorld()->ID());
+							CGameContext::CreateSound(Events(), m_Pos, SOUND_PICKUP_GRENADE);
 							if(pChr->GetPlayer())
 								GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_GRENADE);
 						}
@@ -89,7 +89,7 @@ void CPickup::Tick()
 						if(pChr->GiveWeapon(WEAPON_SHOTGUN))
 						{
 							Gave = true;
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN, GameWorld()->ID());
+							CGameContext::CreateSound(Events(), m_Pos, SOUND_PICKUP_SHOTGUN);
 							if(pChr->GetPlayer())
 								GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_SHOTGUN);
 						}
@@ -98,7 +98,7 @@ void CPickup::Tick()
 						if(pChr->GiveWeapon(WEAPON_LASER))
 						{
 							Gave = true;
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN, GameWorld()->ID());
+							CGameContext::CreateSound(Events(), m_Pos, SOUND_PICKUP_SHOTGUN);
 							if(pChr->GetPlayer())
 								GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_LASER);
 						}
@@ -149,7 +149,7 @@ void CPickup::TickPaused()
 		++m_SpawnTick;
 }
 
-void CPickup::Snap(int SnappingClient)
+void CPickup::Snap(int SnappingClient, int World)
 {
 	if(m_SpawnTick != -1 || NetworkClipped(SnappingClient) || !Active())
 		return;
@@ -161,5 +161,5 @@ void CPickup::Snap(int SnappingClient)
 	pP->m_X = (int)m_Pos.x;
 	pP->m_Y = (int)m_Pos.y;
 	pP->m_Type = m_Type;
-	pP->m_World = GameWorld()->ID();
+	pP->m_World = World;
 }

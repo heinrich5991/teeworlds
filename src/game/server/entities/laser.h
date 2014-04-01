@@ -13,7 +13,7 @@ public:
 	virtual void Reset();
 	virtual void Tick();
 	virtual void TickPaused();
-	virtual void Snap(int SnappingClient);
+	virtual void Snap(int SnappingClient, int World);
 
 protected:
 	bool HitCharacter(vec2 From, vec2 To);

@@ -73,6 +73,7 @@ void CCharacterCore::Reset()
 	m_Endless = false;
 	m_Jumped = 0;
 	m_FreezeTick = 0;
+	m_UnfreezeOnNextTick = false;
 	m_TriggeredEvents = 0;
 }
 

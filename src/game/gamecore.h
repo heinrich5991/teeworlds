@@ -159,8 +159,6 @@ public:
 	int m_HookedPlayer;
 	bool m_Endless;
 
-	int m_CollisionGroup;
-
 	int m_Jumped;
 
 	int m_FreezeTick;

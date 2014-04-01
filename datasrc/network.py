@@ -222,38 +222,32 @@ Objects = [
 	NetEvent("Common", [
 		NetIntAny("m_X"),
 		NetIntAny("m_Y"),
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 
 
 	NetEvent("Explosion:Common", [
-		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 	
 	NetEvent("Spawn:Common", [
-		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 	
 	NetEvent("Teleport:Common", [
-		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 	
 	NetEvent("HammerHit:Common", [
-		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 
 	NetEvent("Death:Common", [
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
-		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 
 	NetEvent("SoundWorld:Common", [
 		NetIntRange("m_SoundID", 0, 'NUM_SOUNDS-1'),
-		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 
 	NetEvent("DamageInd:Common", [
 		NetIntAny("m_Angle"),
-		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 ]
 

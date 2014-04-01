@@ -61,7 +61,7 @@ void CLaser::DoBounce()
 
 	vec2 To = m_Pos + m_Dir * m_Energy;
 
-	if(GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->IntersectLine(m_Pos, To, 0x0, &To, CCollision::COLFLAG_SOLID_PROJ))
+	if(Collision()->IntersectLine(m_Pos, To, 0x0, &To, CCollision::COLFLAG_SOLID_PROJ))
 	{
 		if(!HitCharacter(m_Pos, To))
 		{
@@ -72,7 +72,7 @@ void CLaser::DoBounce()
 			vec2 TempPos = m_Pos;
 			vec2 TempDir = m_Dir * 4.0f;
 
-			GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->MovePoint(&TempPos, &TempDir, 1.0f, 0, CCollision::COLFLAG_SOLID_PROJ);
+			Collision()->MovePoint(&TempPos, &TempDir, 1.0f, 0, CCollision::COLFLAG_SOLID_PROJ);
 			m_Pos = TempPos;
 			m_Dir = normalize(TempDir);
 
@@ -82,7 +82,7 @@ void CLaser::DoBounce()
 			if(m_Bounces > GameServer()->Tuning()->m_LaserBounceNum)
 				m_Energy = -1;
 
-			GameServer()->CreateSound(m_Pos, SOUND_LASER_BOUNCE);
+			GameServer()->CreateSound(m_Pos, SOUND_LASER_BOUNCE, GameWorld()->ID());
 		}
 	}
 	else
@@ -126,5 +126,5 @@ void CLaser::Snap(int SnappingClient)
 	pObj->m_FromX = (int)m_From.x;
 	pObj->m_FromY = (int)m_From.y;
 	pObj->m_StartTick = m_EvalTick;
-	pObj->m_LocalWorld = GameServer()->GetPlayerDDRTeam(SnappingClient) == GameWorld()->DDRTeam();
+	pObj->m_World = GameWorld()->ID();
 }

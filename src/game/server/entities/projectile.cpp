@@ -73,16 +73,16 @@ void CProjectile::Tick()
 	vec2 PrevPos = GetPos(Pt);
 	vec2 CurPos = GetPos(Ct);
 	vec2 ColPos;
-	int Collide = GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->IntersectLine(PrevPos, CurPos, &ColPos, 0, CCollision::COLFLAG_SOLID_PROJ);
+	int Collide = Collision()->IntersectLine(PrevPos, CurPos, &ColPos, 0, CCollision::COLFLAG_SOLID_PROJ);
 
 	if(m_Type == WEAPON_SHOTGUN)
 	{
 		if(Collide)
 		{
 			vec2 Vel = CurPos - PrevPos;
-			if(GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->IntersectLine(PrevPos, vec2(ColPos.x, PrevPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
+			if(Collision()->IntersectLine(PrevPos, vec2(ColPos.x, PrevPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
 				Vel.x *= -1;
-			if(GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->IntersectLine(PrevPos, vec2(PrevPos.x, ColPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
+			if(Collision()->IntersectLine(PrevPos, vec2(PrevPos.x, ColPos.y), 0, 0, CCollision::COLFLAG_SOLID_PROJ))
 				Vel.y *= -1;
 			m_Pos = ColPos;
 			m_Direction = normalize(Vel);
@@ -113,10 +113,10 @@ void CProjectile::Tick()
 		if(pTargetChr || Collide || m_LifeSpan < 0 || GameLayerClipped(CurPos))
 		{
 			if(m_LifeSpan >= 0 || m_Weapon == WEAPON_GRENADE)
-				GameServer()->CreateSound(CurPos, m_SoundImpact);
+				GameServer()->CreateSound(CurPos, m_SoundImpact, GameWorld()->ID());
 
 			if(m_Explosive)
-				GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, true, m_OnlySelf);
+				GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, true, m_OnlySelf, GameWorld()->ID());
 
 			else if(pTargetChr)
 				pTargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Damage, m_Owner, m_Weapon);
@@ -139,6 +139,7 @@ void CProjectile::FillInfo(CNetObj_Projectile *pProj)
 	pProj->m_VelY = (int)(m_Direction.y*100.0f);
 	pProj->m_StartTick = m_StartTick;
 	pProj->m_Type = m_Type;
+	pProj->m_World = GameWorld()->ID();
 }
 
 void CProjectile::Snap(int SnappingClient)
@@ -148,13 +149,10 @@ void CProjectile::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
 
-	bool LocalWorld = GameServer()->GetPlayerDDRTeam(SnappingClient) == GameWorld()->DDRTeam();
-	if(m_Type == WEAPON_SHOTGUN && !LocalWorld)
+	if(m_Type == WEAPON_SHOTGUN && GameServer()->GetPlayerWorldID(SnappingClient) != GameWorld()->ID())
 		return;
-
 
 	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, m_ID, sizeof(CNetObj_Projectile)));
 	if(pProj)
 		FillInfo(pProj);
-	pProj->m_LocalWorld = LocalWorld;
 }

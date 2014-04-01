@@ -31,8 +31,8 @@ public:
 	int GetCID() const { return m_ClientID; };
 	bool IsDummy() const { return m_Dummy; }
 
-	void SetDDRTeam(int Team);
-	int DDRTeam() const { return m_DDRTeam; }
+	void SetWorldID(int Team);
+	int WorldID() const { return m_WorldID; }
 
 	void Tick();
 	void PostTick();
@@ -128,7 +128,7 @@ private:
 	int m_Team;
 	bool m_Dummy;
 
-	int m_DDRTeam;
+	int m_WorldID;
 
 	// used for spectator mode
 	int m_SpectatorID;

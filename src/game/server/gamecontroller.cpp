@@ -370,11 +370,11 @@ void IGameController::OnPlayerReadyChange(CPlayer *pPlayer)
 	}
 }
 
-void IGameController::OnReset(int DDRTeam)
+void IGameController::OnReset(int WorldID)
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->DDRTeam() == DDRTeam)
+		if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->WorldID() == WorldID)
 		{
 			GameServer()->m_apPlayers[i]->m_RespawnDisabled = false;
 			GameServer()->m_apPlayers[i]->Respawn();
@@ -921,10 +921,10 @@ void IGameController::CycleMap()
 }
 
 // spawn
-bool IGameController::CanSpawn(int Team, vec2 *pOutPos, int DDRTeam) const
+bool IGameController::CanSpawn(int Team, vec2 *pOutPos, int WorldID) const
 {
 	// spectators can't spawn
-	if(Team == TEAM_SPECTATORS || GameServer()->m_TeamsCore.GetTeamWorld(DDRTeam)->m_Paused || GameServer()->m_TeamsCore.GetTeamWorld(DDRTeam)->m_ResetRequested)
+	if(Team == TEAM_SPECTATORS || GameServer()->m_TeamsCore.GetTeamWorld(WorldID)->m_Paused || GameServer()->m_TeamsCore.GetTeamWorld(WorldID)->m_ResetRequested)
 		return false;
 
 	CSpawnEval Eval;
@@ -934,29 +934,29 @@ bool IGameController::CanSpawn(int Team, vec2 *pOutPos, int DDRTeam) const
 		Eval.m_FriendlyTeam = Team;
 
 		// first try own team spawn, then normal spawn and then enemy
-		EvaluateSpawnType(&Eval, 1+(Team&1), DDRTeam);
+		EvaluateSpawnType(&Eval, 1+(Team&1), WorldID);
 		if(!Eval.m_Got)
 		{
-			EvaluateSpawnType(&Eval, 0, DDRTeam);
+			EvaluateSpawnType(&Eval, 0, WorldID);
 			if(!Eval.m_Got)
-				EvaluateSpawnType(&Eval, 1+((Team+1)&1), DDRTeam);
+				EvaluateSpawnType(&Eval, 1+((Team+1)&1), WorldID);
 		}
 	}
 	else
 	{
-		EvaluateSpawnType(&Eval, 0, DDRTeam);
-		EvaluateSpawnType(&Eval, 1, DDRTeam);
-		EvaluateSpawnType(&Eval, 2, DDRTeam);
+		EvaluateSpawnType(&Eval, 0, WorldID);
+		EvaluateSpawnType(&Eval, 1, WorldID);
+		EvaluateSpawnType(&Eval, 2, WorldID);
 	}
 
 	*pOutPos = Eval.m_Pos;
 	return Eval.m_Got;
 }
 
-float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos, int DDRTeam) const
+float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos, int WorldID) const
 {
 	float Score = 0.0f;
-	CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_TeamsCore.GetTeamWorld(DDRTeam)->FindFirst(CGameWorld::ENTTYPE_CHARACTER));
+	CCharacter *pC = static_cast<CCharacter *>(GameServer()->m_TeamsCore.GetTeamWorld(WorldID)->FindFirst(CGameWorld::ENTTYPE_CHARACTER));
 	for(; pC; pC = (CCharacter *)pC->TypeNext())
 	{
 		// team mates are not as dangerous as enemies
@@ -971,21 +971,21 @@ float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos, int DDRTeam
 	return Score;
 }
 
-void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type, int DDRTeam) const
+void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type, int WorldID) const
 {
 	// get spawn point
 	for(int i = 0; i < m_aNumSpawnPoints[Type]; i++)
 	{
 		// check if the position is occupado
 		CCharacter *aEnts[MAX_CLIENTS];
-		int Num = GameServer()->m_TeamsCore.GetTeamWorld(DDRTeam)->FindEntities(m_aaSpawnPoints[Type][i], 64, (CEntity**)aEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+		int Num = GameServer()->m_TeamsCore.GetTeamWorld(WorldID)->FindEntities(m_aaSpawnPoints[Type][i], 64, (CEntity**)aEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 		vec2 Positions[5] = { vec2(0.0f, 0.0f), vec2(-32.0f, 0.0f), vec2(0.0f, -32.0f), vec2(32.0f, 0.0f), vec2(0.0f, 32.0f) };	// start, left, up, right, down
 		int Result = -1;
 		for(int Index = 0; Index < 5 && Result == -1; ++Index)
 		{
 			Result = Index;
 			for(int c = 0; c < Num; ++c)
-				if(GameServer()->GetTeamCollision(DDRTeam)->GetCollisionAt(m_aaSpawnPoints[Type][i]+Positions[Index]) ||
+				if(GameServer()->GetCollision(WorldID)->GetCollisionAt(m_aaSpawnPoints[Type][i]+Positions[Index]) ||
 					distance(aEnts[c]->m_Pos, m_aaSpawnPoints[Type][i]+Positions[Index]) <= aEnts[c]->m_ProximityRadius)
 				{
 					Result = -1;
@@ -996,7 +996,7 @@ void IGameController::EvaluateSpawnType(CSpawnEval *pEval, int Type, int DDRTeam
 			continue;	// try next spawn point
 
 		vec2 P = m_aaSpawnPoints[Type][i]+Positions[Result];
-		float S = EvaluateSpawnPos(pEval, P, DDRTeam);
+		float S = EvaluateSpawnPos(pEval, P, WorldID);
 		if(!pEval->m_Got || pEval->m_Score > S)
 		{
 			pEval->m_Got = true;

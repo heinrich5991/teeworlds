@@ -46,12 +46,12 @@ class CGameClient : public IGameClient
 	class IFriends *m_pFriends;
 
 	CLayers m_Layers;
-	class CCollision m_Collision;
+	class CCollision m_aCollision[MAX_CLIENTS];
 	CUI m_UI;
 
 	void DispatchInput();
 	void ProcessEvents();
-	void ProcessTriggeredEvents(int Events, vec2 Pos);
+	void ProcessTriggeredEvents(int Events, vec2 Pos, int WorldID);
 	void UpdatePositions();
 
 	int m_PredictedTick;
@@ -80,7 +80,7 @@ public:
 	class IServerBrowser *ServerBrowser() const { return m_pServerBrowser; }
 	class CRenderTools *RenderTools() { return &m_RenderTools; }
 	class CLayers *Layers() { return &m_Layers; };
-	class CCollision *Collision() { return &m_Collision; };
+	class CCollision *GetDDRTeamCollision(int DDRTeam) { return &m_aCollision[DDRTeam]; };
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
 
@@ -89,7 +89,7 @@ public:
 
 	bool m_SuppressEvents;
 
-	bool m_aSwitchStates[255];
+	bool m_aaSwitchStates[MAX_CLIENTS][255];
 
 	// TODO: move this
 	CTuningParams m_Tuning;
@@ -150,7 +150,7 @@ public:
 		struct CCharacterInfo
 		{
 			bool m_Active;
-			bool m_LocalWorld;
+			int m_World;
 
 			// snapshots
 			CNetObj_Character m_Prev;
@@ -194,6 +194,7 @@ public:
 
 	CClientData m_aClients[MAX_CLIENTS];
 	int m_LocalClientID;
+	int m_LocalWorldID;
 	int m_TeamCooldownTick;
 
 	struct CGameInfo

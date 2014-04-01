@@ -1,8 +1,10 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/math.h>
+
 #include <engine/graphics.h>
 #include <engine/demo.h>
+#include <engine/shared/config.h>
 
 #include <game/generated/client_data.h>
 #include <game/client/render.h>
@@ -101,7 +103,7 @@ void CParticles::Update(float TimePassed)
 
 			// move the point
 			vec2 Vel = m_aParticles[i].m_Vel*TimePassed;
-			Collision()->MovePoint(&m_aParticles[i].m_Pos, &Vel, 0.1f+0.9f*frandom(), NULL, CCollision::COLFLAG_SOLID);
+			GetDDRTeamCollision(m_aParticles[i].m_WorldID)->MovePoint(&m_aParticles[i].m_Pos, &Vel, 0.1f+0.9f*frandom(), NULL, CCollision::COLFLAG_SOLID);
 			m_aParticles[i].m_Vel = Vel* (1.0f/TimePassed);
 
 			m_aParticles[i].m_Life += TimePassed;
@@ -165,6 +167,10 @@ void CParticles::RenderGroup(int Group)
 	int i = m_aFirstPart[Group];
 	while(i != -1)
 	{
+		float Opacity = g_Config.m_GfxOtherWorldOpacity / 10.0f;
+		if(m_aParticles[i].m_WorldID == m_pClient->m_LocalWorldID || m_pClient->m_LocalWorldID == -1)
+			Opacity = 1.0f;
+
 		RenderTools()->SelectSprite(m_aParticles[i].m_Spr);
 		float a = m_aParticles[i].m_Life / m_aParticles[i].m_LifeSpan;
 		vec2 p = m_aParticles[i].m_Pos;
@@ -176,7 +182,7 @@ void CParticles::RenderGroup(int Group)
 			m_aParticles[i].m_Color.r,
 			m_aParticles[i].m_Color.g,
 			m_aParticles[i].m_Color.b,
-			m_aParticles[i].m_Color.a); // pow(a, 0.75f) *
+			m_aParticles[i].m_Color.a * Opacity); // pow(a, 0.75f) *
 
 		IGraphics::CQuadItem QuadItem(p.x, p.y, Size, Size);
 		Graphics()->QuadsDraw(&QuadItem, 1);

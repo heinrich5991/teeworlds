@@ -35,7 +35,7 @@ private:
 
 	class CGameContext *m_pGameServer;
 	class IServer *m_pServer;
-	int m_DDRTeam;
+	int m_ID;
 
 public:
 	class CGameContext *GameServer() { return m_pGameServer; }
@@ -56,8 +56,8 @@ public:
 
 	void SetGameServer(CGameContext *pGameServer);
 
-	void SetDDRTeam(int Team);
-	int DDRTeam();
+	void SetID(int ID);
+	int ID();
 
 	CEntity *FindFirst(int Type);
 

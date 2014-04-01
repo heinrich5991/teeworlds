@@ -340,7 +340,9 @@ int CGameClient::OnSnapInput(int *pData)
 void CGameClient::OnConnected()
 {
 	m_Layers.Init(Kernel());
-	m_Collision.Init(Layers(), m_aSwitchStates);
+	m_aCollision[0].Init(Layers(), m_aaSwitchStates[0]);
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		m_aCollision[i].Init(&m_aCollision[0], m_aaSwitchStates[i]);
 
 	RenderTools()->RenderTilemapGenerateSkip(Layers());
 
@@ -369,6 +371,7 @@ void CGameClient::OnReset()
 		m_All.m_paComponents[i]->OnReset();
 
 	m_LocalClientID = -1;
+	m_LocalWorldID = -1;
 	m_TeamCooldownTick = 0;
 	mem_zero(&m_GameInfo, sizeof(m_GameInfo));
 	m_DemoSpecID = SPEC_FREEVIEW;
@@ -426,7 +429,7 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 	CWorldCore TempWorld;
 	CCharacterCore TempCore;
 	mem_zero(&TempCore, sizeof(TempCore));
-	TempCore.Init(&TempWorld, Collision());
+	TempCore.Init(&TempWorld, GetDDRTeamCollision(pCharacter->m_World));
 	TempCore.Read(pCharacter);
 
 	while(pCharacter->m_Tick < Tick)
@@ -838,58 +841,59 @@ void CGameClient::ProcessEvents()
 		if(Item.m_Type == NETEVENTTYPE_DAMAGEIND)
 		{
 			CNetEvent_DamageInd *ev = (CNetEvent_DamageInd *)pData;
-			m_pEffects->DamageIndicator(vec2(ev->m_X, ev->m_Y), direction(ev->m_Angle/256.0f));
+			m_pEffects->DamageIndicator(vec2(ev->m_X, ev->m_Y), direction(ev->m_Angle/256.0f), ev->m_World);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_EXPLOSION)
 		{
 			CNetEvent_Explosion *ev = (CNetEvent_Explosion *)pData;
-			m_pEffects->Explosion(vec2(ev->m_X, ev->m_Y));
+			m_pEffects->Explosion(vec2(ev->m_X, ev->m_Y), ev->m_World);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_HAMMERHIT)
 		{
 			CNetEvent_HammerHit *ev = (CNetEvent_HammerHit *)pData;
-			m_pEffects->HammerHit(vec2(ev->m_X, ev->m_Y));
+			m_pEffects->HammerHit(vec2(ev->m_X, ev->m_Y), ev->m_World);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_SPAWN)
 		{
 			CNetEvent_Spawn *ev = (CNetEvent_Spawn *)pData;
-			m_pEffects->PlayerSpawn(vec2(ev->m_X, ev->m_Y));
+			m_pEffects->PlayerSpawn(vec2(ev->m_X, ev->m_Y), ev->m_World);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_DEATH)
 		{
 			CNetEvent_Death *ev = (CNetEvent_Death *)pData;
-			m_pEffects->PlayerDeath(vec2(ev->m_X, ev->m_Y), ev->m_ClientID);
+			m_pEffects->PlayerDeath(vec2(ev->m_X, ev->m_Y), ev->m_ClientID, ev->m_World);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_SOUNDWORLD)
 		{
 			CNetEvent_SoundWorld *ev = (CNetEvent_SoundWorld *)pData;
-			m_pSounds->PlayAt(CSounds::CHN_WORLD, ev->m_SoundID, 1.0f, vec2(ev->m_X, ev->m_Y));
+			if(ev->m_World == m_LocalWorldID)
+				m_pSounds->PlayAt(CSounds::CHN_WORLD, ev->m_SoundID, 1.0f, vec2(ev->m_X, ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_TELEPORT)
 		{
 			CNetEvent_Teleport *ev = (CNetEvent_Teleport *)pData;
-			m_pEffects->PlayerTeleport(vec2(ev->m_X, ev->m_Y));
+			m_pEffects->PlayerTeleport(vec2(ev->m_X, ev->m_Y), ev->m_World);
 		}
 	}
 }
 
-void CGameClient::ProcessTriggeredEvents(int Events, vec2 Pos)
+void CGameClient::ProcessTriggeredEvents(int Events, vec2 Pos, int WorldID)
 {
 	if(m_SuppressEvents)
 		return;
 
-	if(Events&COREEVENTFLAG_GROUND_JUMP)
+	if(Events&COREEVENTFLAG_GROUND_JUMP && WorldID == m_LocalWorldID)
 		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);
 	if(Events&COREEVENTFLAG_AIR_JUMP)
-		m_pEffects->AirJump(Pos);
-	if(Events&COREEVENTFLAG_HOOK_ATTACH_PLAYER)
+		m_pEffects->AirJump(Pos, WorldID);
+	if(Events&COREEVENTFLAG_HOOK_ATTACH_PLAYER && WorldID == m_LocalWorldID)
 		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, Pos);
-	if(Events&COREEVENTFLAG_HOOK_ATTACH_GROUND)
+	if(Events&COREEVENTFLAG_HOOK_ATTACH_GROUND && WorldID == m_LocalWorldID)
 		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, Pos);
-	if(Events&COREEVENTFLAG_HOOK_HIT_NOHOOK)
+	if(Events&COREEVENTFLAG_HOOK_HIT_NOHOOK && WorldID == m_LocalWorldID)
 		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_NOATTACH, 1.0f, Pos);
 	if(Events&COREEVENTFLAG_SPEEDUP)
-		m_pEffects->Speedup(Pos);
+		m_pEffects->Speedup(Pos, WorldID);
 	/*if(Events&COREEVENTFLAG_HOOK_LAUNCH)
 		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, Pos);
 	if(Events&COREEVENTFLAG_HOOK_RETRACT)
@@ -1030,7 +1034,9 @@ void CGameClient::OnNewSnapshot()
 			{
 				const void *pOld = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, Item.m_ID);
 				m_Snap.m_aCharacters[Item.m_ID].m_Cur = *((const CNetObj_Character *)pData);
-				m_Snap.m_aCharacters[Item.m_ID].m_LocalWorld = ((const CNetObj_Character *)pData)->m_LocalWorld;
+				m_Snap.m_aCharacters[Item.m_ID].m_World = ((const CNetObj_Character *)pData)->m_World;
+				if(Item.m_ID == m_LocalClientID)
+					m_LocalWorldID = ((const CNetObj_Character *)pData)->m_World;
 
 				// clamp ammo count for non ninja weapon
 				if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Weapon != WEAPON_NINJA)
@@ -1048,7 +1054,9 @@ void CGameClient::OnNewSnapshot()
 				}
 
 				if(Item.m_ID != m_LocalClientID || Client()->State() == IClient::STATE_DEMOPLAYBACK)
-					ProcessTriggeredEvents(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_TriggeredEvents, vec2(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_X, m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Y));
+					ProcessTriggeredEvents(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_TriggeredEvents,
+								vec2(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_X,m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Y),
+								m_Snap.m_aCharacters[Item.m_ID].m_World);
 			}
 			else if(Item.m_Type == NETOBJTYPE_SPECTATORINFO)
 			{
@@ -1083,7 +1091,7 @@ void CGameClient::OnNewSnapshot()
 			{
 				const CNetObj_SwitchStates *pStates = ((const CNetObj_SwitchStates *)pData);
 				for(int i = 0; i < 255; i++)
-					m_aSwitchStates[i] = pStates->m_aStates[i/8] & (1 << (i % 8));
+					m_aaSwitchStates[Item.m_ID][i] = pStates->m_aStates[i/8] & (1 << (i % 8));
 			}
 		}
 	}
@@ -1241,10 +1249,10 @@ void CGameClient::OnPredict()
 	// search for players
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(!m_Snap.m_aCharacters[i].m_Active || !m_Snap.m_aCharacters[i].m_LocalWorld)
+		if(!m_Snap.m_aCharacters[i].m_Active || m_Snap.m_aCharacters[i].m_World != m_LocalWorldID)
 			continue;
 
-		m_aClients[i].m_Predicted.Init(&World, Collision());
+		m_aClients[i].m_Predicted.Init(&World, GetDDRTeamCollision(m_LocalWorldID));
 		World.m_apCharacters[i] = &m_aClients[i].m_Predicted;
 		m_aClients[i].m_Predicted.Read(&m_Snap.m_aCharacters[i].m_Cur);
 	}
@@ -1292,7 +1300,7 @@ void CGameClient::OnPredict()
 			m_LastNewPredictedTick = Tick;
 
 			if(m_LocalClientID != -1 && World.m_apCharacters[m_LocalClientID])
-				ProcessTriggeredEvents(World.m_apCharacters[m_LocalClientID]->m_TriggeredEvents, World.m_apCharacters[m_LocalClientID]->m_Pos);
+				ProcessTriggeredEvents(World.m_apCharacters[m_LocalClientID]->m_TriggeredEvents, World.m_apCharacters[m_LocalClientID]->m_Pos, m_LocalWorldID);
 		}
 
 		if(Tick == Client()->PredGameTick() && World.m_apCharacters[m_LocalClientID])

@@ -2,9 +2,12 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/graphics.h>
 #include <engine/demo.h>
+#include <engine/shared/config.h>
+
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
+#include <engine/shared/config.h>
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/client/render.h>
@@ -21,8 +24,8 @@ void CItems::OnReset()
 
 void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
-	float Opacity = 0.3f;
-	if(pCurrent->m_LocalWorld)
+	float Opacity = g_Config.m_GfxOtherWorldOpacity / 10.0f;
+	if(pCurrent->m_World == m_pClient->m_LocalWorldID || m_pClient->m_LocalWorldID == -1)
 		Opacity = 1.0f;
 
 	// get positions
@@ -69,7 +72,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	// add particle for this projectile
 	if(pCurrent->m_Type == WEAPON_GRENADE)
 	{
-		m_pClient->m_pEffects->SmokeTrail(Pos, Vel*-1);
+		m_pClient->m_pEffects->SmokeTrail(Pos, Vel*-1, pCurrent->m_World);
 		static float s_Time = 0.0f;
 		static float s_LastLocalTime = Client()->LocalTime();
 
@@ -90,7 +93,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	}
 	else
 	{
-		m_pClient->m_pEffects->BulletTrail(Pos);
+		m_pClient->m_pEffects->BulletTrail(Pos, pCurrent->m_World);
 
 		if(length(Vel) > 0.00001f)
 			Graphics()->QuadsSetRotation(angle(Vel));
@@ -107,8 +110,8 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 
 void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCurrent)
 {
-	float Opacity = 0.3f;
-	if(pCurrent->m_LocalWorld)
+	float Opacity = g_Config.m_GfxOtherWorldOpacity / 10.0f;
+	if(pCurrent->m_World == m_pClient->m_LocalWorldID || m_pClient->m_LocalWorldID == -1)
 		Opacity = 1.0f;
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
@@ -139,7 +142,8 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		Size = g_pData->m_Weapons.m_aId[WEAPON_LASER].m_VisualSize;
 		break;
 	case PICKUP_NINJA:
-		m_pClient->m_pEffects->PowerupShine(Pos, vec2(96,18));
+		if(pCurrent->m_World == m_pClient->m_LocalWorldID || m_pClient->m_LocalWorldID == -1)
+			m_pClient->m_pEffects->PowerupShine(Pos, vec2(96,18));
 		Size *= 2.0f;
 		Pos.x -= 10.0f;
 	}
@@ -173,8 +177,8 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 	float Angle = 0.0f;
 	float Size = 42.0f;
 
-	float Opacity = 0.3f;
-	if(pCurrent->m_LocalWorld)
+	float Opacity = g_Config.m_GfxOtherWorldOpacity / 10.0f;
+	if(pCurrent->m_World == m_pClient->m_LocalWorldID || m_pClient->m_LocalWorldID == -1)
 		Opacity = 1.0f;
 
 	Graphics()->BlendNormal();
@@ -218,8 +222,8 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 	vec2 From = vec2(pCurrent->m_FromX, pCurrent->m_FromY);
 	vec2 Dir = normalize(Pos-From);
 
-	float Opacity = 0.3f;
-	if(pCurrent->m_LocalWorld)
+	float Opacity = g_Config.m_GfxOtherWorldOpacity / 10.0f;
+	if(pCurrent->m_World == m_pClient->m_LocalWorldID || m_pClient->m_LocalWorldID == -1)
 		Opacity = 1.0f;
 	
 	float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;

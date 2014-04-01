@@ -92,14 +92,14 @@ class CCharacter *CGameContext::GetPlayerChar(int ClientID)
 }
 
 
-int CGameContext::GetPlayerDDRTeam(int ClientID)
+int CGameContext::GetPlayerWorldID(int ClientID)
 {
 	if(ClientID < 0 || ClientID >= MAX_CLIENTS || !m_apPlayers[ClientID])
 		return -1;
-	return m_apPlayers[ClientID]->DDRTeam();
+	return m_apPlayers[ClientID]->WorldID();
 }
 
-void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount)
+void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount, int WorldID)
 {
 	float a = 3 * 3.14159f / 2 + Angle;
 	//float a = get_angle(dir);
@@ -114,11 +114,12 @@ void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount)
 			pEvent->m_X = (int)Pos.x;
 			pEvent->m_Y = (int)Pos.y;
 			pEvent->m_Angle = (int)(f*256.0f);
+			pEvent->m_World = WorldID;
 		}
 	}
 }
 
-void CGameContext::CreateHammerHit(vec2 Pos)
+void CGameContext::CreateHammerHit(vec2 Pos, int WorldID)
 {
 	// create the event
 	CNetEvent_HammerHit *pEvent = (CNetEvent_HammerHit *)m_Events.Create(NETEVENTTYPE_HAMMERHIT, sizeof(CNetEvent_HammerHit));
@@ -126,11 +127,12 @@ void CGameContext::CreateHammerHit(vec2 Pos)
 	{
 		pEvent->m_X = (int)Pos.x;
 		pEvent->m_Y = (int)Pos.y;
+		pEvent->m_World = WorldID;
 	}
 }
 
 
-void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, bool OnlySelf)
+void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, bool OnlySelf, int WorldID)
 {
 	// create the event
 	CNetEvent_Explosion *pEvent = (CNetEvent_Explosion *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(CNetEvent_Explosion));
@@ -138,6 +140,7 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 	{
 		pEvent->m_X = (int)Pos.x;
 		pEvent->m_Y = (int)Pos.y;
+		pEvent->m_World = WorldID;
 	}
 
 	// deal damage
@@ -145,8 +148,7 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 	float Radius = 135.0f;
 	float InnerRadius = 48.0f;
 	CCharacter *pOwnerChar = GetPlayerChar(Owner);
-	int DDRaceTeam = m_apPlayers[Owner]->DDRTeam();
-	int Num = m_TeamsCore.GetTeamWorld(DDRaceTeam)->FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+	int Num = m_TeamsCore.GetTeamWorld(WorldID)->FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 	for(int i = 0; i < Num; i++)
 	{
 		if(OnlySelf && ((CCharacter*) apEnts[i] != pOwnerChar))
@@ -164,7 +166,7 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamag
 	}
 }
 
-void CGameContext::CreatePlayerSpawn(vec2 Pos)
+void CGameContext::CreatePlayerSpawn(vec2 Pos, int WorldID)
 {
 	// create the event
 	CNetEvent_Spawn *ev = (CNetEvent_Spawn *)m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(CNetEvent_Spawn));
@@ -172,10 +174,11 @@ void CGameContext::CreatePlayerSpawn(vec2 Pos)
 	{
 		ev->m_X = (int)Pos.x;
 		ev->m_Y = (int)Pos.y;
+		ev->m_World = WorldID;
 	}
 }
 
-void CGameContext::CreatePlayerTeleport(vec2 Pos)
+void CGameContext::CreatePlayerTeleport(vec2 Pos, int WorldID)
 {
 	// create the event
 	CNetEvent_Teleport *ev = (CNetEvent_Teleport *)m_Events.Create(NETEVENTTYPE_TELEPORT, sizeof(CNetEvent_Teleport));
@@ -183,10 +186,11 @@ void CGameContext::CreatePlayerTeleport(vec2 Pos)
 	{
 		ev->m_X = (int)Pos.x;
 		ev->m_Y = (int)Pos.y;
+		ev->m_World = WorldID;
 	}
 }
 
-void CGameContext::CreateDeath(vec2 Pos, int ClientID)
+void CGameContext::CreateDeath(vec2 Pos, int ClientID, int WorldID)
 {
 	// create the event
 	CNetEvent_Death *pEvent = (CNetEvent_Death *)m_Events.Create(NETEVENTTYPE_DEATH, sizeof(CNetEvent_Death));
@@ -195,10 +199,11 @@ void CGameContext::CreateDeath(vec2 Pos, int ClientID)
 		pEvent->m_X = (int)Pos.x;
 		pEvent->m_Y = (int)Pos.y;
 		pEvent->m_ClientID = ClientID;
+		pEvent->m_World = WorldID;
 	}
 }
 
-void CGameContext::CreateSound(vec2 Pos, int Sound, int Mask)
+void CGameContext::CreateSound(vec2 Pos, int Sound, int WorldID, int Mask)
 {
 	if (Sound < 0)
 		return;
@@ -210,6 +215,7 @@ void CGameContext::CreateSound(vec2 Pos, int Sound, int Mask)
 		pEvent->m_X = (int)Pos.x;
 		pEvent->m_Y = (int)Pos.y;
 		pEvent->m_SoundID = Sound;
+		pEvent->m_World = WorldID;
 	}
 }
 
@@ -597,7 +603,7 @@ void CGameContext::OnClientDirectInput(int ClientID, void *pInput)
 
 void CGameContext::OnClientPredictedInput(int ClientID, void *pInput)
 {
-	if(!m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->DDRTeam())->m_Paused)
+	if(!m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->WorldID())->m_Paused)
 	{
 		int NumCorrections = m_NetObjHandler.NumObjCorrections();
 		if(m_NetObjHandler.ValidateObj(NETOBJTYPE_PLAYERINPUT, pInput, sizeof(CNetObj_PlayerInput)) == 0)
@@ -756,9 +762,9 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			const char *p = pMsg->m_pMessage;
 			const char *pEnd = 0;
 			if(p[0] == '+')
-				pPlayer->SetDDRTeam((pPlayer->DDRTeam()+1)%MAX_CLIENTS);
+				pPlayer->SetWorldID((pPlayer->WorldID()+1)%MAX_CLIENTS);
 			else if(p[0] == '-')
-				pPlayer->SetDDRTeam((pPlayer->DDRTeam()+15)%MAX_CLIENTS);
+				pPlayer->SetWorldID((pPlayer->WorldID()+15)%MAX_CLIENTS);
 			while(*p)
  			{
 				const char *pStrOld = p;
@@ -939,7 +945,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				m_pController->DoTeamChange(pPlayer, pMsg->m_Team);
 			}
 		}
-		else if (MsgID == NETMSGTYPE_CL_SETSPECTATORMODE && !m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->DDRTeam())->m_Paused)
+		else if (MsgID == NETMSGTYPE_CL_SETSPECTATORMODE && !m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->WorldID())->m_Paused)
 		{
 			CNetMsg_Cl_SetSpectatorMode *pMsg = (CNetMsg_Cl_SetSpectatorMode *)pRawMsg;
 
@@ -950,7 +956,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if(!pPlayer->SetSpectatorID(pMsg->m_SpectatorID))
 				SendGameMsg(GAMEMSG_SPEC_INVALIDID, ClientID);
 		}
-		else if (MsgID == NETMSGTYPE_CL_EMOTICON && !m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->DDRTeam())->m_Paused)
+		else if (MsgID == NETMSGTYPE_CL_EMOTICON && !m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->WorldID())->m_Paused)
 		{
 			CNetMsg_Cl_Emoticon *pMsg = (CNetMsg_Cl_Emoticon *)pRawMsg;
 
@@ -963,7 +969,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 			ExtendEmoticon(ClientID, pMsg->m_Emoticon);
 		}
-		else if (MsgID == NETMSGTYPE_CL_KILL && !m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->DDRTeam())->m_Paused)
+		else if (MsgID == NETMSGTYPE_CL_KILL && !m_TeamsCore.GetTeamWorld(m_apPlayers[ClientID]->WorldID())->m_Paused)
 		{
 			if(pPlayer->m_LastKill && pPlayer->m_LastKill+Server()->TickSpeed()*3 > Server()->Tick())
 				return;

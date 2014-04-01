@@ -36,14 +36,14 @@ void CGameWorld::SetGameServer(CGameContext *pGameServer)
 	m_pServer = m_pGameServer->Server();
 }
 
-void CGameWorld::SetDDRTeam(int DDRTeam)
+void CGameWorld::SetID(int ID)
 {
-	m_DDRTeam = DDRTeam;
+	m_ID = ID;
 }
 
-int CGameWorld::DDRTeam()
+int CGameWorld::ID()
 {
-	return m_DDRTeam;
+	return m_ID;
 }
 
 CEntity *CGameWorld::FindFirst(int Type)
@@ -131,16 +131,12 @@ void CGameWorld::Snap(int SnappingClient)
 			pEnt = m_pNextTraverseEntity;
 		}
 
-	if(GameServer()->GetPlayerDDRTeam(SnappingClient) == m_DDRTeam)
+	// snap switch states
+	CNetObj_SwitchStates *pSwitchStates = static_cast<CNetObj_SwitchStates *>(Server()->SnapNewItem(NETOBJTYPE_SWITCHSTATES, m_ID, sizeof(CNetObj_SwitchStates)));
+	if(pSwitchStates)
 	{
-		// snap switch states
-		CNetObj_SwitchStates *pSwitchStates = static_cast<CNetObj_SwitchStates *>(Server()->SnapNewItem(NETOBJTYPE_SWITCHSTATES, 0, sizeof(CNetObj_SwitchStates)));
-		if(pSwitchStates)
-		{
-			for(int i = 0; i < 255; i++)
-				pSwitchStates->m_aStates[i/8] |= m_aSwitchStates[i] << (i % 8);
-			pSwitchStates->m_LocalWorld = false;
-		}
+		for(int i = 0; i < 255; i++)
+			pSwitchStates->m_aStates[i/8] |= m_aSwitchStates[i] << (i % 8);
 	}
 }
 
@@ -167,7 +163,7 @@ void CGameWorld::Reset()
 		}
 	RemoveEntities();
 
-	GameServer()->m_pController->OnReset(m_DDRTeam);
+	GameServer()->m_pController->OnReset(m_ID);
 	RemoveEntities();
 
 	m_ResetRequested = false;

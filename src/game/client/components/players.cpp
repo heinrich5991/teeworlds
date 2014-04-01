@@ -97,8 +97,8 @@ void CPlayers::RenderHook(
 
 	CTeeRenderInfo RenderInfo = m_aRenderInfo[ClientID];
 
-	float Opacity = 0.3f;
-	if(pPlayerChar->m_LocalWorld)
+	float Opacity = g_Config.m_GfxOtherWorldOpacity / 10.0f;
+	if(pPlayerChar->m_World == m_pClient->m_LocalWorldID || m_pClient->m_LocalWorldID == -1)
 		Opacity = 1.0f;
 
 	float IntraTick = Client()->IntraGameTick();
@@ -204,8 +204,8 @@ void CPlayers::RenderPlayer(
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
 	CTeeRenderInfo RenderInfo = m_aRenderInfo[ClientID];
 
-	float Opacity = 0.3f;
-	if(pPlayerChar->m_LocalWorld)
+	float Opacity = g_Config.m_GfxOtherWorldOpacity / 10.0f;
+	if(pPlayerChar->m_World == m_pClient->m_LocalWorldID || m_pClient->m_LocalWorldID == -1)
 		Opacity = 1.0f;
 
 	// set size
@@ -270,7 +270,7 @@ void CPlayers::RenderPlayer(
 	RenderInfo.m_GotAirJump = Player.m_Jumped&2?0:1;
 
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
-	bool InAir = !(Collision()->GetCollisionMove(Player.m_X, Player.m_Y+16, Player.m_X, Player.m_Y+14)&CCollision::COLFLAG_SOLID);
+	bool InAir = !(GetDDRTeamCollision(Player.m_World)->GetCollisionMove(Player.m_X, Player.m_Y+16, Player.m_X, Player.m_Y+14)&CCollision::COLFLAG_SOLID);
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
 
 	// evaluate animation
@@ -313,7 +313,8 @@ void CPlayers::RenderPlayer(
 
 		m_pClient->m_pEffects->SkidTrail(
 			Position+vec2(-Player.m_Direction*6,12),
-			vec2(-Player.m_Direction*100*length(Vel),-50)
+			vec2(-Player.m_Direction*100*length(Vel),-50),
+			Player.m_World
 		);
 	}
 
@@ -624,7 +625,7 @@ void CPlayers::OnRender()
 	}
 
 	// render other players in two passes, first pass we render the other, second pass we render our self
-	for(int p = 0; p < 4; p++)
+	for(int p = 0; p < 6; p++)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -643,13 +644,22 @@ void CPlayers::OnRender()
 			{
 				//
 				bool Local = m_pClient->m_LocalClientID == i;
-				if((p % 2) == 0 && Local) continue;
-				if((p % 2) == 1 && !Local) continue;
+				bool LocalWorld = m_pClient->m_Snap.m_aCharacters[i].m_World == m_pClient->m_LocalWorldID;
+				if(p < 2)
+				{
+					if(LocalWorld) continue;
+				}
+				else
+				{
+					if(!LocalWorld) continue;
+					if((p % 2) == 0 && Local) continue;
+					if((p % 2) == 1 && !Local) continue;
+				}
 
 				CNetObj_Character PrevChar = m_pClient->m_Snap.m_aCharacters[i].m_Prev;
 				CNetObj_Character CurChar = m_pClient->m_Snap.m_aCharacters[i].m_Cur;
 
-				if(p<2)
+				if(p < 4 && p != 1)
 					RenderHook(
 							&PrevChar,
 							&CurChar,

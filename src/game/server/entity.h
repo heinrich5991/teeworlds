@@ -6,6 +6,7 @@
 #include <base/vmath.h>
 
 #include <game/server/gameworld.h>
+#include <game/server/gamecontext.h>
 
 #include "alloc.h"
 
@@ -34,6 +35,7 @@ public:
 	virtual ~CEntity();
 
 	class CGameWorld *GameWorld() { return m_pGameWorld; }
+	class CCollision *Collision() { return m_pGameWorld->GameServer()->GetCollision(m_pGameWorld->ID()); }
 	class CGameContext *GameServer() { return GameWorld()->GameServer(); }
 	class IServer *Server() { return GameWorld()->Server(); }
 

@@ -28,7 +28,7 @@ protected:
 	class IDemoRecorder *DemoRecorder() const { return m_pClient->DemoRecorder(); }
 	class IServerBrowser *ServerBrowser() const { return m_pClient->ServerBrowser(); }
 	class CLayers *Layers() const { return m_pClient->Layers(); }
-	class CCollision *Collision() const { return m_pClient->Collision(); }
+	class CCollision *GetDDRTeamCollision(int DDRTeam) const { return m_pClient->GetDDRTeamCollision(DDRTeam); }
 public:
 	virtual ~CComponent() {}
 

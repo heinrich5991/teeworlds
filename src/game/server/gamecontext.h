@@ -72,7 +72,7 @@ class CGameContext : public IGameServer
 public:
 	IServer *Server() const { return m_pServer; }
 	class IConsole *Console() { return m_pConsole; }
-	CCollision *GetTeamCollision(int DDRTeam) { return m_TeamsCore.GetTeamCollision(DDRTeam); }
+	CCollision *GetCollision(int WorldID) { return m_TeamsCore.GetTeamCollision(WorldID); }
 	CTuningParams *Tuning() { return &m_Tuning; }
 
 	CGameContext();
@@ -89,7 +89,7 @@ public:
 
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientID);
-	int GetPlayerDDRTeam(int ClientID);
+	int GetPlayerWorldID(int ClientID);
 
 	int m_LockTeams;
 
@@ -125,13 +125,13 @@ public:
 	CVoteOptionServer *m_pVoteOptionLast;
 
 	// helper functions
-	void CreateDamageInd(vec2 Pos, float AngleMod, int Amount);
-	void CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, bool OnlySelf);
-	void CreateHammerHit(vec2 Pos);
-	void CreatePlayerSpawn(vec2 Pos);
-	void CreatePlayerTeleport(vec2 Pos);
-	void CreateDeath(vec2 Pos, int Who);
-	void CreateSound(vec2 Pos, int Sound, int Mask=-1);
+	void CreateDamageInd(vec2 Pos, float AngleMod, int Amount, int WorldID);
+	void CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, bool OnlySelf, int WorldID);
+	void CreateHammerHit(vec2 Pos, int WorldID);
+	void CreatePlayerSpawn(vec2 Pos, int WorldID);
+	void CreatePlayerTeleport(vec2 Pos, int WorldID);
+	void CreateDeath(vec2 Pos, int Who, int WorldID);
+	void CreateSound(vec2 Pos, int Sound, int WorldID, int Mask=-1);
 
 
 	enum

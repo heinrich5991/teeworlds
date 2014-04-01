@@ -81,8 +81,6 @@ Objects = [
 
 	NetObject("SwitchStates", [
 		NetArray(NetIntAny("m_aStates"), 8),
-
-		NetBool("m_LocalWorld"),
 	]),
 
 	NetObject("Projectile", [
@@ -94,7 +92,7 @@ Objects = [
 		NetIntRange("m_Type", 0, 'NUM_WEAPONS-1'),
 		NetTick("m_StartTick"),
 
-		NetBool("m_LocalWorld"),
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 
 	NetObject("Laser", [
@@ -105,7 +103,7 @@ Objects = [
 
 		NetTick("m_StartTick"),
 
-		NetBool("m_LocalWorld"),
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 
 	NetObject("Pickup", [
@@ -114,7 +112,7 @@ Objects = [
 
 		NetEnum("m_Type", Pickups),
 
-		NetBool("m_LocalWorld"),
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 
 	NetObject("Flag", [
@@ -123,7 +121,7 @@ Objects = [
 
 		NetIntRange("m_Team", 'TEAM_RED', 'TEAM_BLUE'),
 
-		NetBool("m_LocalWorld"),
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 
 	NetObject("GameData", [
@@ -160,8 +158,6 @@ Objects = [
 		NetTick("m_HookTick"),
 		NetTick("m_FreezeTick"),
 
-		NetIntRange("m_CollisionGroup", 0, 16),
-
 		NetIntAny("m_HookX"),
 		NetIntAny("m_HookY"),
 	]),
@@ -175,7 +171,7 @@ Objects = [
 		NetTick("m_AttackTick"),
 		NetFlag("m_TriggeredEvents", CoreEventFlags),
 
-		NetBool("m_LocalWorld"),
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 
 	NetObject("PlayerInfo", [
@@ -229,21 +225,35 @@ Objects = [
 	]),
 
 
-	NetEvent("Explosion:Common", []),
-	NetEvent("Spawn:Common", []),
-	NetEvent("Teleport:Common", []),
-	NetEvent("HammerHit:Common", []),
+	NetEvent("Explosion:Common", [
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
+	]),
+	
+	NetEvent("Spawn:Common", [
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
+	]),
+	
+	NetEvent("Teleport:Common", [
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
+	]),
+	
+	NetEvent("HammerHit:Common", [
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
+	]),
 
 	NetEvent("Death:Common", [
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 
 	NetEvent("SoundWorld:Common", [
 		NetIntRange("m_SoundID", 0, 'NUM_SOUNDS-1'),
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 
 	NetEvent("DamageInd:Common", [
 		NetIntAny("m_Angle"),
+		NetIntRange("m_World", 0, 'MAX_CLIENTS-1'),
 	]),
 ]
 

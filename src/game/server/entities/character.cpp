@@ -74,7 +74,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_Pos = Pos;
 
 	m_Core.Reset();
-	m_Core.Init(&GameWorld()->m_Core, GameServer()->GetTeamCollision(GameWorld()->DDRTeam()));
+	m_Core.Init(&GameWorld()->m_Core, Collision());
 	m_Core.m_Pos = m_Pos;
 	GameWorld()->m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
 
@@ -106,7 +106,7 @@ void CCharacter::SetWeapon(int W)
 	m_LastWeapon = m_ActiveWeapon;
 	m_QueuedWeapon = -1;
 	m_ActiveWeapon = W;
-	GameServer()->CreateSound(m_Pos, SOUND_WEAPON_SWITCH);
+	GameServer()->CreateSound(m_Pos, SOUND_WEAPON_SWITCH, GameWorld()->ID());
 
 	if(m_ActiveWeapon < 0 || m_ActiveWeapon >= NUM_WEAPONS)
 		m_ActiveWeapon = 0;
@@ -114,7 +114,7 @@ void CCharacter::SetWeapon(int W)
 
 bool CCharacter::IsGrounded()
 {
-	if(GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->TestHLineMove(m_Pos + vec2(0, m_ProximityRadius / 2 + 5), m_Pos + vec2(0, m_ProximityRadius / 2), m_ProximityRadius))
+	if(Collision()->TestHLineMove(m_Pos + vec2(0, m_ProximityRadius / 2 + 5), m_Pos + vec2(0, m_ProximityRadius / 2), m_ProximityRadius))
 		return true;
 	return false;
 }
@@ -157,7 +157,7 @@ void CCharacter::HandleNinja()
 		vec2 OldPos = m_Pos;
 
 		CCollision::CTriggers aTriggers[4 * (int)((MAX_SPEED + 15) / 16) + 2];
-		int Size = GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, aTriggers, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
+		int Size = Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, aTriggers, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
 		for(int i = 0; i < Size; i++)
 		{
 			m_Core.HandleTriggers(aTriggers[i]);
@@ -194,7 +194,7 @@ void CCharacter::HandleNinja()
 					continue;
 
 				// Hit a player, give him damage and stuffs...
-				GameServer()->CreateSound(aEnts[i]->m_Pos, SOUND_NINJA_HIT);
+				GameServer()->CreateSound(aEnts[i]->m_Pos, SOUND_NINJA_HIT, GameWorld()->ID());
 				// set his velocity to fast upward (for now)
 				if(m_NumObjectsHit < 10)
 					m_apHitObjects[m_NumObjectsHit++] = aEnts[i];
@@ -297,7 +297,7 @@ void CCharacter::FireWeapon()
 		m_UnfreezeFire = true;
 		if(m_LastFreezeCrySound+Server()->TickSpeed() <= Server()->Tick())
 		{
-			GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
+			GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG, GameWorld()->ID());
 			m_LastFreezeCrySound = Server()->Tick();
 		}
 			
@@ -315,7 +315,7 @@ void CCharacter::FireWeapon()
 		m_ReloadTimer = 125 * Server()->TickSpeed() / 1000;
 		if(m_LastNoAmmoSound+Server()->TickSpeed() <= Server()->Tick())
 		{
-			GameServer()->CreateSound(m_Pos, SOUND_WEAPON_NOAMMO);
+			GameServer()->CreateSound(m_Pos, SOUND_WEAPON_NOAMMO, GameWorld()->ID());
 			m_LastNoAmmoSound = Server()->Tick();
 		}
 		return;
@@ -324,7 +324,7 @@ void CCharacter::FireWeapon()
 	vec2 HammerStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
 	vec2 ProjStartPos = HammerStartPos;
 	// dirty fix
-	GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->IntersectLine(m_Pos, ProjStartPos, 0, &ProjStartPos, CCollision::COLFLAG_SOLID_PROJ);
+	Collision()->IntersectLine(m_Pos, ProjStartPos, 0, &ProjStartPos, CCollision::COLFLAG_SOLID_PROJ);
 
 	switch(m_ActiveWeapon)
 	{
@@ -332,7 +332,7 @@ void CCharacter::FireWeapon()
 		{
 			// reset objects Hit
 			m_NumObjectsHit = 0;
-			GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE);
+			GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE, GameWorld()->ID());
 
 			CCharacter *apEnts[MAX_CLIENTS];
 			int Hits = 0;
@@ -348,9 +348,9 @@ void CCharacter::FireWeapon()
 
 					// set his velocity to fast upward (for now)
 					if(length(pTarget->m_Pos-ProjStartPos) > 0.0f)
-						GameServer()->CreateHammerHit(pTarget->m_Pos-normalize(pTarget->m_Pos-ProjStartPos)*m_ProximityRadius*0.5f);
+						GameServer()->CreateHammerHit(pTarget->m_Pos-normalize(pTarget->m_Pos-ProjStartPos)*m_ProximityRadius*0.5f, GameWorld()->ID());
 					else
-						GameServer()->CreateHammerHit(ProjStartPos);
+						GameServer()->CreateHammerHit(ProjStartPos, GameWorld()->ID());
 
 					vec2 Dir;
 					if (length(pTarget->m_Pos - m_Pos) > 0.0f)
@@ -390,13 +390,13 @@ void CCharacter::FireWeapon()
 
 			Server()->SendMsg(&Msg, 0, m_pPlayer->GetCID());
 
-			GameServer()->CreateSound(m_Pos, SOUND_GUN_FIRE);
+			GameServer()->CreateSound(m_Pos, SOUND_GUN_FIRE, GameWorld()->ID());
 		} break;
 
 		case WEAPON_SHOTGUN:
 		{
 			new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), true, m_Nohit);
-			GameServer()->CreateSound(m_Pos, SOUND_SHOTGUN_FIRE);
+			GameServer()->CreateSound(m_Pos, SOUND_SHOTGUN_FIRE, GameWorld()->ID());
 		} break;
 
 		case WEAPON_GRENADE:
@@ -418,13 +418,13 @@ void CCharacter::FireWeapon()
 				Msg.AddInt(((int *)&p)[i]);
 			Server()->SendMsg(&Msg, 0, m_pPlayer->GetCID());
 
-			GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE);
+			GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE, GameWorld()->ID());
 		} break;
 
 		case WEAPON_LASER:
 		{
 			new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), false, m_Nohit);
-			GameServer()->CreateSound(m_Pos, SOUND_LASER_FIRE);
+			GameServer()->CreateSound(m_Pos, SOUND_LASER_FIRE, GameWorld()->ID());
 		} break;
 
 		case WEAPON_NINJA:
@@ -436,7 +436,7 @@ void CCharacter::FireWeapon()
 			m_Ninja.m_CurrentMoveTime = g_pData->m_Weapons.m_Ninja.m_Movetime * Server()->TickSpeed() / 1000;
 			m_Ninja.m_OldVelAmount = length(m_Core.m_Vel);
 
-			GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE);
+			GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE, GameWorld()->ID());
 		} break;
 
 	}
@@ -491,7 +491,7 @@ void CCharacter::GiveNinja()
 
 	if(m_Ninja.m_ActivationTick < Server()->Tick()-1 && m_LastNinjaSound < Server()->Tick() - Server()->TickSpeed() * 0.7f)
 	{
-		GameServer()->CreateSound(m_Pos, SOUND_PICKUP_NINJA);
+		GameServer()->CreateSound(m_Pos, SOUND_PICKUP_NINJA, GameWorld()->ID());
 		m_LastNinjaSound = Server()->Tick();
 	}
 	m_Ninja.m_ActivationTick = Server()->Tick();
@@ -554,10 +554,10 @@ void CCharacter::Tick()
 	m_Core.Tick(true);
 
 	// handle death-tiles and leaving gamelayer
-	if(GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+	if(Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+		Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+		Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+		Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
 		GameLayerClipped(m_Pos))
 	{
 		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
@@ -576,7 +576,7 @@ void CCharacter::TickDefered()
 	// advance the dummy
 	{
 		CWorldCore TempWorld;
-		m_ReckoningCore.Init(&TempWorld, GameServer()->GetTeamCollision(GameWorld()->DDRTeam()));
+		m_ReckoningCore.Init(&TempWorld, Collision());
 		m_ReckoningCore.Tick(false);
 		m_ReckoningCore.Move();
 		m_ReckoningCore.Quantize();
@@ -585,16 +585,16 @@ void CCharacter::TickDefered()
 	//lastsentcore
 	vec2 StartPos = m_Core.m_Pos;
 	vec2 StartVel = m_Core.m_Vel;
-	bool StuckBefore = GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
+	bool StuckBefore = Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 
 	CCollision::CTriggers aTriggers[4 * (int)((MAX_SPEED + 15) / 16) + 2];
 	int Size = m_Core.Move(aTriggers);
 	for(int i = 0; i < Size; i++)
 		HandleTriggers(aTriggers[i]);
 
-	bool StuckAfterMove = GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
+	bool StuckAfterMove = Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Core.Quantize();
-	bool StuckAfterQuant = GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
+	bool StuckAfterQuant = Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Pos = m_Core.m_Pos;
 
 	if(!StuckBefore && (StuckAfterMove || StuckAfterQuant))
@@ -657,8 +657,8 @@ void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 
 	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_TELEPORT)
 	{
-		GameServer()->CreatePlayerTeleport(Triggers.m_TeleInPos);
-		GameServer()->CreatePlayerTeleport(Triggers.m_TeleOutPos);
+		GameServer()->CreatePlayerTeleport(Triggers.m_TeleInPos, GameWorld()->ID());
+		GameServer()->CreatePlayerTeleport(Triggers.m_TeleOutPos, GameWorld()->ID());
 	}
 	if(Triggers.m_TeleFlags&CCollision::TRIGGERFLAG_STOP_NINJA)
 		m_Ninja.m_CurrentMoveTime = -1;
@@ -675,7 +675,7 @@ void CCharacter::HandleTriggers(CCollision::CTriggers Triggers)
 		m_LastCheckpoint = Checkpoint - 1;
 		if(Checkpoint - 2 == m_LastCorrectCheckpoint)
 		{
-			if(Checkpoint == GameServer()->GetTeamCollision(GameWorld()->DDRTeam())->GetNumCheckpoints() + 1)
+			if(Checkpoint == Collision()->GetNumCheckpoints() + 1)
 			{
 				OnFinish();
 				m_LastCheckpoint = -1;
@@ -796,14 +796,14 @@ void CCharacter::Die(int Killer, int Weapon)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 
 	// a nice sound
-	GameServer()->CreateSound(m_Pos, SOUND_PLAYER_DIE);
+	GameServer()->CreateSound(m_Pos, SOUND_PLAYER_DIE, GameWorld()->ID());
 
 	// this is for auto respawn after 3 secs
 	m_pPlayer->m_DieTick = Server()->Tick();
 
 	GameWorld()->RemoveEntity(this);
 	GameWorld()->m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
-	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID());
+	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID(), GameWorld()->ID());
 }
 
 bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
@@ -826,12 +826,12 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	if(Server()->Tick() < m_DamageTakenTick+25)
 	{
 		// make sure that the damage indicators doesn't group together
-		GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, Dmg);
+		GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, Dmg, GameWorld()->ID());
 	}
 	else
 	{
 		m_DamageTaken = 0;
-		GameServer()->CreateDamageInd(m_Pos, 0, Dmg);
+		GameServer()->CreateDamageInd(m_Pos, 0, Dmg, GameWorld()->ID());
 	}
 
 	if(Dmg)
@@ -872,7 +872,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 				Mask |= CmaskOne(i);
 		}
 		if(Dmg > 0)
-			GameServer()->CreateSound(GameServer()->m_apPlayers[From]->m_ViewPos, SOUND_HIT, Mask);
+			GameServer()->CreateSound(GameServer()->m_apPlayers[From]->m_ViewPos, SOUND_HIT, GameWorld()->ID(), Mask);
 	}
 
 	// check for death
@@ -895,9 +895,9 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	}
 
 	if (Dmg > 2)
-		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
+		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG, GameWorld()->ID());
 	else if (Dmg > 0)
-		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT);
+		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT, GameWorld()->ID());
 
 	m_EmoteType = EMOTE_PAIN;
 	m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;
@@ -967,7 +967,7 @@ void CCharacter::Snap(int SnappingClient)
 
 	pCharacter->m_Direction = m_Input.m_Direction;
 
-	pCharacter->m_LocalWorld = GameServer()->GetPlayerDDRTeam(SnappingClient) == GameWorld()->DDRTeam();
+	pCharacter->m_World = GameWorld()->ID();
 
 	if(m_pPlayer->GetCID() == SnappingClient || SnappingClient == -1 ||
 		(!g_Config.m_SvStrictSpectateMode && m_pPlayer->GetCID() == GameServer()->m_apPlayers[SnappingClient]->GetSpectatorID()))

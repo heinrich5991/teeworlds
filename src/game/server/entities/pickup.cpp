@@ -37,7 +37,7 @@ void CPickup::Tick()
 			m_SpawnTick = -1;
 
 			if(m_Type == PICKUP_GRENADE || m_Type == PICKUP_SHOTGUN || m_Type == PICKUP_LASER)
-				GameServer()->CreateSound(m_Pos, SOUND_WEAPON_SPAWN);
+				GameServer()->CreateSound(m_Pos, SOUND_WEAPON_SPAWN, GameWorld()->ID());
 		}
 		else
 			return;
@@ -64,7 +64,7 @@ void CPickup::Tick()
 						if(pChr->IncreaseHealth(1))
 						{
 							Gave = true;
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH, GameWorld()->ID());
 						}
 						break;
 
@@ -72,7 +72,7 @@ void CPickup::Tick()
 						if(pChr->IncreaseArmor(1))
 						{
 							Gave = true;
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_ARMOR);
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_ARMOR, GameWorld()->ID());
 						}
 						break;
 
@@ -80,7 +80,7 @@ void CPickup::Tick()
 						if(pChr->GiveWeapon(WEAPON_GRENADE))
 						{
 							Gave = true;
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE);
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE, GameWorld()->ID());
 							if(pChr->GetPlayer())
 								GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_GRENADE);
 						}
@@ -89,7 +89,7 @@ void CPickup::Tick()
 						if(pChr->GiveWeapon(WEAPON_SHOTGUN))
 						{
 							Gave = true;
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN, GameWorld()->ID());
 							if(pChr->GetPlayer())
 								GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_SHOTGUN);
 						}
@@ -98,7 +98,7 @@ void CPickup::Tick()
 						if(pChr->GiveWeapon(WEAPON_LASER))
 						{
 							Gave = true;
-							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN, GameWorld()->ID());
 							if(pChr->GetPlayer())
 								GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_LASER);
 						}
@@ -161,5 +161,5 @@ void CPickup::Snap(int SnappingClient)
 	pP->m_X = (int)m_Pos.x;
 	pP->m_Y = (int)m_Pos.y;
 	pP->m_Type = m_Type;
-	pP->m_LocalWorld = GameServer()->GetPlayerDDRTeam(SnappingClient) == GameWorld()->DDRTeam();
+	pP->m_World = GameWorld()->ID();
 }

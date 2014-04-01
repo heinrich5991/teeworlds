@@ -204,7 +204,7 @@ void CPlayer::OnPredictedInput(CNetObj_PlayerInput *NewInput)
 
 void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 {
-	if(GameServer()->m_TeamsCore.GetTeamWorld(m_DDRTeam)->m_Paused)
+	if(GameServer()->m_TeamsCore.GetTeamWorld(m_WorldID)->m_Paused)
 	{
 		m_PlayerFlags = NewInput->m_PlayerFlags;
 		return;
@@ -359,11 +359,11 @@ void CPlayer::SetTeam(int Team, bool DoChatMsg)
 	}
 }
 
-void CPlayer::SetDDRTeam(int Team)
+void CPlayer::SetWorldID(int Team)
 {
-	if(Team == m_DDRTeam)
+	if(Team == m_WorldID)
 		return;
-	m_DDRTeam = Team;
+	m_WorldID = Team;
 	KillCharacter();
 }
 
@@ -371,11 +371,11 @@ void CPlayer::TryRespawn()
 {
 	vec2 SpawnPos;
 
-	if(!GameServer()->m_pController->CanSpawn(m_Team, &SpawnPos, m_DDRTeam))
+	if(!GameServer()->m_pController->CanSpawn(m_Team, &SpawnPos, m_WorldID))
 		return;
 
 	m_Spawning = false;
-	m_pCharacter = new(m_ClientID) CCharacter(GameServer()->m_TeamsCore.GetTeamWorld(m_DDRTeam));
+	m_pCharacter = new(m_ClientID) CCharacter(GameServer()->m_TeamsCore.GetTeamWorld(m_WorldID));
 	m_pCharacter->Spawn(this, SpawnPos);
-	GameServer()->CreatePlayerSpawn(SpawnPos);
+	GameServer()->CreatePlayerSpawn(SpawnPos, m_WorldID);
 }

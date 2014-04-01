@@ -84,8 +84,8 @@ class IGameController
 	vec2 m_aaSpawnPoints[3][64];
 	int m_aNumSpawnPoints[3];
 	
-	float EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos, int DDRTeam) const;
-	void EvaluateSpawnType(CSpawnEval *pEval, int Type, int DDRTeam) const;
+	float EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos, int WorldID) const;
+	void EvaluateSpawnType(CSpawnEval *pEval, int Type, int WorldID) const;
 
 	// team
 	int ClampTeam(int Team) const;
@@ -164,7 +164,7 @@ public:
 	void OnPlayerInfoChange(class CPlayer *pPlayer);
 	void OnPlayerReadyChange(class CPlayer *pPlayer);
 
-	void OnReset(int DDRTeam);
+	void OnReset(int WorldID);
 
 	// game
 	enum
@@ -199,7 +199,7 @@ public:
 	void ChangeMap(const char *pToMap);
 
 	//spawn
-	bool CanSpawn(int Team, vec2 *pPos, int DDRTeam) const;
+	bool CanSpawn(int Team, vec2 *pPos, int WorldID) const;
 	bool GetStartRespawnState() const;
 
 	// team

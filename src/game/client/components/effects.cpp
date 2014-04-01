@@ -24,10 +24,11 @@ CEffects::CEffects()
 	m_Add100hz = false;
 }
 
-void CEffects::AirJump(vec2 Pos)
+void CEffects::AirJump(vec2 Pos, int WorldID)
 {
 	CParticle p;
 	p.SetDefault();
+	p.m_WorldID = WorldID;
 	p.m_Spr = SPRITE_PART_AIRJUMP;
 	p.m_Pos = Pos + vec2(-6.0f, 16.0f);
 	p.m_Vel = vec2(0, -200);
@@ -44,13 +45,15 @@ void CEffects::AirJump(vec2 Pos)
 	p.m_Pos = Pos + vec2(6.0f, 16.0f);
 	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 
-	m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, Pos);
+	if(WorldID == m_pClient->m_LocalWorldID)
+		m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, Pos);
 }
 
-void CEffects::Speedup(vec2 Pos)
+void CEffects::Speedup(vec2 Pos, int WorldID)
 {
 	CParticle p;
 	p.SetDefault();
+	p.m_WorldID = WorldID;
 	p.m_Spr = SPRITE_PART_AIRJUMP;
 	p.m_Pos = Pos + vec2(-6.0f, 16.0f);
 	p.m_Vel = vec2(0, -200);
@@ -68,9 +71,9 @@ void CEffects::Speedup(vec2 Pos)
 	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 }
 
-void CEffects::DamageIndicator(vec2 Pos, vec2 Dir)
+void CEffects::DamageIndicator(vec2 Pos, vec2 Dir, int WorldID)
 {
-	m_pClient->m_pDamageind->Create(Pos, Dir);
+	m_pClient->m_pDamageind->Create(Pos, Dir, WorldID);
 }
 
 void CEffects::PowerupShine(vec2 Pos, vec2 size)
@@ -91,16 +94,18 @@ void CEffects::PowerupShine(vec2 Pos, vec2 size)
 	p.m_Gravity = 500;
 	p.m_Friction = 0.9f;
 	p.m_FlowAffected = 0.0f;
+	p.m_WorldID = m_pClient->m_LocalWorldID;
 	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 }
 
-void CEffects::SmokeTrail(vec2 Pos, vec2 Vel)
+void CEffects::SmokeTrail(vec2 Pos, vec2 Vel, int WorldID)
 {
 	if(!m_Add50hz)
 		return;
 
 	CParticle p;
 	p.SetDefault();
+	p.m_WorldID = WorldID;
 	p.m_Spr = SPRITE_PART_SMOKE;
 	p.m_Pos = Pos;
 	p.m_Vel = Vel + RandomDir()*50.0f;
@@ -113,13 +118,14 @@ void CEffects::SmokeTrail(vec2 Pos, vec2 Vel)
 }
 
 
-void CEffects::SkidTrail(vec2 Pos, vec2 Vel)
+void CEffects::SkidTrail(vec2 Pos, vec2 Vel, int WorldID)
 {
 	if(!m_Add100hz)
 		return;
 
 	CParticle p;
 	p.SetDefault();
+	p.m_WorldID = WorldID;
 	p.m_Spr = SPRITE_PART_SMOKE;
 	p.m_Pos = Pos;
 	p.m_Vel = Vel + RandomDir()*50.0f;
@@ -132,13 +138,14 @@ void CEffects::SkidTrail(vec2 Pos, vec2 Vel)
 	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 }
 
-void CEffects::BulletTrail(vec2 Pos)
+void CEffects::BulletTrail(vec2 Pos, int WorldID)
 {
 	if(!m_Add100hz)
 		return;
 
 	CParticle p;
 	p.SetDefault();
+	p.m_WorldID = WorldID;
 	p.m_Spr = SPRITE_PART_BALL;
 	p.m_Pos = Pos;
 	p.m_LifeSpan = 0.25f + frandom()*0.25f;
@@ -148,12 +155,13 @@ void CEffects::BulletTrail(vec2 Pos)
 	m_pClient->m_pParticles->Add(CParticles::GROUP_PROJECTILE_TRAIL, &p);
 }
 
-void CEffects::PlayerSpawn(vec2 Pos)
+void CEffects::PlayerSpawn(vec2 Pos, int WorldID)
 {
 	for(int i = 0; i < 32; i++)
 	{
 		CParticle p;
 		p.SetDefault();
+		p.m_WorldID = WorldID;
 		p.m_Spr = SPRITE_PART_SHELL;
 		p.m_Pos = Pos;
 		p.m_Vel = RandomDir() * (powf(frandom(), 3)*600.0f);
@@ -168,15 +176,17 @@ void CEffects::PlayerSpawn(vec2 Pos)
 		m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 
 	}
-	m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SPAWN, 1.0f, Pos);
+	if(WorldID == m_pClient->m_LocalWorldID)
+		m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SPAWN, 1.0f, Pos);
 }
 
-void CEffects::PlayerTeleport(vec2 Pos)
+void CEffects::PlayerTeleport(vec2 Pos, int WorldID)
 {
 	for(int i = 0; i < 32; i++)
 	{
 		CParticle p;
 		p.SetDefault();
+		p.m_WorldID = WorldID;
 		p.m_Spr = SPRITE_PART_SHELL;
 		p.m_Pos = Pos;
 		p.m_Vel = RandomDir() * (powf(frandom(), 3)*600.0f);
@@ -193,7 +203,7 @@ void CEffects::PlayerTeleport(vec2 Pos)
 	}
 }
 
-void CEffects::PlayerDeath(vec2 Pos, int ClientID)
+void CEffects::PlayerDeath(vec2 Pos, int ClientID, int WorldID)
 {
 	vec3 BloodColor(1.0f,1.0f,1.0f);
 
@@ -213,6 +223,7 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 	{
 		CParticle p;
 		p.SetDefault();
+		p.m_WorldID = WorldID;
 		p.m_Spr = SPRITE_PART_SPLAT01 + (rand()%3);
 		p.m_Pos = Pos;
 		p.m_Vel = RandomDir() * ((frandom()+0.1f)*900.0f);
@@ -230,7 +241,7 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 }
 
 
-void CEffects::Explosion(vec2 Pos)
+void CEffects::Explosion(vec2 Pos, int WorldID)
 {
 	// add to flow
 	for(int y = -8; y <= 8; y++)
@@ -246,6 +257,7 @@ void CEffects::Explosion(vec2 Pos)
 	// add the explosion
 	CParticle p;
 	p.SetDefault();
+	p.m_WorldID = WorldID;
 	p.m_Spr = SPRITE_PART_EXPL01;
 	p.m_Pos = Pos;
 	p.m_LifeSpan = 0.4f;
@@ -259,6 +271,7 @@ void CEffects::Explosion(vec2 Pos)
 	{
 		CParticle p;
 		p.SetDefault();
+		p.m_WorldID = WorldID;
 		p.m_Spr = SPRITE_PART_SMOKE;
 		p.m_Pos = Pos;
 		p.m_Vel = RandomDir() * ((1.0f + frandom()*0.2f) * 1000.0f);
@@ -273,11 +286,12 @@ void CEffects::Explosion(vec2 Pos)
 }
 
 
-void CEffects::HammerHit(vec2 Pos)
+void CEffects::HammerHit(vec2 Pos, int WorldID)
 {
 	// add the explosion
 	CParticle p;
 	p.SetDefault();
+	p.m_WorldID = WorldID;
 	p.m_Spr = SPRITE_PART_HIT01;
 	p.m_Pos = Pos;
 	p.m_LifeSpan = 0.3f;
@@ -285,7 +299,8 @@ void CEffects::HammerHit(vec2 Pos)
 	p.m_EndSize = 0;
 	p.m_Rot = frandom()*pi*2;
 	m_pClient->m_pParticles->Add(CParticles::GROUP_EXPLOSIONS, &p);
-	m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HAMMER_HIT, 1.0f, Pos);
+	if(WorldID == m_pClient->m_LocalWorldID)
+		m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HAMMER_HIT, 1.0f, Pos);
 }
 
 void CEffects::OnRender()

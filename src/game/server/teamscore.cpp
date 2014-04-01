@@ -5,7 +5,7 @@
 CTeamsCore::CTeamsCore()
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
-		m_aTeams[i].m_TeamWorld.SetDDRTeam(i);
+		m_aTeams[i].m_TeamWorld.SetID(i);
 }
 
 void CTeamsCore::InitCollision(class CLayers *pLayers)

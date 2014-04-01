@@ -1030,6 +1030,7 @@ void CGameClient::OnNewSnapshot()
 			{
 				const void *pOld = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, Item.m_ID);
 				m_Snap.m_aCharacters[Item.m_ID].m_Cur = *((const CNetObj_Character *)pData);
+				m_Snap.m_aCharacters[Item.m_ID].m_LocalWorld = ((const CNetObj_Character *)pData)->m_LocalWorld;
 
 				// clamp ammo count for non ninja weapon
 				if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Weapon != WEAPON_NINJA)
@@ -1240,7 +1241,7 @@ void CGameClient::OnPredict()
 	// search for players
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(!m_Snap.m_aCharacters[i].m_Active)
+		if(!m_Snap.m_aCharacters[i].m_Active || !m_Snap.m_aCharacters[i].m_LocalWorld)
 			continue;
 
 		m_aClients[i].m_Predicted.Init(&World, Collision());

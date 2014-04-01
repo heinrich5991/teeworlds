@@ -20,7 +20,7 @@
 
 #include "players.h"
 
-void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset)
+void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset, float Opacity)
 {
 	// for drawing hand
 	//const skin *s = skin_get(skin_id);
@@ -48,7 +48,7 @@ void CPlayers::RenderHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float
 	Graphics()->TextureSet(pInfo->m_aTextures[CSkins::SKINPART_HANDS]);
 	Graphics()->QuadsBegin();
 	vec4 Color = pInfo->m_aColors[CSkins::SKINPART_HANDS];
-	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+	Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * Opacity);
 
 	// two passes
 	for (int i = 0; i < 2; i++)
@@ -97,6 +97,10 @@ void CPlayers::RenderHook(
 
 	CTeeRenderInfo RenderInfo = m_aRenderInfo[ClientID];
 
+	float Opacity = 0.3f;
+	if(pPlayerChar->m_LocalWorld)
+		Opacity = 1.0f;
+
 	float IntraTick = Client()->IntraGameTick();
 
 	// set size
@@ -126,6 +130,7 @@ void CPlayers::RenderHook(
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, Opacity);
 		//Graphics()->QuadsBegin();
 
 		vec2 Pos = Position;
@@ -179,7 +184,7 @@ void CPlayers::RenderHook(
 		Graphics()->QuadsSetRotation(0);
 		Graphics()->QuadsEnd();
 
-		RenderHand(&RenderInfo, Position, normalize(HookPos-Pos), -pi/2, vec2(20, 0));
+		RenderHand(&RenderInfo, Position, normalize(HookPos-Pos), -pi/2, vec2(20, 0), Opacity);
 	}
 }
 
@@ -198,6 +203,10 @@ void CPlayers::RenderPlayer(
 
 	CNetObj_PlayerInfo pInfo = *pPlayerInfo;
 	CTeeRenderInfo RenderInfo = m_aRenderInfo[ClientID];
+
+	float Opacity = 0.3f;
+	if(pPlayerChar->m_LocalWorld)
+		Opacity = 1.0f;
 
 	// set size
 	RenderInfo.m_Size = 64.0f;
@@ -313,6 +322,7 @@ void CPlayers::RenderPlayer(
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, Opacity);
 		Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle*pi*2+Angle);
 
 		// normal weapons
@@ -457,9 +467,9 @@ void CPlayers::RenderPlayer(
 
 		switch (Player.m_Weapon)
 		{
-			case WEAPON_GUN: RenderHand(&RenderInfo, p, Direction, -3*pi/4, vec2(-15, 4)); break;
-			case WEAPON_SHOTGUN: RenderHand(&RenderInfo, p, Direction, -pi/2, vec2(-5, 4)); break;
-			case WEAPON_GRENADE: RenderHand(&RenderInfo, p, Direction, -pi/2, vec2(-4, 7)); break;
+			case WEAPON_GUN: RenderHand(&RenderInfo, p, Direction, -3*pi/4, vec2(-15, 4), Opacity); break;
+			case WEAPON_SHOTGUN: RenderHand(&RenderInfo, p, Direction, -pi/2, vec2(-5, 4), Opacity); break;
+			case WEAPON_GRENADE: RenderHand(&RenderInfo, p, Direction, -pi/2, vec2(-4, 7), Opacity); break;
 		}
 
 	}
@@ -516,14 +526,14 @@ void CPlayers::RenderPlayer(
 		}
 	}
 
-	RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, Position);
+	RenderTools()->RenderTee(&State, &RenderInfo, Player.m_Emote, Direction, Position, Opacity);
 
 	// draw ice block
 	if(m_aFreezeFadeState[ClientID] > 0.0f)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_FREEZE].m_Id);
 		Graphics()->QuadsBegin();
-		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.8f * m_aFreezeFadeState[ClientID]);
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.8f * m_aFreezeFadeState[ClientID] * Opacity);
 
 		RenderTools()->SelectSprite(SPRITE_FROZEN);
 		RenderTools()->DrawSprite(Position.x, Position.y - 5, 72.0f);
@@ -534,6 +544,7 @@ void CPlayers::RenderPlayer(
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
 		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, Opacity);
 		RenderTools()->SelectSprite(SPRITE_DOTDOT);
 		IGraphics::CQuadItem QuadItem(Position.x + 24, Position.y - 40, 64,64);
 		Graphics()->QuadsDraw(&QuadItem, 1);
@@ -544,6 +555,7 @@ void CPlayers::RenderPlayer(
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
 		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, Opacity);
 
 		int SinceStart = Client()->GameTick() - m_pClient->m_aClients[ClientID].m_EmoticonStart;
 		int FromEnd = m_pClient->m_aClients[ClientID].m_EmoticonStart + 2 * Client()->GameTickSpeed() - Client()->GameTick();

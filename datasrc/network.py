@@ -81,6 +81,8 @@ Objects = [
 
 	NetObject("SwitchStates", [
 		NetArray(NetIntAny("m_aStates"), 8),
+
+		NetBool("m_LocalWorld"),
 	]),
 
 	NetObject("Projectile", [
@@ -91,6 +93,8 @@ Objects = [
 
 		NetIntRange("m_Type", 0, 'NUM_WEAPONS-1'),
 		NetTick("m_StartTick"),
+
+		NetBool("m_LocalWorld"),
 	]),
 
 	NetObject("Laser", [
@@ -100,6 +104,8 @@ Objects = [
 		NetIntAny("m_FromY"),
 
 		NetTick("m_StartTick"),
+
+		NetBool("m_LocalWorld"),
 	]),
 
 	NetObject("Pickup", [
@@ -107,13 +113,17 @@ Objects = [
 		NetIntAny("m_Y"),
 
 		NetEnum("m_Type", Pickups),
+
+		NetBool("m_LocalWorld"),
 	]),
 
 	NetObject("Flag", [
 		NetIntAny("m_X"),
 		NetIntAny("m_Y"),
 
-		NetIntRange("m_Team", 'TEAM_RED', 'TEAM_BLUE')
+		NetIntRange("m_Team", 'TEAM_RED', 'TEAM_BLUE'),
+
+		NetBool("m_LocalWorld"),
 	]),
 
 	NetObject("GameData", [
@@ -164,6 +174,8 @@ Objects = [
 		NetEnum("m_Emote", Emotes),
 		NetTick("m_AttackTick"),
 		NetFlag("m_TriggeredEvents", CoreEventFlags),
+
+		NetBool("m_LocalWorld"),
 	]),
 
 	NetObject("PlayerInfo", [

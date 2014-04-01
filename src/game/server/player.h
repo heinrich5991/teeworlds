@@ -32,7 +32,7 @@ public:
 	bool IsDummy() const { return m_Dummy; }
 
 	void SetDDRTeam(int Team);
-	int GetDDRTeam() const { return m_DDRTeam; }
+	int DDRTeam() const { return m_DDRTeam; }
 
 	void Tick();
 	void PostTick();

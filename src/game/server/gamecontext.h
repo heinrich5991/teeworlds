@@ -90,6 +90,7 @@ public:
 
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientID);
+	int GetPlayerDDRTeam(int ClientID);
 
 	int m_LockTeams;
 

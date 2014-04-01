@@ -150,6 +150,7 @@ public:
 		struct CCharacterInfo
 		{
 			bool m_Active;
+			bool m_LocalWorld;
 
 			// snapshots
 			CNetObj_Character m_Prev;

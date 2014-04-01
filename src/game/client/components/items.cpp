@@ -21,6 +21,13 @@ void CItems::OnReset()
 
 void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
+	if(pCurrent->m_Type == WEAPON_SHOTGUN && !pCurrent->m_LocalWorld)
+		return;
+
+	float Opacity = 0.3f;
+	if(pCurrent->m_LocalWorld)
+		Opacity = 1.0f;
+
 	// get positions
 	float Curvature = 0;
 	float Speed = 0;
@@ -55,6 +62,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f,1.0f, Opacity);
 
 	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Type, 0, NUM_WEAPONS-1)].m_pSpriteProj);
 	vec2 Vel = Pos-PrevPos;
@@ -102,8 +110,13 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 
 void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCurrent)
 {
+	float Opacity = 0.3f;
+	if(pCurrent->m_LocalWorld)
+		Opacity = 1.0f;
+
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f,1.0f, Opacity);
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
 	float Angle = 0.0f;
 	float Size = 64.0f;
@@ -163,9 +176,14 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 	float Angle = 0.0f;
 	float Size = 42.0f;
 
+	float Opacity = 0.3f;
+	if(pCurrent->m_LocalWorld)
+		Opacity = 1.0f;
+
 	Graphics()->BlendNormal();
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f,1.0f, Opacity);
 
 	if(pCurrent->m_Team == TEAM_RED)
 		RenderTools()->SelectSprite(SPRITE_FLAG_RED);
@@ -203,6 +221,10 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 	vec2 From = vec2(pCurrent->m_FromX, pCurrent->m_FromY);
 	vec2 Dir = normalize(Pos-From);
 
+	float Opacity = 0.3f;
+	if(pCurrent->m_LocalWorld)
+		Opacity = 1.0f;
+	
 	float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
 	float Ms = (Ticks/50.0f) * 1000.0f;
 	float a = Ms / m_pClient->m_Tuning.m_LaserBounceDelay;
@@ -220,7 +242,7 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 
 	// do outline
 	vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
-	Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
+	Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, Opacity);
 	Out = vec2(Dir.y, -Dir.x) * (7.0f*Ia);
 
 	IGraphics::CFreeformItem Freeform(
@@ -233,7 +255,7 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 	// do inner
 	vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
 	Out = vec2(Dir.y, -Dir.x) * (5.0f*Ia);
-	Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f); // center
+	Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, Opacity); // center
 
 	Freeform = IGraphics::CFreeformItem(
 			From.x-Out.x, From.y-Out.y,
@@ -253,10 +275,10 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 		int Sprites[] = {SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03};
 		RenderTools()->SelectSprite(Sprites[Client()->GameTick()%3]);
 		Graphics()->QuadsSetRotation(Client()->GameTick());
-		Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
+		Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, Opacity);
 		IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 24, 24);
 		Graphics()->QuadsDraw(&QuadItem, 1);
-		Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f);
+		Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, Opacity);
 		QuadItem = IGraphics::CQuadItem(Pos.x, Pos.y, 20, 20);
 		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();

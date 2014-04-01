@@ -3,7 +3,9 @@
 #include "player.h"
 
 CTeamsCore::CTeamsCore()
-{	
+{
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		m_aTeams[i].m_TeamWorld.SetDDRTeam(i);
 }
 
 void CTeamsCore::Tick()
@@ -31,7 +33,8 @@ void CTeamsCore::SetGameServer(CGameContext *pGameServer)
 
 void CTeamsCore::Snap(int SnappingClient)
 {
-	m_aTeams[m_pGameServer->m_apPlayers[SnappingClient]->GetDDRTeam()].m_TeamWorld.Snap(SnappingClient);
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		m_aTeams[i].m_TeamWorld.Snap(SnappingClient);
 }
 
 void CTeamsCore::PostSnap()

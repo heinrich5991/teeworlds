@@ -18,7 +18,6 @@ CGameWorld::CGameWorld()
 
 	m_Paused = false;
 	m_ResetRequested = false;
-	m_Team = 0;
 	for(int i = 0; i < NUM_ENTTYPES; i++)
 		m_apFirstEntityTypes[i] = 0;
 }
@@ -37,9 +36,14 @@ void CGameWorld::SetGameServer(CGameContext *pGameServer)
 	m_pServer = m_pGameServer->Server();
 }
 
-void CGameWorld::SetTeam(int Team)
+void CGameWorld::SetDDRTeam(int DDRTeam)
 {
-	m_Team = Team;
+	m_DDRTeam = DDRTeam;
+}
+
+int CGameWorld::DDRTeam()
+{
+	return m_DDRTeam;
 }
 
 CEntity *CGameWorld::FindFirst(int Type)
@@ -159,7 +163,7 @@ void CGameWorld::Reset()
 		}
 	RemoveEntities();
 
-	GameServer()->m_pController->OnReset(m_Team);
+	GameServer()->m_pController->OnReset(m_DDRTeam);
 	RemoveEntities();
 
 	m_ResetRequested = false;

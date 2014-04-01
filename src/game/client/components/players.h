@@ -11,7 +11,7 @@ class CPlayers : public CComponent
 	int m_aFreezeFadeTick[MAX_CLIENTS];
 	float m_aFreezeFadeIntraTick[MAX_CLIENTS];
 
-	void RenderHand(class CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset);
+	void RenderHand(class CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset, float Opacity = 1.0f);
 	void RenderPlayer(
 		const CNetObj_Character *pPrevChar,
 		const CNetObj_Character *pPlayerChar,

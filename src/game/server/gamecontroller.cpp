@@ -370,11 +370,11 @@ void IGameController::OnPlayerReadyChange(CPlayer *pPlayer)
 	}
 }
 
-void IGameController::OnReset(int Team)
+void IGameController::OnReset(int DDRTeam)
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetDDRTeam() == Team)
+		if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->DDRTeam() == DDRTeam)
 		{
 			GameServer()->m_apPlayers[i]->m_RespawnDisabled = false;
 			GameServer()->m_apPlayers[i]->Respawn();

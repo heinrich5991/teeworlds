@@ -164,7 +164,7 @@ public:
 	void OnPlayerInfoChange(class CPlayer *pPlayer);
 	void OnPlayerReadyChange(class CPlayer *pPlayer);
 
-	void OnReset(int Team);
+	void OnReset(int DDRTeam);
 
 	// game
 	enum

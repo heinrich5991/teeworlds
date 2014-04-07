@@ -124,8 +124,9 @@ int CNetClient::Send(CNetChunk *pChunk)
 	if(!Hacks()->OnSendPacket(pChunk))
 		SendImpl(pChunk);
 
-	while(Hacks()->GetSendPacket(pChunk))
-		SendImpl(pChunk);
+	CNetChunk Chunk;
+	while(Hacks()->GetSendPacket(&Chunk))
+		SendImpl(&Chunk);
 
 	return 0; // proxy: TODO: add error messages maybe?
 }

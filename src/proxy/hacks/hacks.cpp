@@ -171,12 +171,19 @@ int CHacks::GetPacket(CNetChunk *pPacket, int Origin)
 	dbg_assert(!m_aCBData[Origin].m_Active, "must be inactive at that time");
 
 	if(m_aCBData[Origin].m_NumPackets == 0)
+	{
+		// connlesshack begin
+		// reset the connless addr proxy if all packets have been read
+		m_pConnlessAddrProxy = 0;
+		// connlesshack end
 		return 0;
+	}
 
 	*pPacket = m_aCBData[Origin].m_aPackets[m_aCBData[Origin].m_Offset];
 	m_aCBData[Origin].m_Offset++;
 	m_aCBData[Origin].m_NumPackets--;
 
+	// connlesshack begin
 	if(Origin == ORIGIN_PEER)
 	{
 		if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
@@ -187,6 +194,7 @@ int CHacks::GetPacket(CNetChunk *pPacket, int Origin)
 		else
 			m_pConnlessAddrProxy = 0;
 	}
+	// connlesshack end
 
 	return 1;
 }

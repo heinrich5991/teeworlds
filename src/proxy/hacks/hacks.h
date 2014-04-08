@@ -3,6 +3,7 @@
 #include <engine/shared/network.h>
 #include <engine/shared/packer.h>
 #include <engine/shared/protocol.h>
+#include <engine/shared/ringbuffer.h>
 #include <engine/shared/snapshot.h>
 
 #include <game/generated/protocol.h>
@@ -112,11 +113,12 @@ protected:
 
 	struct CRecvData
 	{
-		CNetChunk m_aPackets[MAX_PACKETS_PER_PACKET];
-		CPacker m_aPacketData[MAX_PACKETS_PER_PACKET];
-		int m_NumPackets;
-		int m_Offset;
+		CNetChunk m_Packet;
+		CPacker m_PacketData;
 	};
+	CPacker m_GetRecvPacketData;
+
+	TStaticRingBuffer<CRecvData, MAX_PACKETS_PER_PACKET*sizeof(CRecvData)> m_RecvBuffer;
 
 	CRecvData m_RecvData;
 

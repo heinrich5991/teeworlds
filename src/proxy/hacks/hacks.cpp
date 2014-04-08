@@ -8,7 +8,6 @@ CHacks::CHacks()
 	mem_zero(m_apConnlessProxies, sizeof(m_apConnlessProxies));
 	mem_zero(m_apSnapshotHandlers, sizeof(m_apSnapshotHandlers));
 	mem_zero(m_aPeers, sizeof(m_aPeers));
-	mem_zero(&m_RecvData, sizeof(m_RecvData));
 	mem_zero(&m_ConnlessAddr, sizeof(m_ConnlessAddr));
 
 	m_pfnSendFunction = 0;
@@ -66,16 +65,13 @@ void CHacks::TranslatePacketSendCBImpl(CNetChunk *pPacket)
 
 void CHacks::TranslatePacketRecvCBImpl(CNetChunk *pPacket)
 {
-	dbg_assert(m_RecvData.m_Offset == 0, "packet read in progress, can't add new ones");
-	dbg_assert(m_RecvData.m_NumPackets < MAX_PACKETS_PER_PACKET, "too many packets per packet");
+	CRecvData *pRecvData = m_RecvBuffer.Allocate(sizeof(*pRecvData));
+	dbg_assert((bool)pRecvData, "too many packets per packet"); // proxy: TODO: check before release
 
-	int NumPackets = m_RecvData.m_NumPackets;
-
-	m_RecvData.m_aPacketData[NumPackets].Reset();
-	m_RecvData.m_aPacketData[NumPackets].AddRaw(pPacket->m_pData, pPacket->m_DataSize);
-	m_RecvData.m_aPackets[NumPackets] = *pPacket;
-	m_RecvData.m_aPackets[NumPackets].m_pData = m_RecvData.m_aPacketData[NumPackets].Data();
-	m_RecvData.m_NumPackets++;
+	pRecvData->m_PacketData.Reset();
+	pRecvData->m_PacketData.AddRaw(pPacket->m_pData, pPacket->m_DataSize);
+	pRecvData->m_Packet = *pPacket;
+	pRecvData->m_Packet.m_pData = pRecvData->m_PacketData.Data();
 }
 
 int CHacks::OnPacket(CNetChunk *pPacket, int Origin)
@@ -176,11 +172,9 @@ void CHacks::SetSendFunction(HACKS_SEND_FUNC pfnSendFunction, void *pUserdata)
 
 int CHacks::GetRecvPacket(CNetChunk *pPacket)
 {
-	if(m_RecvData.m_NumPackets == 0)
+	CRecvData *pRecvData = m_RecvBuffer.First();
+	if(!pRecvData)
 	{
-		// reset the offset to signal that new packets may be added
-		m_RecvData.m_Offset = 0;
-
 		// connlesshack begin
 		// reset the connless addr proxy if all packets have been read
 		m_pConnlessAddrProxy = 0;
@@ -188,9 +182,14 @@ int CHacks::GetRecvPacket(CNetChunk *pPacket)
 		return 0;
 	}
 
-	*pPacket = m_RecvData.m_aPackets[m_RecvData.m_Offset];
-	m_RecvData.m_Offset++;
-	m_RecvData.m_NumPackets--;
+	m_GetRecvPacketData.Reset();
+	m_GetRecvPacketData.AddRaw(pRecvData->m_Packet.m_pData, pRecvData->m_Packet.m_DataSize);
+
+	*pPacket = pRecvData->m_Packet;
+	pPacket->m_pData = m_GetRecvPacketData.Data();
+
+	m_RecvBuffer.PopFirst();
+	pRecvData = 0;
 
 	// connlesshack begin
 	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)

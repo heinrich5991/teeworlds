@@ -140,6 +140,21 @@ void CProxy_Client06_Server05::TranslateClientPacket(CNetChunk *pPacket, CProxyC
 			for(int i = 0; i < Size / 4; i++)
 				Packer.AddInt(aInputBuf[i]);
 		}
+		else if(Msg == Protocol6::NETMSG_READY)
+		{
+			Packer.AddRaw(&Unpacker);
+			CNetChunk Packet = *pPacket;
+			Packet.m_DataSize = Packer.Size();
+			Packet.m_pData = Packer.Data();
+			PROXY_CLIENT_PACKET(&Packet);
+
+			Packer.Reset();
+			Packer.AddInt(Protocol6::NETMSG_CON_READY << 1 | 1);
+			Packet.m_DataSize = Packer.Size();
+			Packet.m_pData = Packer.Data();
+			PROXY_SERVER_PACKET(&Packet);
+			return;
+		}
 	}
 	else
 	{
@@ -371,24 +386,10 @@ void CProxy_Client06_Server05::TranslateServerPacket(CNetChunk *pPacket, CProxyC
 
 		if(Msg == Protocol5::NETMSG_MAP_CHANGE)
 		{
-			CNetChunk Packet = *pPacket;
-
 			Packer.AddString(Unpacker.GetString(), 0);           // map name
 			Packer.AddInt(m_MapDownloadCrc = Unpacker.GetInt()); // map crc
 			Packer.AddInt(1); // proxy: TODO: fix me             // map size
 			m_MapDownloadNum = 0;
-
-			Packet.m_DataSize = Packer.Size();
-			Packet.m_pData = Packer.Data();
-			PROXY_SERVER_PACKET(&Packet);
-
-			Packer.Reset();
-			Packer.AddInt(Protocol6::NETMSG_CON_READY << 1 | 1);
-
-			Packet.m_DataSize = Packer.Size();
-			Packet.m_pData = Packer.Data();
-			PROXY_SERVER_PACKET(&Packet);
-			return;
 		}
 		else if(Msg == Protocol5::NETMSG_MAP_DATA)
 		{

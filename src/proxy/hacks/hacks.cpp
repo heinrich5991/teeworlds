@@ -5,17 +5,48 @@
 
 CHacks::CHacks()
 {
+	mem_zero(m_apConnlessProxies, sizeof(m_apConnlessProxies));
+	mem_zero(m_apSnapshotHandlers, sizeof(m_apSnapshotHandlers));
 	mem_zero(m_aPeers, sizeof(m_aPeers));
-	mem_zero(m_aCBData, sizeof(m_aCBData));
+	mem_zero(&m_RecvData, sizeof(m_RecvData));
 	mem_zero(&m_ConnlessAddr, sizeof(m_ConnlessAddr));
-	m_pConnlessAddrProxy = 0;
-	m_CBOrigin = -1;
 
+	m_pfnSendFunction = 0;
+	m_pSendFunctionUserdata = 0;
+	m_pConnlessAddrProxy = 0;
+
+	for(int i = 0; i < NUM_VERSIONS; i++)
+		m_apSnapshotHandlers[i] = CreateSnapshotHandler(i);
+
+	CNetObjHandler NetObjHandler;
+	for(int i = 0; i < NUM_NETOBJTYPES; i++)
+		m_SnapshotDelta.SetStaticsize(i, NetObjHandler.GetObjSize(i));
 }
 
 CHacks::~CHacks()
 {
-	mem_zero(m_apConnlessProxies, sizeof(m_apConnlessProxies));
+	for(int i = 0; i < NUM_VERSIONS; i++)
+	{
+		if(m_apConnlessProxies[i])
+			delete m_apConnlessProxies[i];
+		m_apConnlessProxies[i] = 0;
+	}
+	for(int i = 0; i < NUM_VERSIONS; i++)
+	{
+		if(m_apSnapshotHandlers[i])
+			delete m_apSnapshotHandlers[i];
+		m_apSnapshotHandlers[i] = 0;
+	}
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(m_aPeers[i].m_pProxy)
+			delete m_aPeers[i].m_pProxy;
+		m_aPeers[i].m_pProxy = 0;
+		// don't delete the snapshot handler,
+		// the peer doesn't own it
+		m_aPeers[i].m_pSnapshotHandler = 0;
+	}
+
 	mem_zero(m_aPeers, sizeof(m_aPeers));
 	m_pConnlessAddrProxy = 0;
 }
@@ -26,45 +57,25 @@ void CHacks::Init()
 	// would otherwise result in a pure virtual call GetVersion()
 	for(int i = 0; i < NUM_VERSIONS; i++)
 		m_apConnlessProxies[i] = CreateProxy(i);
-
-	CNetObjHandler NetObjHandler;
-	for(int i = 0; i < NUM_NETOBJTYPES; i++)
-		m_SnapshotDelta.SetStaticsize(i, NetObjHandler.GetObjSize(i));
 }
 
-void CHacks::InitCBData(int Origin, int PeerID)
+void CHacks::TranslatePacketSendCBImpl(CNetChunk *pPacket)
 {
-	dbg_assert(0 <= Origin && Origin < NUM_ORIGINS, "invalid origin");
-	dbg_assert(!m_aCBData[Origin].m_Active, "must not be active at that time");
-	dbg_assert(m_aCBData[Origin].m_NumPackets == 0, "cannot init, not empty");
-
-	//mem_zero(m_aCBData[Origin], sizeof(m_aCBData[Origin]));
-	m_aCBData[Origin].m_PeerID = PeerID;
-	m_aCBData[Origin].m_Offset = 0;
-	m_aCBData[Origin].m_Active = true;
-
-	m_CBOrigin = Origin;
+	m_pfnSendFunction(pPacket, m_pSendFunctionUserdata);
 }
 
-void CHacks::FinalizeCBData(int Origin)
+void CHacks::TranslatePacketRecvCBImpl(CNetChunk *pPacket)
 {
-	dbg_assert(m_aCBData[Origin].m_Active, "must be active at that time");
-	m_aCBData[Origin].m_Active = false;
-}
+	dbg_assert(m_RecvData.m_Offset == 0, "packet read in progress, can't add new ones");
+	dbg_assert(m_RecvData.m_NumPackets < MAX_PACKETS_PER_PACKET, "too many packets per packet");
 
-void CHacks::TranslatePacketCBImpl(CNetChunk *pPacket)
-{
-	dbg_assert(m_aCBData[m_CBOrigin].m_Active, "must be active at that time");
-	dbg_assert(m_aCBData[m_CBOrigin].m_NumPackets < MAX_PACKETS_PER_PACKET, "too many packets per packet");
+	int NumPackets = m_RecvData.m_NumPackets;
 
-	CCBData *pCBData = &m_aCBData[m_CBOrigin];
-	int NumPackets = pCBData->m_NumPackets;
-
-	pCBData->m_aPacketData[NumPackets].Reset();
-	pCBData->m_aPacketData[NumPackets].AddRaw(pPacket->m_pData, pPacket->m_DataSize);
-	pCBData->m_aPackets[NumPackets] = *pPacket;
-	pCBData->m_aPackets[NumPackets].m_pData = pCBData->m_aPacketData[NumPackets].Data();
-	pCBData->m_NumPackets++;
+	m_RecvData.m_aPacketData[NumPackets].Reset();
+	m_RecvData.m_aPacketData[NumPackets].AddRaw(pPacket->m_pData, pPacket->m_DataSize);
+	m_RecvData.m_aPackets[NumPackets] = *pPacket;
+	m_RecvData.m_aPackets[NumPackets].m_pData = m_RecvData.m_aPacketData[NumPackets].Data();
+	m_RecvData.m_NumPackets++;
 }
 
 int CHacks::OnPacket(CNetChunk *pPacket, int Origin)
@@ -80,9 +91,7 @@ int CHacks::OnPacket(CNetChunk *pPacket, int Origin)
 			int Version = GetConnlessVersion(pPacket);
 			if(m_apConnlessProxies[Version])
 			{
-				InitCBData(Origin, PeerID);
-				m_apConnlessProxies[Version]->TranslatePacket(pPacket, GetRole(Origin));
-				FinalizeCBData(Origin);
+				TranslatePacket(m_apConnlessProxies[Version], pPacket, Origin);
 				return 1;
 			}
 			else
@@ -97,9 +106,7 @@ int CHacks::OnPacket(CNetChunk *pPacket, int Origin)
 				if(m_aPeers[PeerID].m_pProxy
 					&& net_addr_comp(&m_aPeers[PeerID].m_Addr, &pPacket->m_Address) == 0)
 				{
-					InitCBData(Origin, PeerID);
-					m_aPeers[PeerID].m_pProxy->TranslatePacket(pPacket, GetRole(Origin));
-					FinalizeCBData(Origin);
+					TranslatePacket(m_aPeers[PeerID].m_pProxy, pPacket, Origin);
 					return 1;
 				}
 			}
@@ -109,9 +116,7 @@ int CHacks::OnPacket(CNetChunk *pPacket, int Origin)
 		if(Origin == ORIGIN_OWN && m_pConnlessAddrProxy
 			&& net_addr_comp(&pPacket->m_Address, &m_ConnlessAddr) == 0)
 		{
-			InitCBData(Origin, PeerID);
-			m_pConnlessAddrProxy->TranslatePacket(pPacket, GetRole(Origin)); // proxy: TODO: fix this
-			FinalizeCBData(Origin);
+			TranslatePacket(m_pConnlessAddrProxy, pPacket, Origin); // proxy: TODO: fix this
 			return 1;
 		}
 		// connlesshack end
@@ -122,9 +127,7 @@ int CHacks::OnPacket(CNetChunk *pPacket, int Origin)
 	dbg_assert(0 <= PeerID && PeerID < MAX_CLIENTS, "pid out of range");
 	if(m_aPeers[PeerID].m_pProxy)
 	{
-		InitCBData(Origin, PeerID);
-		m_aPeers[PeerID].m_pProxy->TranslatePacket(pPacket, GetRole(Origin));
-		FinalizeCBData(Origin);
+		TranslatePacket(m_aPeers[PeerID].m_pProxy, pPacket, Origin);
 		return 1;
 	}
 
@@ -165,13 +168,19 @@ int CHacks::GetConnlessVersion(CNetChunk *pPacket)
 	return VERSION_06;
 }
 
-
-int CHacks::GetPacket(CNetChunk *pPacket, int Origin)
+void CHacks::SetSendFunction(HACKS_SEND_FUNC pfnSendFunction, void *pUserdata)
 {
-	dbg_assert(!m_aCBData[Origin].m_Active, "must be inactive at that time");
+	m_pfnSendFunction = pfnSendFunction;
+	m_pSendFunctionUserdata = pUserdata;
+}
 
-	if(m_aCBData[Origin].m_NumPackets == 0)
+int CHacks::GetRecvPacket(CNetChunk *pPacket)
+{
+	if(m_RecvData.m_NumPackets == 0)
 	{
+		// reset the offset to signal that new packets may be added
+		m_RecvData.m_Offset = 0;
+
 		// connlesshack begin
 		// reset the connless addr proxy if all packets have been read
 		m_pConnlessAddrProxy = 0;
@@ -179,21 +188,18 @@ int CHacks::GetPacket(CNetChunk *pPacket, int Origin)
 		return 0;
 	}
 
-	*pPacket = m_aCBData[Origin].m_aPackets[m_aCBData[Origin].m_Offset];
-	m_aCBData[Origin].m_Offset++;
-	m_aCBData[Origin].m_NumPackets--;
+	*pPacket = m_RecvData.m_aPackets[m_RecvData.m_Offset];
+	m_RecvData.m_Offset++;
+	m_RecvData.m_NumPackets--;
 
 	// connlesshack begin
-	if(Origin == ORIGIN_PEER)
+	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
 	{
-		if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
-		{
-			m_ConnlessAddr = pPacket->m_Address;
-			m_pConnlessAddrProxy = m_apConnlessProxies[VERSION_05];
-		}
-		else
-			m_pConnlessAddrProxy = 0;
+		m_ConnlessAddr = pPacket->m_Address;
+		m_pConnlessAddrProxy = m_apConnlessProxies[VERSION_05];
 	}
+	else
+		m_pConnlessAddrProxy = 0;
 	// connlesshack end
 
 	return 1;
@@ -207,10 +213,12 @@ void CHacks::SetProxy(int PeerID, int Version)
 	if(Version == GetVersion())
 	{
 		m_aPeers[PeerID].m_pProxy = 0;
+		m_aPeers[PeerID].m_pSnapshotHandler = 0;
 		return;
 	}
 
 	m_aPeers[PeerID].m_pProxy = CreateProxy(Version);
+	m_aPeers[PeerID].m_pSnapshotHandler = m_apSnapshotHandlers[Version];
 	m_aPeers[PeerID].m_Addr = *GetPeerAddress(PeerID);
 
 	dbg_msg("proxy", "version detected pid=%d ver=%s", PeerID, GetVersionString(Version));
@@ -226,10 +234,50 @@ IProxy *CHacks::CreateProxy(int PeerVersion)
 
 	int OwnRole = GetRole(ORIGIN_OWN);
 	if(OwnRole == ROLE_SERVER)
-		return ::CreateProxy(GetVersion(), PeerVersion, this, TranslatePacketCB, this);
+		return ::CreateProxy(GetVersion(), PeerVersion);
 	if(OwnRole == ROLE_CLIENT)
-		return ::CreateProxy(PeerVersion, GetVersion(), this, TranslatePacketCB, this);
+		return ::CreateProxy(PeerVersion, GetVersion());
+
+	dbg_assert(false, "unreachable");
 	return 0;
+}
+
+void CHacks::InitCBData(CProxyCB *pClientCB, CProxyCB *pServerCB)
+{
+	CProxyCB SendCB;
+	CProxyCB RecvCB;
+
+	SendCB.m_pfnCallback = TranslatePacketSendCB;
+	SendCB.m_pUserdata = this;
+	RecvCB.m_pfnCallback = TranslatePacketRecvCB;
+	RecvCB.m_pUserdata = this;
+
+	if(GetRole(ORIGIN_OWN) == ROLE_CLIENT)
+	{
+		// if we're the client, origin client means send,
+		// origin server means recv
+		*pClientCB = SendCB;
+		*pServerCB = RecvCB;
+	}
+	else
+	{
+		// vice versa for the server
+		*pClientCB = RecvCB;
+		*pServerCB = SendCB;
+	}
+}
+
+void CHacks::TranslatePacket(IProxy *pProxy, CNetChunk *pPacket, int Origin)
+{
+	dbg_assert((bool)pProxy, "invalid proxy");
+
+	CProxyCB ClientCB;
+	CProxyCB ServerCB;
+	InitCBData(&ClientCB, &ServerCB);
+	if(GetRole(Origin) == ROLE_CLIENT)
+		pProxy->TranslateClientPacket(pPacket, ClientCB, ServerCB);
+	else
+		pProxy->TranslateServerPacket(pPacket, ClientCB, ServerCB);
 }
 
 const char *CHacks::GetVersionString(int Version)
@@ -265,22 +313,25 @@ int CHacks::OnDisconnect(int PeerID)
 
 int CHacks::CreateDeltaServer(int PeerID, CSnapshot *pFrom, CSnapshot *pTo, void *pDelta)
 {
-	if(m_aPeers[PeerID].m_pProxy)
-		return m_aPeers[PeerID].m_pProxy->CreateDeltaServer(pFrom, pTo, pDelta);
+	dbg_assert(GetRole(ORIGIN_OWN) == ROLE_SERVER, "create_delta_server called in client");
+	if(m_aPeers[PeerID].m_pSnapshotHandler)
+		return m_aPeers[PeerID].m_pSnapshotHandler->CreateDelta(pFrom, pTo, pDelta);
 	return m_SnapshotDelta.CreateDelta(pFrom, pTo, pDelta);
 }
 
 int CHacks::UnpackDeltaClient(int PeerID, CSnapshot *pFrom, CSnapshot *pTo, void *pDelta, int DeltaSize)
 {
-	if(m_aPeers[PeerID].m_pProxy)
-		return m_aPeers[PeerID].m_pProxy->UnpackDeltaClient(pFrom, pTo, pDelta, DeltaSize);
+	dbg_assert(GetRole(ORIGIN_OWN) == ROLE_CLIENT, "unpack_delta_client called in server");
+	if(m_aPeers[PeerID].m_pSnapshotHandler)
+		return m_aPeers[PeerID].m_pSnapshotHandler->UnpackDelta(pFrom, pTo, pDelta, DeltaSize);
 	return m_SnapshotDelta.UnpackDelta(pFrom, pTo, pDelta, DeltaSize);
 }
 
 void *CHacks::EmptyDeltaClient(int PeerID)
 {
-	if(m_aPeers[PeerID].m_pProxy)
-		return m_aPeers[PeerID].m_pProxy->EmptyDeltaClient();
+	dbg_assert(GetRole(ORIGIN_OWN) == ROLE_CLIENT, "unpack_delta_client called in server");
+	if(m_aPeers[PeerID].m_pSnapshotHandler)
+		return m_aPeers[PeerID].m_pSnapshotHandler->EmptyDelta();
 	return m_SnapshotDelta.EmptyDelta();
 }
 

@@ -28,6 +28,18 @@
 #define MACRO_LIST_FIND(Start, Next, Expression) \
 	{ while(Start && !(Expression)) Start = Start->Next; }
 
+
+void CNetServer::HacksSendFunction(CNetChunk *pPacket, void *pUserdata)
+{
+	((CNetServer *)pUserdata)->SendImpl(pPacket);
+}
+
+void CNetServer::SetHacks(IHacks *pHacks)
+{
+	m_pHacks = pHacks;
+	Hacks()->SetSendFunction(HacksSendFunction, this);
+}
+
 bool CNetServer::Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int Flags)
 {
 	// zero out the whole structure
@@ -448,10 +460,6 @@ int CNetServer::Send(CNetChunk *pChunk)
 
 	if(!Hacks()->OnSendPacket(pChunk))
 		SendImpl(pChunk);
-
-	CNetChunk Chunk;
-	while(Hacks()->GetSendPacket(&Chunk))
-		SendImpl(&Chunk);
 
 	return 0; // proxy: TODO: add error messages maybe?
 }

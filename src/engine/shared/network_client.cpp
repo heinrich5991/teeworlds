@@ -5,6 +5,17 @@
 
 #include <proxy/hacks.h>
 
+void CNetClient::HacksSendFunction(CNetChunk *pPacket, void *pUserdata)
+{
+	((CNetClient *)pUserdata)->SendImpl(pPacket);
+}
+
+void CNetClient::SetHacks(IHacks *pHacks)
+{
+	m_pHacks = pHacks;
+	Hacks()->SetSendFunction(HacksSendFunction, this);
+}
+
 bool CNetClient::Open(NETADDR BindAddr, int Flags)
 {
 	// open socket
@@ -123,10 +134,6 @@ int CNetClient::Send(CNetChunk *pChunk)
 
 	if(!Hacks()->OnSendPacket(pChunk))
 		SendImpl(pChunk);
-
-	CNetChunk Chunk;
-	while(Hacks()->GetSendPacket(&Chunk))
-		SendImpl(&Chunk);
 
 	return 0; // proxy: TODO: add error messages maybe?
 }

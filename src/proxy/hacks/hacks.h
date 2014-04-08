@@ -8,8 +8,9 @@
 #include <game/generated/protocol.h>
 
 #include <proxy/proxy/proxy.h>
+#include <proxy/proxy/snapshot_handler.h>
 
-#include "../hacks.h"
+#include <proxy/hacks.h>
 
 static const unsigned char HACKS_MAGIC[] = { 0x40, 0x49, 0x0f, 0xdb };
 
@@ -27,6 +28,10 @@ protected:
 		ORIGIN_OWN=0,
 		ORIGIN_PEER,
 		NUM_ORIGINS,
+
+		ROLE_CLIENT=0,
+		ROLE_SERVER,
+		NUM_ROLES,
 	};
 
 public:
@@ -34,8 +39,10 @@ public:
 	virtual ~CHacks();
 
 	virtual void Init() = 0;
-	virtual int GetSendPacket(CNetChunk *pPacket) { return GetPacket(pPacket, ORIGIN_OWN); }
-	virtual int GetRecvPacket(CNetChunk *pPacket) { return GetPacket(pPacket, ORIGIN_PEER); }
+
+	virtual void SetSendFunction(HACKS_SEND_FUNC pfnSendFunction, void *pUserdata);
+	virtual int GetRecvPacket(CNetChunk *pPacket);
+
 	virtual int OnSendPacket(CNetChunk *pPacket) { return OnPacket(pPacket, ORIGIN_OWN); }
 	virtual int OnRecvPacket(CNetChunk *pPacket) { return OnPacket(pPacket, ORIGIN_PEER); }
 
@@ -49,19 +56,25 @@ public:
 	virtual void PostSnapshotStorageAddClient(int PeerID, CSnapshotStorage *pStorage, CSnapshot *pAltSnap, int AltSize);
 	virtual bool OverrideStandardMapCheckClient(int PeerID);
 
-	virtual int GetPacket(CNetChunk *pPacket, int Origin);
 	virtual int OnPacket(CNetChunk *pPacket, int Origin);
 
-	virtual void TranslatePacketCBImpl(CNetChunk *pPacket);
-	static void TranslatePacketCB(CNetChunk *pPacket, void *pUserData)
+	virtual void TranslatePacketSendCBImpl(CNetChunk *pPacket);
+	static void TranslatePacketSendCB(CNetChunk *pPacket, void *pUserdata)
 	{
-		((CHacks *)pUserData)->TranslatePacketCBImpl(pPacket);
+		((CHacks *)pUserdata)->TranslatePacketSendCBImpl(pPacket);
 	}
 
-	virtual void InitCBData(int Origin, int PeerID);
-	virtual void FinalizeCBData(int Origin);
+	virtual void TranslatePacketRecvCBImpl(CNetChunk *pPacket);
+	static void TranslatePacketRecvCB(CNetChunk *pPacket, void *pUserdata)
+	{
+		((CHacks *)pUserdata)->TranslatePacketRecvCBImpl(pPacket);
+	}
 
+	// six helper functions
 	IProxy *CreateProxy(int PeerVersion);
+	void InitCBData(CProxyCB *ClientCB, CProxyCB *ServerCB);
+	void TranslatePacket(IProxy *pProxy, CNetChunk *pPacket, int Origin);
+
 	void SetProxy(int PeerID, int Version);
 	virtual int GetConnlessVersion(CNetChunk *pPacket);
 	const char *GetVersionString(int Version);
@@ -76,7 +89,12 @@ public:
 	virtual int GetVersion() const = 0;
 
 protected:
+	HACKS_SEND_FUNC m_pfnSendFunction;
+	void *m_pSendFunctionUserdata;
+
 	CSnapshotDelta m_SnapshotDelta;
+
+	ISnapshotHandler *m_apSnapshotHandlers[NUM_VERSIONS];
 
 	enum
 	{
@@ -87,22 +105,20 @@ protected:
 	{
 		NETADDR m_Addr;
 		IProxy *m_pProxy;
+		ISnapshotHandler *m_pSnapshotHandler;
 	};
 
 	CPeer m_aPeers[MAX_CLIENTS];
 
-	struct CCBData
+	struct CRecvData
 	{
-		bool m_Active;
-		int m_PeerID;
 		CNetChunk m_aPackets[MAX_PACKETS_PER_PACKET];
 		CPacker m_aPacketData[MAX_PACKETS_PER_PACKET];
 		int m_NumPackets;
 		int m_Offset;
 	};
 
-	CCBData m_aCBData[NUM_ORIGINS];
-	int m_CBOrigin;
+	CRecvData m_RecvData;
 
 	NETADDR m_ConnlessAddr;
 	IProxy *m_pConnlessAddrProxy;

@@ -1,0 +1,9 @@
+#ifndef PROXY_VERSIONS_H
+#define PROXY_VERSIONS_H
+enum
+{
+	VERSION_05=0,
+	VERSION_06,
+	NUM_VERSIONS,
+};
+#endif // PROXY_VERSIONS_H

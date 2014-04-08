@@ -4,6 +4,8 @@
 
 #include <engine/kernel.h>
 
+typedef void (*HACKS_SEND_FUNC)(CNetChunk *pPacket, void *pUserData);
+
 class CNetChunk;
 class CSnapshot;
 class CSnapshotStorage;
@@ -18,9 +20,9 @@ public:
 	// called on init
 	virtual void Init() = 0;
 
-	// called to check if more packets are to be sent
-	// returns nonzero if there is a packet
-	virtual int GetSendPacket(CNetChunk *pPacket) = 0;
+	// called to set the send function of the hacks instance
+	// it will be used whenever a packet is to be sent
+	virtual void SetSendFunction(HACKS_SEND_FUNC pfnSendFunction, void *pUserdata) = 0;
 
 	// called to check if more packets are to be received
 	// returns nonzero if there is a packet

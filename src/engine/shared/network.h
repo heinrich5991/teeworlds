@@ -300,7 +300,8 @@ private:
 	IHacks *m_pHacks;
 
 public:
-	void SetHacks(IHacks *pHacks) { m_pHacks = pHacks; }
+	static void HacksSendFunction(CNetChunk *pPacket, void *pUserdata);
+	void SetHacks(IHacks *pHacks);
 	IHacks *Hacks() { return m_pHacks; }
 
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
@@ -402,7 +403,8 @@ class CNetClient
 	IHacks *m_pHacks;
 
 public:
-	void SetHacks(IHacks *pHacks) { m_pHacks = pHacks; }
+	static void HacksSendFunction(CNetChunk *pPacket, void *pUserdata);
+	void SetHacks(IHacks *pHacks);
 	IHacks *Hacks() { return m_pHacks; }
 
 	// openness

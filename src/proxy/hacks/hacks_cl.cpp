@@ -108,12 +108,10 @@ int CHacksClient::OnPacket(CNetChunk *pPacket, int Origin)
 		// browserhack begin
 		if(IsConnlessServerbrowse(pPacket))
 		{
-			InitCBData(Origin, PeerID);
 			// send packets in all versions
 			for(int i = 0; i < NUM_VERSIONS; i++)
 				if(m_apConnlessProxies[i])
-					m_apConnlessProxies[i]->TranslatePacket(pPacket, GetRole(Origin));
-			FinalizeCBData(Origin);
+					TranslatePacket(m_apConnlessProxies[i], pPacket, Origin);
 			// return 0 to send the actual packet, other packets will be sent later
 			return 0;
 		}
@@ -133,7 +131,7 @@ const NETADDR *CHacksClient::GetPeerAddress(int PeerID)
 int CHacksClient::OnDisconnect(int PeerID)
 {
 	dbg_assert(0 <= PeerID && PeerID < 1, "invalid pid");
-	dbg_msg("dbg", "ondisconnect=%d proxy=%p state=%d", m_InDisconnect, m_aPeers[PeerID].m_pProxy, Client()->State());
+	dbg_msg("proxy", "ondisconnect=%d proxy=%p state=%d", m_InDisconnect, m_aPeers[PeerID].m_pProxy, Client()->State());
 
 	if(m_InDisconnect)
 		return 0;
@@ -147,7 +145,7 @@ int CHacksClient::OnDisconnect(int PeerID)
 	if(!pError)
 		return CHacks::OnDisconnect(PeerID);
 
-	dbg_msg("dbg", "error '%s'", pError);
+	dbg_msg("proxy", "error '%s'", pError);
 
 	int ErrLength = str_length(pError) + 1;
 	const char *pNetHash = 0;

@@ -2,5 +2,4 @@ Fix server browser to check for 0.5 and 0.6 changes
 Hook into the game to check for dead reckoning fixes
 Fix core dump on 'invalid standard map' (client-side)
 Enable caching of serverbrowse IPs
-Check why only 0.5 requests are sent after the first request
 Add client->server map downloading support

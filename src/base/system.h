@@ -181,6 +181,7 @@ int mem_check_imp();
 enum {
 	IOFLAG_READ = 1,
 	IOFLAG_WRITE = 2,
+	IOFLAG_CREATE = 3,
 	IOFLAG_RANDOM = 4,
 
 	IOSEEK_START = 0,
@@ -1002,6 +1003,20 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size);
 */
 void str_timestamp(char *buffer, int buffer_size);
 
+/*
+	Function: str_concat
+		Concatenate two strings.
+
+	Parameters:
+		prefix - Prefix string.
+		sufix - Sufix string.
+
+	Remarks:
+		- The strings are treated as zero-termineted strings.
+*/
+const char *str_concat(const char *prefix, const char *sufix);
+
+
 /* Group: Filesystem */
 
 /*
@@ -1292,6 +1307,20 @@ int str_utf8_encode(char *ptr, int chr);
 		- The string is treated as zero-terminated utf8 string.
 */
 int str_utf8_check(const char *str);
+
+/*
+	Function: server_init
+		Start server.
+*/
+
+void server_init(void);
+
+/*
+	Function: server_stop
+		Stop server.
+*/
+
+void server_stop(void);
 
 #ifdef __cplusplus
 }

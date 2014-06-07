@@ -19,6 +19,20 @@
 
 #include "menus.h"
 
+//Server thread control.
+unsigned long int svThread = 0;
+
+void *thread_Start(void *ptr)
+{
+	server_init();
+	return NULL;
+}
+
+void *thread_Stop(void *ptr)
+{
+	server_stop();
+	return NULL;
+}
 
 void CMenus::RenderServerbrowserServerList(CUIRect View)
 {
@@ -598,6 +612,107 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	}
 }
 
+void CMenus::RenderServerbrowserLANServer(CUIRect View)
+{
+	CUIRect ServerFilter = View, FilterHeader;
+	const float FontSize = 12.0f;
+	ServerFilter.HSplitBottom(42.5f, &ServerFilter, 0);
+
+	// server filter
+	ServerFilter.HSplitTop(ms_ListheaderHeight, &FilterHeader, &ServerFilter);
+	RenderTools()->DrawUIRect(&FilterHeader, vec4(1,1,1,0.25f), CUI::CORNER_T, 4.0f);
+	RenderTools()->DrawUIRect(&ServerFilter, vec4(0,0,0,0.15f), CUI::CORNER_B, 4.0f);
+	UI()->DoLabelScaled(&FilterHeader, Localize("Server details"), FontSize+2.0f, 0);
+	CUIRect Button;
+
+	ServerFilter.VSplitLeft(5.0f, 0, &ServerFilter);
+	ServerFilter.Margin(3.0f, &ServerFilter);
+	ServerFilter.VMargin(5.0f, &ServerFilter);
+
+	ServerFilter.HSplitTop(5.0f, 0, &ServerFilter);
+
+	ServerFilter.HSplitTop(19.0f, &Button, &ServerFilter);
+	UI()->DoLabelScaled(&Button, Localize("Server name:"), FontSize, -1);
+	Button.VSplitRight(60.0f, 0, &Button);
+	ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
+	static float Offset = 0.0f;
+	if(DoEditBox(&g_Config.m_SvName, &Button, g_Config.m_SvName, sizeof(g_Config.m_SvName), FontSize, &Offset))
+		Client()->ServerBrowserUpdate();
+
+
+	ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
+	ServerFilter.HSplitTop(19.0f, &Button, &ServerFilter);
+	UI()->DoLabelScaled(&Button, Localize("Game types:"), FontSize, -1);
+	Button.VSplitRight(60.0f, 0, &Button);
+	if(DoEditBox(&g_Config.m_BrFilterGametype, &Button, g_Config.m_BrFilterGametype, sizeof(g_Config.m_BrFilterGametype), FontSize, &Offset))
+		Client()->ServerBrowserUpdate();
+
+	ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
+	ServerFilter.HSplitTop(19.0f, &Button, &ServerFilter);
+	UI()->DoLabelScaled(&Button, Localize("Map:"), FontSize, -1);
+	Button.VSplitRight(60.0f, 0, &Button);
+	if(DoEditBox(&g_Config.m_SvMap, &Button, g_Config.m_SvMap, sizeof(g_Config.m_SvMap), FontSize, &Offset))
+		Client()->ServerBrowserUpdate();
+
+
+	ServerFilter.HSplitBottom(5.0f, &ServerFilter, 0);
+	ServerFilter.HSplitBottom(ms_ButtonHeight-2.0f, &ServerFilter, &Button);
+	static int s_ClearButton = 0;
+	if(DoButton_Menu(&s_ClearButton, Localize("Create LAN"), 0, &Button))
+	{
+		IOHANDLE confFILE = io_open("serverconfig.cfg", IOFLAG_CREATE);
+		io_flush(confFILE);
+
+		const char *pLine = "sv_name ";
+		const char *toAppend = (char*) &g_Config.m_SvName;
+		const char *newLine = str_concat(pLine, toAppend);
+		io_write(confFILE, newLine, str_length(newLine));
+		io_write_newline(confFILE);
+
+		/* TODO: A combo box GUI component may be implemented to deliver a friendly choose interface in the case of maps and game types.  */
+		pLine = "sv_gametype ";
+		toAppend = (char*) &g_Config.m_BrFilterGametype;
+		newLine = str_concat(pLine, toAppend);
+		io_write(confFILE, newLine, str_length(newLine));
+		io_write_newline(confFILE);
+
+		pLine = "sv_port 8303\nsv_external_port 0\nsv_max_clients 12\nsv_max_clients_per_ip 12\nsv_register 0\nsv_map  ";
+		toAppend = (char*) &g_Config.m_SvMap;
+		newLine = str_concat(pLine, toAppend);
+		io_write(confFILE, newLine, str_length(newLine));
+		io_write_newline(confFILE);
+
+		/* TODO: Other servers configuration options can be turned available. */
+
+		newLine = "sv_maprotation ctf1 dm1 ctf2 dm2 ctf3 dm6 ctf4 dm7 ctf5 dm8 ctf6 dm9 ctf7\nsv_rcon_password\npassword\nlogfile\nconsole_output_level 0\n";
+		io_write(confFILE, newLine, str_length(newLine));
+
+		newLine = "sv_rcon_max_tries 3\nsv_rcon_bantime 5\nsv_warmup 0\nsv_scorelimit 25\nsv_timelimit0\n";
+		io_write(confFILE, newLine, str_length(newLine));
+
+		newLine = "sv_rounds_per_map 1\nsv_motd\nsv_spectator_slots 2\nsv_teambalance_time 1\nsv_spamprotection 1\n";
+		io_write(confFILE, newLine, str_length(newLine));
+
+		newLine = "sv_tournament_mode 0\nsv_respawn_delay_tdm 3\nmasterserver master.teewars.com";
+		io_write(confFILE, newLine, str_length(newLine));
+
+		io_close(confFILE);
+
+
+		if(svThread == 0)
+		{
+			thread_create((void (*)(void*))thread_Start, &svThread);
+			svThread++;
+		}
+		else
+		{
+			thread_create((void (*)(void*))thread_Stop, &svThread);
+			thread_create((void (*)(void*))thread_Start, &svThread);
+		}
+
+	}
+}
+
 void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 {
 	CUIRect ServerDetails = View;
@@ -931,7 +1046,11 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 
 	// create server list, status box, tab bar and tool box area
 	MainView.VSplitRight(205.0f, &ServerList, &ToolBox);
-	ServerList.HSplitBottom(70.0f, &ServerList, &StatusBox);
+	//Create space for a new tool box tab only in the LAN page.
+	if(g_Config.m_UiPage == PAGE_LAN)
+		ServerList.HSplitBottom(92.5f, &ServerList, &StatusBox);
+	else
+		ServerList.HSplitBottom(70.0f, &ServerList, &StatusBox);
 	StatusBox.VSplitRight(100.0f, &StatusBox, &TabBar);
 	ServerList.VSplitRight(5.0f, &ServerList, 0);
 
@@ -944,13 +1063,33 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 
 	// tab bar
 	{
-		CUIRect TabButton0, TabButton1, TabButton2;
+		CUIRect TabButton0, TabButton1, TabButton2, TabButton3;
+
 		TabBar.HSplitTop(5.0f, 0, &TabBar);
 		TabBar.HSplitTop(20.0f, &TabButton0, &TabBar);
 		TabBar.HSplitTop(2.5f, 0, &TabBar);
 		TabBar.HSplitTop(20.0f, &TabButton1, &TabBar);
 		TabBar.HSplitTop(2.5f, 0, &TabBar);
-		TabBar.HSplitTop(20.0f, &TabButton2, 0);
+		TabBar.HSplitTop(20.0f, &TabButton2, &TabBar);
+
+		/*debuging
+
+		char *pLine = "sv_name ";
+		char *toAppend = (char*) &g_Config.m_SvName;
+		const char *typeConversion = toAppend;
+		//str_copy(toAppend, g_Config.m_SvName  , sizeof(toApend));
+		str_append(pLine, typeConversion, sizeof(pLine));
+
+		////////////////////////////// */
+
+
+		//Draw LAN server configuration tab only at LAN Page.
+		if(g_Config.m_UiPage == PAGE_LAN)
+		{
+			TabBar.HSplitTop(2.5f, 0, &TabBar);
+			TabBar.HSplitTop(20.0f, &TabButton3, 0);
+		};
+
 		vec4 Active = ms_ColorTabbarActive;
 		vec4 InActive = ms_ColorTabbarInactive;
 		ms_ColorTabbarActive = vec4(0.0f, 0.0f, 0.0f, 0.3f);
@@ -968,6 +1107,14 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		if (DoButton_MenuTab(&s_FriendsTab, Localize("Friends"), ToolboxPage==2, &TabButton2, CUI::CORNER_L))
 			ToolboxPage = 2;
 
+		//LINK LAN Config Tab.
+		if(g_Config.m_UiPage == PAGE_LAN)
+		{
+			static int s_LANConfTab = 0;
+			if (DoButton_MenuTab(&s_LANConfTab, Localize("Server"), ToolboxPage==3, &TabButton3, CUI::CORNER_L))
+			ToolboxPage = 3;
+		}
+
 		ms_ColorTabbarActive = Active;
 		ms_ColorTabbarInactive = InActive;
 		g_Config.m_UiToolboxPage = ToolboxPage;
@@ -984,6 +1131,8 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 			RenderServerbrowserServerDetail(ToolBox);
 		else if(ToolboxPage == 2)
 			RenderServerbrowserFriends(ToolBox);
+		else if(ToolboxPage == 3)
+			RenderServerbrowserLANServer(ToolBox);
 	}
 
 	// status box

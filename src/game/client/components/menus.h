@@ -254,6 +254,7 @@ class CMenus : public CComponent
 	// found in menus_browser.cpp
 	int m_SelectedIndex;
 	int m_ScrollOffset;
+	void RenderServerbrowserLANServer(CUIRect View);
 	void RenderServerbrowserServerList(CUIRect View);
 	void RenderServerbrowserServerDetail(CUIRect View);
 	void RenderServerbrowserFilters(CUIRect View);

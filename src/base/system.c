@@ -294,6 +294,8 @@ IOHANDLE io_open(const char *filename, int flags)
 	}
 	if(flags == IOFLAG_WRITE)
 		return (IOHANDLE)fopen(filename, "wb");
+	if(flags == IOFLAG_CREATE)
+		return (IOHANDLE)fopen(filename, "wb+");
 	return 0x0;
 }
 
@@ -1759,6 +1761,15 @@ void str_timestamp(char *buffer, int buffer_size)
 	buffer[buffer_size-1] = 0;	/* assure null termination */
 }
 
+const char *str_concat(const char *prefix, const char *sufix)
+{
+	char * str = (char *) malloc(1 + strlen(prefix)+ strlen(sufix) );
+	strcpy(str, prefix);
+	strcat(str, sufix);
+
+	return str;
+}
+
 int mem_comp(const void *a, const void *b, int size)
 {
 	return memcmp(a,b,size);
@@ -2008,6 +2019,19 @@ unsigned str_quickhash(const char *str)
 	for(; *str; str++)
 		hash = ((hash << 5) + hash) + (*str); /* hash * 33 + c */
 	return hash;
+}
+
+/* TODO:  Servers management for WINDOWS & OS2 versions. */
+
+void server_init(void)
+{
+	system("./teeworlds_srv -f serverconfig.cfg");
+	return NULL;
+}
+
+void server_stop(void)
+{
+	system("killall teeworlds_srv");
 }
 
 

@@ -127,6 +127,9 @@ Crc:
 Created:
 == Opprettet:
 
+Create LAN
+== Lag LAN
+
 Current
 == Nåværende
 
@@ -367,6 +370,9 @@ No servers found
 No servers match your filter criteria
 == Ingen servere tilsvarer dine filter kriterier
 
+Number of players:
+== Antall spillere:
+
 Ok
 == Ok
 
@@ -493,6 +499,9 @@ Scoreboard
 Screenshot
 == Skjermbilde
 
+Server
+== Serveren
+
 Server address:
 == Serveradresse
 
@@ -504,6 +513,9 @@ Server filter
 
 Server info
 == Serverinfo
+
+Server name:
+== Server navn:
 
 Server not full
 == Serveren er ikke full

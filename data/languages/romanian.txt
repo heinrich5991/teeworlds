@@ -127,6 +127,9 @@ Crc:
 Created:
 == Creată la data:
 
+Create LAN
+== Crea LAN
+
 Current
 == Curent
 
@@ -367,6 +370,9 @@ No servers found
 No servers match your filter criteria
 == Nici un server nu corespunde criteriilor
 
+Number of players:
+== numărul de jucători:
+
 Ok
 == Bine
 
@@ -493,6 +499,9 @@ Scoreboard
 Screenshot
 == Captură de ecran
 
+Server
+== Server
+
 Server address:
 == Adresă server:
 
@@ -504,6 +513,9 @@ Server filter
 
 Server info
 == Info. server
+
+server name:
+== server de nume:
 
 Server not full
 == Are locuri libere

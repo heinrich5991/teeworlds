@@ -127,6 +127,9 @@ Crc:
 Created:
 == Kreirano:
 
+Create LAN
+== Napravi LAN
+
 Current
 == Current
 
@@ -367,6 +370,9 @@ No servers found
 No servers match your filter criteria
 == Nijedan server ne odgovara zadatom kriteriju
 
+Number of players:
+== Broj igrača:
+
 Ok
 == OK
 
@@ -493,6 +499,9 @@ Scoreboard
 Screenshot
 == Screenshot
 
+Server
+== Server
+
 Server address:
 == Adresa servera:
 
@@ -504,6 +513,9 @@ Server filter
 
 Server info
 == O Serveru
+
+Server name:
+== Ime Server:
 
 Server not full
 == Server nije pun

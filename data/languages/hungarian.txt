@@ -127,6 +127,9 @@ Crc:
 Created:
 == Készítette:
 
+Create LAN
+== Létrehozása Helyi
+
 Current
 == Aktuális
 
@@ -364,6 +367,9 @@ No servers found
 No servers match your filter criteria
 == Nincs szerver a szűrőfeltételeidhez
 
+Number of players:
+== Játékosok száma:
+
 Ok
 == Oké
 
@@ -484,6 +490,9 @@ Scoreboard
 Screenshot
 == Pillanatkép
 
+Server
+== Server
+
 Server address:
 == Szerver címe:
 
@@ -495,6 +504,9 @@ Server filter
 
 Server info
 == Szerver infó
+
+Server name:
+== Szerver neve:
 
 Server not full
 == Szerver nincs tele

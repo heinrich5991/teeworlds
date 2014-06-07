@@ -127,6 +127,9 @@ Crc:
 Created:
 == Vytvořeno:
 
+Create LAN
+== Vytvořte LAN
+
 Current
 == Aktuálně
 
@@ -367,6 +370,9 @@ No servers found
 No servers match your filter criteria
 == Žádný server neodpovídá požadavkům filtru
 
+Number of players:
+== Počet hráčů:
+
 Ok
 == OK
 
@@ -493,6 +499,9 @@ Scoreboard
 Screenshot
 == Vyfotit obrazovku
 
+Server
+== Server
+
 Server address:
 == Adresa serveru:
 
@@ -504,6 +513,9 @@ Server filter
 
 Server info
 == Informace
+
+Server name:
+== Název serveru:
 
 Server not full
 == Možnost připojit se

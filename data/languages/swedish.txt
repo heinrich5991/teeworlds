@@ -127,6 +127,9 @@ Crc:
 Created:
 == Skapad:
 
+Create LAN
+== Skapa LAN
+
 Current
 == Nuvarande
 
@@ -367,6 +370,9 @@ No servers found
 No servers match your filter criteria
 == Inga servrar matchar dina filterkriterer
 
+Number of players:
+== antal spelare:
+
 Ok
 == Ok
 
@@ -493,6 +499,9 @@ Scoreboard
 Screenshot
 == Skärmdump
 
+Server
+== Server
+
 Server address:
 == Serveradress
 
@@ -504,6 +513,9 @@ Server filter
 
 Server info
 == Serverinfo
+
+Server name:
+== Servernamn:
 
 Server not full
 == Lediga platser

@@ -127,6 +127,9 @@ Crc:
 Created:
 == Luotu:
 
+Create LAN
+== Luo LAN
+
 Current
 == Nykyinen
 
@@ -367,6 +370,9 @@ No servers found
 No servers match your filter criteria
 == Yksikään palvelin ei täyttänyt suodinkriteerejäsi
 
+Number of playyers:
+== Pelaajien määrä:
+
 Ok
 == Ok
 
@@ -493,6 +499,9 @@ Scoreboard
 Screenshot
 == Kuvankaappaus
 
+Server
+== Palvelin
+
 Server address:
 == Palvelimen osoite:
 
@@ -504,6 +513,9 @@ Server filter
 
 Server info
 == Palvelintiedot
+
+Server namme:
+== Palvelimen nimi:
 
 Server not full
 == Palvelin ei täysi

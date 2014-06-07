@@ -127,6 +127,9 @@ Crc:
 Created:
 == Criado:
 
+Create LAN
+== Criar LAN
+
 Current
 == Actualmente
 
@@ -367,6 +370,9 @@ No servers found
 No servers match your filter criteria
 == Não há servidores que correspondam às definições de procura.
 
+Number of players:
+== Número de jogadores:
+
 Ok
 == Aceitar
 
@@ -493,6 +499,9 @@ Scoreboard
 Screenshot
 == Screenshot
 
+Server
+== Servidor
+
 Server address:
 == Direção do servidor:
 
@@ -504,6 +513,9 @@ Server filter
 
 Server info
 == Info de servidor
+
+Server name:
+== Nome do servidor:
 
 Server not full
 == Não está cheio

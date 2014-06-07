@@ -127,6 +127,9 @@ Crc:
 Created:
 == Створаны:
 
+Creat LAN
+== ствараць LAN
+
 Current
 == Бягучы
 
@@ -367,6 +370,9 @@ No servers found
 No servers match your filter criteria
 == Няма сервераў, падыходных пад ваш фільтр
 
+Number of players:
+== Колькасць гульцоў:
+
 Ok
 == ОК
 
@@ -493,6 +499,9 @@ Scoreboard
 Screenshot
 == Здымак
 
+Server
+== сервер
+
 Server address:
 == Адрас сервера
 
@@ -504,6 +513,9 @@ Server filter
 
 Server info
 == Інфармацыя
+
+Server name:
+== Імя сервера:
 
 Server not full
 == Сервер не запоўнены

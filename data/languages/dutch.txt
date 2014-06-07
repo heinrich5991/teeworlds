@@ -127,6 +127,9 @@ Crc:
 Created:
 == Gemaakt:
 
+Create LAN
+== Maak LAN
+
 Current
 == Huidig
 
@@ -370,6 +373,9 @@ No servers found
 No servers match your filter criteria
 == Geen servers gevonden op zoekopdracht
 
+Number of players:
+== Aantal spelers:
+
 Ok
 == Oké
 
@@ -499,6 +505,9 @@ Scoreboard
 Screenshot
 == Schermafbeelding
 
+Server
+== Server
+
 Server address:
 == Serveradres:
 
@@ -510,6 +519,9 @@ Server filter
 
 Server info
 == Serverinfo
+
+Server name:
+== Naam van de server:
 
 Server not full
 == Server niet vol

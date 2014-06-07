@@ -58,6 +58,9 @@ Compatible version
 Connect
 == Під’єднатись
 
+create LAN
+== створити LAN
+
 Connecting to
 == Підключення до
 
@@ -268,6 +271,9 @@ No servers found
 No servers match your filter criteria
 == Не знайдено ні одного сервара, який би відповідав вашим критеріям
 
+Number of pleyers:
+== кількість гравців:
+
 Ok
 == Ок
 
@@ -364,11 +370,17 @@ Scoreboard
 Screenshot
 == Скріншот
 
+Server
+== Cервер
+
 Server details
 == Деталі сервера
 
 Server info
 == Інформація
+
+Server name
+== Iм'я сервера
 
 Server not full
 == Сервер не заповнений

@@ -126,6 +126,9 @@ Crc:
 Created:
 == Жаратылганы:
 
+Create LAN
+==  LAN үүсгэх
+
 Current
 == Кезектегиси
 
@@ -366,6 +369,9 @@ No servers found
 No servers match your filter criteria
 == Сиздин фильтриңизге жарай турган серверлер жок
 
+Number of players:
+== Тоглогчдын тоо:
+
 Ok
 == ОК
 
@@ -482,6 +488,8 @@ Score
 
 Score board
 == Табло
+LAN
+== LAN
 
 Score limit
 == Упай чеги
@@ -491,6 +499,9 @@ Scoreboard
 
 Screenshot
 == Сүрөт
+
+Server
+== Сервер
 
 Server address:
 == Сервер дареги:
@@ -503,6 +514,9 @@ Server filter
 
 Server info
 == Маалымат
+
+Server name:
+== Серверийн нэр:
 
 Server not full
 == Сервер толук эмес

@@ -127,6 +127,9 @@ Crc:
 Created:
 == Yaratıldı:
 
+Create LAN
+== LAM oluşturun
+
 Current
 == Şimdiki
 
@@ -367,6 +370,9 @@ No servers found
 No servers match your filter criteria
 == Filtre kriterlerinize uygun sunucu bulunamadı
 
+Number of players:
+== Oyuncu sayısı:
+
 Ok
 == Tamam
 
@@ -490,6 +496,9 @@ Scoreboard
 Screenshot
 == Ekran alıntısı
 
+Server
+== Sunucu
+
 Server address:
 == Sunucu adresi :
 
@@ -501,6 +510,9 @@ Server filter
 
 Server info
 == Sunucu bilgisi
+
+Server name:
+== Sunucu adı:
 
 Server not full
 == Sunucu dolu değil

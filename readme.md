@@ -1,5 +1,5 @@
-Teeworlds
-=========
+Teeworlds!
+==========
 
 A retro multiplayer shooter
 ---------------------------

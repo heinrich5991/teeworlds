@@ -15,8 +15,9 @@ CGameControllerCTF::CGameControllerCTF(class CGameContext *pGameServer)
 {
 	m_apFlags[0] = 0;
 	m_apFlags[1] = 0;
-	m_pGameType = "CTF";
+	m_pGameType = "CFT";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
+	m_BothTeamsPresent = false;
 }
 
 bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
@@ -56,12 +57,37 @@ int CGameControllerCTF::OnCharacterDeath(class CCharacter *pVictim, class CPlaye
 			F->m_pCarryingCharacter = 0;
 			F->m_Vel = vec2(0,0);
 
-			if(pKiller && pKiller->GetTeam() != pVictim->GetPlayer()->GetTeam())
+			if(pKiller && pKiller->GetGameTeam() != pVictim->GetPlayer()->GetGameTeam())
 				pKiller->m_Score++;
 
 			HadFlag |= 1;
 		}
 	}
+
+	// Don't mark the player as dead in case of team changes
+	if(WeaponID != WEAPON_GAME)
+	{
+		CPlayer *pVictimPlayer = pVictim->GetPlayer();
+		pVictimPlayer->SetTeamSimple(DeadTeam(pVictimPlayer->GetGameTeam()));
+
+		int NewSpectatorID;
+		if(pKiller && pKiller->GetCID() != pVictimPlayer->GetCID())
+			NewSpectatorID = pKiller->GetCID();
+		else
+			NewSpectatorID = SPEC_FREEVIEW;
+
+		pVictimPlayer->m_SpectatorID = NewSpectatorID;
+
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+			if(!pPlayer)
+				continue;
+			if(pPlayer->m_SpectatorID == pVictimPlayer->GetCID())
+				pPlayer->m_SpectatorID = NewSpectatorID;
+		}
+	}
+	ReviveCheck();
 
 	return HadFlag;
 }
@@ -197,6 +223,8 @@ void CGameControllerCTF::Tick()
 						m_apFlags[i]->Reset();
 
 					GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE);
+
+					Revive();
 				}
 			}
 		}
@@ -206,10 +234,10 @@ void CGameControllerCTF::Tick()
 			int Num = GameServer()->m_World.FindEntities(F->m_Pos, CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 			for(int i = 0; i < Num; i++)
 			{
-				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == TEAM_SPECTATORS || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
+				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->IsSpectator() || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
 					continue;
 
-				if(apCloseCCharacters[i]->GetPlayer()->GetTeam() == F->m_Team)
+				if(apCloseCCharacters[i]->GetPlayer()->GetGameTeam() == F->m_Team)
 				{
 					// return the flag
 					if(!F->m_AtStand)
@@ -252,9 +280,9 @@ void CGameControllerCTF::Tick()
 						if(!pPlayer)
 							continue;
 
-						if(pPlayer->GetTeam() == TEAM_SPECTATORS && pPlayer->m_SpectatorID != SPEC_FREEVIEW && GameServer()->m_apPlayers[pPlayer->m_SpectatorID] && GameServer()->m_apPlayers[pPlayer->m_SpectatorID]->GetTeam() == fi)
+						if(pPlayer->IsSpectator() && pPlayer->m_SpectatorID != SPEC_FREEVIEW && GameServer()->m_apPlayers[pPlayer->m_SpectatorID] && GameServer()->m_apPlayers[pPlayer->m_SpectatorID]->GetGameTeam() == fi)
 							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_EN, c);
-						else if(pPlayer->GetTeam() == fi)
+						else if(pPlayer->GetGameTeam() == fi)
 							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_EN, c);
 						else
 							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, c);
@@ -279,5 +307,80 @@ void CGameControllerCTF::Tick()
 				}
 			}
 		}
+	}
+
+	{
+		int TeamAlive = TEAM_SPECTATORS;
+		bool OnlyOneTeamAlive = true;
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+			if(!pPlayer || pPlayer->GetGameTeam() == TEAM_SPECTATORS)
+				continue;
+			if(!pPlayer->IsDeadTeam() && pPlayer)
+			{
+				if(TeamAlive == TEAM_SPECTATORS)
+					TeamAlive = pPlayer->GetGameTeam();
+				else if(TeamAlive != pPlayer->GetGameTeam())
+					OnlyOneTeamAlive = false;
+			}
+		}
+
+		if(OnlyOneTeamAlive)
+		{
+			if(m_BothTeamsPresent)
+			{
+				char aBuf[64];
+				str_format(aBuf, sizeof(aBuf), "The %s team eliminated all enemies", TeamAlive ? "blue" : "red");
+				GameServer()->SendChat(-1, -2, aBuf);
+
+				for(int i = 0; i < 2; i++)
+					if(m_apFlags[i])
+						m_apFlags[i]->Reset();
+
+				m_aTeamscore[TeamAlive] += 100;
+
+				GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE);
+			}
+
+			Revive();
+		}
+
+		bool aTeamsPresent[2] = { false, false };
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+			if(!pPlayer || pPlayer->GetGameTeam() == TEAM_SPECTATORS)
+				continue;
+			aTeamsPresent[pPlayer->GetGameTeam()] = true;
+		}
+		m_BothTeamsPresent = aTeamsPresent[TEAM_RED] && aTeamsPresent[TEAM_BLUE];
+	}
+}
+
+void CGameControllerCTF::ReviveCheck()
+{
+	bool Respawn = true;
+	for(int i = 0; i < MAX_CLIENTS && Respawn; i++)
+	{
+		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+		if(!pPlayer)
+			continue;
+		if(!pPlayer->IsDeadTeam())
+			Respawn = false;
+	}
+
+	if(Respawn)
+		Revive();
+}
+
+void CGameControllerCTF::Revive()
+{
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		CPlayer *pPlayer = GameServer()->m_apPlayers[i];
+		if(!pPlayer)
+			continue;
+		pPlayer->Revive();
 	}
 }

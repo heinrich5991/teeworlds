@@ -159,6 +159,56 @@ if gen_network_source:
 	lines += ['#include <engine/message.h>']
 	lines += ['#include "protocol.h"']
 
+	lines += ["""
+int SnapTeam(int Team)
+{
+	switch(Team)
+	{
+	case TEAM_RED_DEAD:
+	case TEAM_BLUE_DEAD:
+		return TEAM_SPECTATORS;
+	default:
+		return Team;
+	}
+}
+
+bool IsSpectatorTeam(int Team)
+{
+	return SnapTeam(Team) == TEAM_SPECTATORS;
+}
+
+bool IsAliveTeam(int Team)
+{
+	return Team == TEAM_RED || Team == TEAM_BLUE;
+}
+
+int GameTeam(int Team)
+{
+	switch(Team)
+	{
+	case TEAM_RED_DEAD:
+		return TEAM_RED;
+	case TEAM_BLUE_DEAD:
+		return TEAM_BLUE;
+	default:
+		return Team;
+	}
+}
+
+int DeadTeam(int Team)
+{
+	switch(Team)
+	{
+	case TEAM_RED:
+		return TEAM_RED_DEAD;
+	case TEAM_BLUE:
+		return TEAM_BLUE_DEAD;
+	default:
+		return Team;
+	}
+}
+	"""]
+
 	lines += ['CNetObjHandler::CNetObjHandler()']
 	lines += ['{']
 	lines += ['\tm_pMsgFailedOn = "";']

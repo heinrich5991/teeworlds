@@ -18,6 +18,12 @@ public:
 
 	virtual bool OnEntity(int Index, vec2 Pos);
 	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
+
+	virtual void ReviveCheck();
+	void Revive();
+
+private:
+	bool m_BothTeamsPresent;
 };
 
 #endif

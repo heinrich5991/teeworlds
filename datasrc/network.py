@@ -23,6 +23,8 @@ enum
 	TEAM_SPECTATORS=-1,
 	TEAM_RED,
 	TEAM_BLUE,
+	TEAM_RED_DEAD,
+	TEAM_BLUE_DEAD,
 
 	FLAG_MISSING=-3,
 	FLAG_ATSTAND,
@@ -30,6 +32,12 @@ enum
 
 	SPEC_FREEVIEW=-1,
 };
+
+int SnapTeam(int Team);
+int GameTeam(int Team);
+int DeadTeam(int Team);
+bool IsSpectatorTeam(int Team);
+bool IsAliveTeam(int Team);
 '''
 
 RawSource = '''

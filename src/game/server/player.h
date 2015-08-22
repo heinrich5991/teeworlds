@@ -20,8 +20,15 @@ public:
 
 	void TryRespawn();
 	void Respawn();
-	void SetTeam(int Team, bool DoChatMsg=true);
+	void SetGameTeam(int Team, bool DoChatMsg=true);
+	void SetTeamSimple(int Team, bool Init=false);
+	void Revive();
+private:
 	int GetTeam() const { return m_Team; };
+public:
+	int GetGameTeam() const { return GameTeam(GetTeam()); }
+	bool IsSpectator() const { return IsSpectatorTeam(GetTeam()); }
+	bool IsDeadTeam() const { return !IsAliveTeam(GetTeam()); }
 	int GetCID() const { return m_ClientID; };
 
 	void Tick();

@@ -48,7 +48,7 @@ float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos)
 	{
 		// team mates are not as dangerous as enemies
 		float Scoremod = 1.0f;
-		if(pEval->m_FriendlyTeam != -1 && pC->GetPlayer()->GetTeam() == pEval->m_FriendlyTeam)
+		if(pEval->m_FriendlyTeam != -1 && pC->GetPlayer()->GetGameTeam() == pEval->m_FriendlyTeam)
 			Scoremod = 0.5f;
 
 		float d = distance(Pos, pC->m_Pos);
@@ -326,10 +326,10 @@ void IGameController::OnPlayerInfoChange(class CPlayer *pP)
 	if(IsTeamplay())
 	{
 		pP->m_TeeInfos.m_UseCustomColor = 1;
-		if(pP->GetTeam() >= TEAM_RED && pP->GetTeam() <= TEAM_BLUE)
+		if(pP->GetGameTeam() >= TEAM_RED && pP->GetGameTeam() <= TEAM_BLUE)
 		{
-			pP->m_TeeInfos.m_ColorBody = aTeamColors[pP->GetTeam()];
-			pP->m_TeeInfos.m_ColorFeet = aTeamColors[pP->GetTeam()];
+			pP->m_TeeInfos.m_ColorBody = aTeamColors[pP->GetGameTeam()];
+			pP->m_TeeInfos.m_ColorFeet = aTeamColors[pP->GetGameTeam()];
 		}
 		else
 		{
@@ -349,7 +349,7 @@ int IGameController::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *
 		pVictim->GetPlayer()->m_Score--; // suicide
 	else
 	{
-		if(IsTeamplay() && pVictim->GetPlayer()->GetTeam() == pKiller->GetTeam())
+		if(IsTeamplay() && pVictim->GetPlayer()->GetGameTeam() == pKiller->GetGameTeam())
 			pKiller->m_Score--; // teamkill
 		else
 			pKiller->m_Score++; // normal kill
@@ -411,7 +411,7 @@ bool IGameController::IsFriendlyFire(int ClientID1, int ClientID2)
 		if(!GameServer()->m_apPlayers[ClientID1] || !GameServer()->m_apPlayers[ClientID2])
 			return false;
 
-		if(GameServer()->m_apPlayers[ClientID1]->GetTeam() == GameServer()->m_apPlayers[ClientID2]->GetTeam())
+		if(GameServer()->m_apPlayers[ClientID1]->GetGameTeam() == GameServer()->m_apPlayers[ClientID2]->GetGameTeam())
 			return true;
 	}
 
@@ -475,12 +475,12 @@ void IGameController::Tick()
 		float aPScore[MAX_CLIENTS] = {0.0f};
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetGameTeam() != TEAM_SPECTATORS)
 			{
-				aT[GameServer()->m_apPlayers[i]->GetTeam()]++;
+				aT[GameServer()->m_apPlayers[i]->GetGameTeam()]++;
 				aPScore[i] = GameServer()->m_apPlayers[i]->m_Score*Server()->TickSpeed()*60.0f/
 					(Server()->Tick()-GameServer()->m_apPlayers[i]->m_ScoreStartTick);
-				aTScore[GameServer()->m_apPlayers[i]->GetTeam()] += aPScore[i];
+				aTScore[GameServer()->m_apPlayers[i]->GetGameTeam()] += aPScore[i];
 			}
 		}
 
@@ -499,7 +499,7 @@ void IGameController::Tick()
 					if(!GameServer()->m_apPlayers[i] || !CanBeMovedOnBalance(i))
 						continue;
 					// remember the player who would cause lowest score-difference
-					if(GameServer()->m_apPlayers[i]->GetTeam() == M && (!pP || absolute((aTScore[M^1]+aPScore[i]) - (aTScore[M]-aPScore[i])) < PD))
+					if(GameServer()->m_apPlayers[i]->GetGameTeam() == M && (!pP || absolute((aTScore[M^1]+aPScore[i]) - (aTScore[M]-aPScore[i])) < PD))
 					{
 						pP = GameServer()->m_apPlayers[i];
 						PD = absolute((aTScore[M^1]+aPScore[i]) - (aTScore[M]-aPScore[i]));
@@ -508,7 +508,8 @@ void IGameController::Tick()
 
 				// move the player to the other team
 				int Temp = pP->m_LastActionTick;
-				pP->SetTeam(M^1);
+				pP->SetGameTeam(M^1);
+				pP->Revive();
 				pP->m_LastActionTick = Temp;
 
 				pP->Respawn();
@@ -532,7 +533,7 @@ void IGameController::Tick()
 					break;
 			}
 		#endif
-			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS && !Server()->IsAuthed(i))
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetGameTeam() != TEAM_SPECTATORS && !Server()->IsAuthed(i))
 			{
 				if(Server()->Tick() > GameServer()->m_apPlayers[i]->m_LastActionTick+g_Config.m_SvInactiveKickTime*Server()->TickSpeed()*60)
 				{
@@ -541,7 +542,7 @@ void IGameController::Tick()
 					case 0:
 						{
 							// move player to spectator
-							GameServer()->m_apPlayers[i]->SetTeam(TEAM_SPECTATORS);
+							GameServer()->m_apPlayers[i]->SetGameTeam(TEAM_SPECTATORS);
 						}
 						break;
 					case 1:
@@ -549,12 +550,12 @@ void IGameController::Tick()
 							// move player to spectator if the reserved slots aren't filled yet, kick him otherwise
 							int Spectators = 0;
 							for(int j = 0; j < MAX_CLIENTS; ++j)
-								if(GameServer()->m_apPlayers[j] && GameServer()->m_apPlayers[j]->GetTeam() == TEAM_SPECTATORS)
+								if(GameServer()->m_apPlayers[j] && GameServer()->m_apPlayers[j]->GetGameTeam() == TEAM_SPECTATORS)
 									++Spectators;
 							if(Spectators >= g_Config.m_SvSpectatorSlots)
 								Server()->Kick(i, "Kicked for inactivity");
 							else
-								GameServer()->m_apPlayers[i]->SetTeam(TEAM_SPECTATORS);
+								GameServer()->m_apPlayers[i]->SetGameTeam(TEAM_SPECTATORS);
 						}
 						break;
 					case 2:
@@ -612,8 +613,8 @@ int IGameController::GetAutoTeam(int NotThisID)
 	{
 		if(GameServer()->m_apPlayers[i] && i != NotThisID)
 		{
-			if(GameServer()->m_apPlayers[i]->GetTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetTeam() <= TEAM_BLUE)
-				aNumplayers[GameServer()->m_apPlayers[i]->GetTeam()]++;
+			if(GameServer()->m_apPlayers[i]->GetGameTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetGameTeam() <= TEAM_BLUE)
+				aNumplayers[GameServer()->m_apPlayers[i]->GetGameTeam()]++;
 		}
 	}
 
@@ -628,7 +629,7 @@ int IGameController::GetAutoTeam(int NotThisID)
 
 bool IGameController::CanJoinTeam(int Team, int NotThisID)
 {
-	if(Team == TEAM_SPECTATORS || (GameServer()->m_apPlayers[NotThisID] && GameServer()->m_apPlayers[NotThisID]->GetTeam() != TEAM_SPECTATORS))
+	if(Team == TEAM_SPECTATORS || (GameServer()->m_apPlayers[NotThisID] && GameServer()->m_apPlayers[NotThisID]->GetGameTeam() != TEAM_SPECTATORS))
 		return true;
 
 	int aNumplayers[2] = {0,0};
@@ -636,8 +637,8 @@ bool IGameController::CanJoinTeam(int Team, int NotThisID)
 	{
 		if(GameServer()->m_apPlayers[i] && i != NotThisID)
 		{
-			if(GameServer()->m_apPlayers[i]->GetTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetTeam() <= TEAM_BLUE)
-				aNumplayers[GameServer()->m_apPlayers[i]->GetTeam()]++;
+			if(GameServer()->m_apPlayers[i]->GetGameTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetGameTeam() <= TEAM_BLUE)
+				aNumplayers[GameServer()->m_apPlayers[i]->GetGameTeam()]++;
 		}
 	}
 
@@ -653,8 +654,8 @@ bool IGameController::CheckTeamBalance()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		CPlayer *pP = GameServer()->m_apPlayers[i];
-		if(pP && pP->GetTeam() != TEAM_SPECTATORS)
-			aT[pP->GetTeam()]++;
+		if(pP && pP->GetGameTeam() != TEAM_SPECTATORS)
+			aT[pP->GetGameTeam()]++;
 	}
 
 	char aBuf[256];
@@ -685,13 +686,13 @@ bool IGameController::CanChangeTeam(CPlayer *pPlayer, int JoinTeam)
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		CPlayer *pP = GameServer()->m_apPlayers[i];
-		if(pP && pP->GetTeam() != TEAM_SPECTATORS)
-			aT[pP->GetTeam()]++;
+		if(pP && pP->GetGameTeam() != TEAM_SPECTATORS)
+			aT[pP->GetGameTeam()]++;
 	}
 
 	// simulate what would happen if changed team
 	aT[JoinTeam]++;
-	if (pPlayer->GetTeam() != TEAM_SPECTATORS)
+	if (pPlayer->GetGameTeam() != TEAM_SPECTATORS)
 		aT[JoinTeam^1]--;
 
 	// there is a player-difference of at least 2

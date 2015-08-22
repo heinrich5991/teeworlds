@@ -526,7 +526,7 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 	if(m_LatestInput.m_TargetX == 0 && m_LatestInput.m_TargetY == 0)
 		m_LatestInput.m_TargetY = -1;
 
-	if(m_NumInputs > 2 && m_pPlayer->GetTeam() != TEAM_SPECTATORS)
+	if(m_NumInputs > 2 && !m_pPlayer->IsSpectator())
 	{
 		HandleWeaponSwitch();
 		FireWeapon();
@@ -552,7 +552,7 @@ void CCharacter::Tick()
 	if(m_pPlayer->m_ForceBalanced)
 	{
 		char Buf[128];
-		str_format(Buf, sizeof(Buf), "You were moved to %s due to team balancing", GameServer()->m_pController->GetTeamName(m_pPlayer->GetTeam()));
+		str_format(Buf, sizeof(Buf), "You were moved to %s due to team balancing", GameServer()->m_pController->GetTeamName(m_pPlayer->GetGameTeam()));
 		GameServer()->SendBroadcast(Buf, m_pPlayer->GetCID());
 
 		m_pPlayer->m_ForceBalanced = false;
@@ -637,7 +637,7 @@ void CCharacter::TickDefered()
 	if(Events&COREEVENT_HOOK_HIT_NOHOOK) GameServer()->CreateSound(m_Pos, SOUND_HOOK_NOATTACH, Mask);
 
 
-	if(m_pPlayer->GetTeam() == TEAM_SPECTATORS)
+	if(m_pPlayer->IsSpectator())
 	{
 		m_Pos.x = m_Input.m_TargetX;
 		m_Pos.y = m_Input.m_TargetY;
@@ -782,7 +782,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 		int Mask = CmaskOne(From);
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS && GameServer()->m_apPlayers[i]->m_SpectatorID == From)
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->IsSpectator() && GameServer()->m_apPlayers[i]->m_SpectatorID == From)
 				Mask |= CmaskOne(i);
 		}
 		GameServer()->CreateSound(GameServer()->m_apPlayers[From]->m_ViewPos, SOUND_HIT, Mask);

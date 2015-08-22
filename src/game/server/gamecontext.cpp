@@ -9,10 +9,7 @@
 #include <game/version.h>
 #include <game/collision.h>
 #include <game/gamecore.h>
-#include "gamemodes/dm.h"
-#include "gamemodes/tdm.h"
 #include "gamemodes/ctf.h"
-#include "gamemodes/mod.h"
 
 enum
 {
@@ -257,7 +254,7 @@ void CGameContext::SendChat(int ChatterClientID, int Team, const char *pText)
 		// send to the clients
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() == Team)
+			if(m_apPlayers[i] && m_apPlayers[i]->GetGameTeam() == Team)
 				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
 		}
 	}
@@ -397,8 +394,8 @@ void CGameContext::SwapTeams()
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
-			m_apPlayers[i]->SetTeam(m_apPlayers[i]->GetTeam()^1, false);
+		if(m_apPlayers[i] && m_apPlayers[i]->GetGameTeam() != TEAM_SPECTATORS)
+			m_apPlayers[i]->SetGameTeam(m_apPlayers[i]->GetGameTeam()^1, false);
 	}
 
 	(void)m_pController->CheckTeamBalance();
@@ -447,7 +444,7 @@ void CGameContext::OnTick()
 				bool aVoteChecked[MAX_CLIENTS] = {0};
 				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
-					if(!m_apPlayers[i] || m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS || aVoteChecked[i])	// don't count in votes by spectators
+					if(!m_apPlayers[i] || m_apPlayers[i]->GetGameTeam() == TEAM_SPECTATORS || aVoteChecked[i])	// don't count in votes by spectators
 						continue;
 
 					int ActVote = m_apPlayers[i]->m_Vote;
@@ -536,10 +533,10 @@ void CGameContext::OnClientEnter(int ClientID)
 	//world.insert_entity(&players[client_id]);
 	m_apPlayers[ClientID]->Respawn();
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "'%s' entered and joined the %s", Server()->ClientName(ClientID), m_pController->GetTeamName(m_apPlayers[ClientID]->GetTeam()));
+	str_format(aBuf, sizeof(aBuf), "'%s' entered and joined the %s", Server()->ClientName(ClientID), m_pController->GetTeamName(m_apPlayers[ClientID]->GetGameTeam()));
 	SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 
-	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientID, Server()->ClientName(ClientID), m_apPlayers[ClientID]->GetTeam());
+	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientID, Server()->ClientName(ClientID), m_apPlayers[ClientID]->GetGameTeam());
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
 	m_VoteUpdate = true;
@@ -551,6 +548,7 @@ void CGameContext::OnClientConnected(int ClientID)
 	const int StartTeam = g_Config.m_SvTournamentMode ? TEAM_SPECTATORS : m_pController->GetAutoTeam(ClientID);
 
 	m_apPlayers[ClientID] = new(ClientID) CPlayer(this, ClientID, StartTeam);
+	m_apPlayers[ClientID]->Revive();
 	//players[client_id].init(client_id);
 	//players[client_id].client_id = client_id;
 
@@ -616,7 +614,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				return;
 
 			CNetMsg_Cl_Say *pMsg = (CNetMsg_Cl_Say *)pRawMsg;
-			int Team = pMsg->m_Team ? pPlayer->GetTeam() : CGameContext::CHAT_ALL;
+			int Team = pMsg->m_Team ? pPlayer->GetGameTeam() : CGameContext::CHAT_ALL;
 			
 			// trim right and set maximum length to 128 utf8-characters
 			int Length = 0;
@@ -661,7 +659,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 			int64 Now = Server()->Tick();
 			pPlayer->m_LastVoteTry = Now;
-			if(pPlayer->GetTeam() == TEAM_SPECTATORS)
+			if(pPlayer->GetGameTeam() == TEAM_SPECTATORS)
 			{
 				SendChatTarget(ClientID, "Spectators aren't allowed to start a vote.");
 				return;
@@ -724,7 +722,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				{
 					int PlayerNum = 0;
 					for(int i = 0; i < MAX_CLIENTS; ++i)
-						if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+						if(m_apPlayers[i] && m_apPlayers[i]->GetGameTeam() != TEAM_SPECTATORS)
 							++PlayerNum;
 
 					if(PlayerNum < g_Config.m_SvVoteKickMin)
@@ -775,7 +773,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				}
 
 				int SpectateID = str_toint(pMsg->m_Value);
-				if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !m_apPlayers[SpectateID] || m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS)
+				if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !m_apPlayers[SpectateID] || m_apPlayers[SpectateID]->GetGameTeam() == TEAM_SPECTATORS)
 				{
 					SendChatTarget(ClientID, "Invalid client id to move");
 					return;
@@ -820,8 +818,16 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		else if (MsgID == NETMSGTYPE_CL_SETTEAM && !m_World.m_Paused)
 		{
 			CNetMsg_Cl_SetTeam *pMsg = (CNetMsg_Cl_SetTeam *)pRawMsg;
+			CNetMsg_Cl_SetTeam Copy = *pMsg;
+			pMsg = &Copy;
 
-			if(pPlayer->GetTeam() == pMsg->m_Team || (g_Config.m_SvSpamprotection && pPlayer->m_LastSetTeam && pPlayer->m_LastSetTeam+Server()->TickSpeed()*3 > Server()->Tick()))
+			// The button for joining the spectators is not
+			// available in the client when the player is dead. If
+			// you join your own team, join the spectators instead.
+			if(pPlayer->GetGameTeam() == pMsg->m_Team)
+				pMsg->m_Team = TEAM_SPECTATORS;
+
+			if(pPlayer->GetGameTeam() == pMsg->m_Team || (g_Config.m_SvSpamprotection && pPlayer->m_LastSetTeam && pPlayer->m_LastSetTeam+Server()->TickSpeed()*3 > Server()->Tick()))
 				return;
 
 			if(pMsg->m_Team != TEAM_SPECTATORS && m_LockTeams)
@@ -847,9 +853,9 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				if(m_pController->CanChangeTeam(pPlayer, pMsg->m_Team))
 				{
 					pPlayer->m_LastSetTeam = Server()->Tick();
-					if(pPlayer->GetTeam() == TEAM_SPECTATORS || pMsg->m_Team == TEAM_SPECTATORS)
+					if(pPlayer->GetGameTeam() == TEAM_SPECTATORS || pMsg->m_Team == TEAM_SPECTATORS)
 						m_VoteUpdate = true;
-					pPlayer->SetTeam(pMsg->m_Team);
+					pPlayer->SetGameTeam(pMsg->m_Team);
 					(void)m_pController->CheckTeamBalance();
 					pPlayer->m_TeamChangeTick = Server()->Tick();
 				}
@@ -867,12 +873,12 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		{
 			CNetMsg_Cl_SetSpectatorMode *pMsg = (CNetMsg_Cl_SetSpectatorMode *)pRawMsg;
 
-			if(pPlayer->GetTeam() != TEAM_SPECTATORS || pPlayer->m_SpectatorID == pMsg->m_SpectatorID || ClientID == pMsg->m_SpectatorID ||
+			if(!pPlayer->IsSpectator() || pPlayer->m_SpectatorID == pMsg->m_SpectatorID || ClientID == pMsg->m_SpectatorID ||
 				(g_Config.m_SvSpamprotection && pPlayer->m_LastSetSpectatorMode && pPlayer->m_LastSetSpectatorMode+Server()->TickSpeed()*3 > Server()->Tick()))
 				return;
 
 			pPlayer->m_LastSetSpectatorMode = Server()->Tick();
-			if(pMsg->m_SpectatorID != SPEC_FREEVIEW && (!m_apPlayers[pMsg->m_SpectatorID] || m_apPlayers[pMsg->m_SpectatorID]->GetTeam() == TEAM_SPECTATORS))
+			if(pMsg->m_SpectatorID != SPEC_FREEVIEW && (!m_apPlayers[pMsg->m_SpectatorID] || m_apPlayers[pMsg->m_SpectatorID]->IsSpectator()))
 				SendChatTarget(ClientID, "Invalid spectator id used");
 			else
 				pPlayer->m_SpectatorID = pMsg->m_SpectatorID;
@@ -1111,7 +1117,7 @@ void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData)
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 
 	pSelf->m_apPlayers[ClientID]->m_TeamChangeTick = pSelf->Server()->Tick()+pSelf->Server()->TickSpeed()*Delay*60;
-	pSelf->m_apPlayers[ClientID]->SetTeam(Team);
+	pSelf->m_apPlayers[ClientID]->SetGameTeam(Team);
 	(void)pSelf->m_pController->CheckTeamBalance();
 }
 
@@ -1126,7 +1132,7 @@ void CGameContext::ConSetTeamAll(IConsole::IResult *pResult, void *pUserData)
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 		if(pSelf->m_apPlayers[i])
-			pSelf->m_apPlayers[i]->SetTeam(Team, false);
+			pSelf->m_apPlayers[i]->SetGameTeam(Team, false);
 
 	(void)pSelf->m_pController->CheckTeamBalance();
 }
@@ -1147,7 +1153,7 @@ void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
 	int CounterBlue = 0;
 	int PlayerTeam = 0;
 	for(int i = 0; i < MAX_CLIENTS; ++i)
-		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetGameTeam() != TEAM_SPECTATORS)
 			++PlayerTeam;
 	PlayerTeam = (PlayerTeam+1)/2;
 	
@@ -1155,22 +1161,22 @@ void CGameContext::ConShuffleTeams(IConsole::IResult *pResult, void *pUserData)
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
+		if(pSelf->m_apPlayers[i] && pSelf->m_apPlayers[i]->GetGameTeam() != TEAM_SPECTATORS)
 		{
 			if(CounterRed == PlayerTeam)
-				pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE, false);
+				pSelf->m_apPlayers[i]->SetGameTeam(TEAM_BLUE, false);
 			else if(CounterBlue == PlayerTeam)
-				pSelf->m_apPlayers[i]->SetTeam(TEAM_RED, false);
+				pSelf->m_apPlayers[i]->SetGameTeam(TEAM_RED, false);
 			else
 			{	
 				if(rand() % 2)
 				{
-					pSelf->m_apPlayers[i]->SetTeam(TEAM_BLUE, false);
+					pSelf->m_apPlayers[i]->SetGameTeam(TEAM_BLUE, false);
 					++CounterBlue;
 				}
 				else
 				{
-					pSelf->m_apPlayers[i]->SetTeam(TEAM_RED, false);
+					pSelf->m_apPlayers[i]->SetGameTeam(TEAM_RED, false);
 					++CounterRed;
 				}
 			}
@@ -1380,7 +1386,7 @@ void CGameContext::ConForceVote(IConsole::IResult *pResult, void *pUserData)
 	else if(str_comp_nocase(pType, "spectate") == 0)
 	{
 		int SpectateID = str_toint(pValue);
-		if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !pSelf->m_apPlayers[SpectateID] || pSelf->m_apPlayers[SpectateID]->GetTeam() == TEAM_SPECTATORS)
+		if(SpectateID < 0 || SpectateID >= MAX_CLIENTS || !pSelf->m_apPlayers[SpectateID] || pSelf->m_apPlayers[SpectateID]->GetGameTeam() == TEAM_SPECTATORS)
 		{
 			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "Invalid client id to move");
 			return;
@@ -1489,14 +1495,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	//players = new CPlayer[MAX_CLIENTS];
 
 	// select gametype
-	if(str_comp(g_Config.m_SvGametype, "mod") == 0)
-		m_pController = new CGameControllerMOD(this);
-	else if(str_comp(g_Config.m_SvGametype, "ctf") == 0)
-		m_pController = new CGameControllerCTF(this);
-	else if(str_comp(g_Config.m_SvGametype, "tdm") == 0)
-		m_pController = new CGameControllerTDM(this);
-	else
-		m_pController = new CGameControllerDM(this);
+	m_pController = new CGameControllerCTF(this);
 
 	// setup core world
 	//for(int i = 0; i < MAX_CLIENTS; i++)
@@ -1585,7 +1584,7 @@ bool CGameContext::IsClientReady(int ClientID)
 
 bool CGameContext::IsClientPlayer(int ClientID)
 {
-	return m_apPlayers[ClientID] && m_apPlayers[ClientID]->GetTeam() == TEAM_SPECTATORS ? false : true;
+	return m_apPlayers[ClientID] && m_apPlayers[ClientID]->GetGameTeam() == TEAM_SPECTATORS ? false : true;
 }
 
 const char *CGameContext::GameType() { return m_pController && m_pController->m_pGameType ? m_pController->m_pGameType : ""; }

@@ -144,6 +144,7 @@ public:
 	int ClampTeam(int Team);
 
 	virtual void PostReset();
+	virtual void ReviveCheck() = 0;
 };
 
 #endif

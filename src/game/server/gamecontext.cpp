@@ -401,6 +401,30 @@ void CGameContext::SwapTeams()
 	(void)m_pController->CheckTeamBalance();
 }
 
+void CGameContext::ResetRevivedClients()
+{
+	m_NumRevivedClients = 0;
+}
+
+bool CGameContext::RegisterReviveClient(int ClientID)
+{
+	// If the list is full, say that everybody has rejoined!
+	if(m_NumRevivedClients == sizeof(m_aRevivedClients) / sizeof(m_aRevivedClients[0]))
+		return true;
+
+	NETADDR Addr = Server()->GetClientNetAddr(ClientID);
+	Addr.port = 0;
+
+	for(int i = 0; i < m_NumRevivedClients; i++)
+	{
+		if(net_addr_comp(&Addr, &m_aRevivedClients[i]) == 0)
+			return true;
+	}
+
+	m_aRevivedClients[m_NumRevivedClients++] = Addr;
+	return false;
+}
+
 void CGameContext::OnTick()
 {
 	// check tuning
@@ -548,7 +572,7 @@ void CGameContext::OnClientConnected(int ClientID)
 	const int StartTeam = g_Config.m_SvTournamentMode ? TEAM_SPECTATORS : m_pController->GetAutoTeam(ClientID);
 
 	m_apPlayers[ClientID] = new(ClientID) CPlayer(this, ClientID, StartTeam);
-	m_apPlayers[ClientID]->Revive();
+	m_apPlayers[ClientID]->Revive(true);
 	//players[client_id].init(client_id);
 	//players[client_id].client_id = client_id;
 
@@ -856,6 +880,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					if(pPlayer->GetGameTeam() == TEAM_SPECTATORS || pMsg->m_Team == TEAM_SPECTATORS)
 						m_VoteUpdate = true;
 					pPlayer->SetGameTeam(pMsg->m_Team);
+					pPlayer->Revive(true);
 					(void)m_pController->CheckTeamBalance();
 					pPlayer->m_TeamChangeTick = Server()->Tick();
 				}

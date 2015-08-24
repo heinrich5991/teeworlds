@@ -461,6 +461,11 @@ void CServer::GetClientAddr(int ClientID, char *pAddrStr, int Size)
 		net_addr_str(m_NetServer.ClientAddr(ClientID), pAddrStr, Size, false);
 }
 
+NETADDR CServer::GetClientNetAddr(int ClientID)
+{
+	return *m_NetServer.ClientAddr(ClientID);
+}
+
 
 const char *CServer::ClientName(int ClientID)
 {

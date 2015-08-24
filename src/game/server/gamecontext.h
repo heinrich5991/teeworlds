@@ -45,6 +45,9 @@ class CGameContext : public IGameServer
 	CNetObjHandler m_NetObjHandler;
 	CTuningParams m_Tuning;
 
+	NETADDR m_aRevivedClients[1024];
+	int m_NumRevivedClients;
+
 	static void ConTuneParam(IConsole::IResult *pResult, void *pUserData);
 	static void ConTuneReset(IConsole::IResult *pResult, void *pUserData);
 	static void ConTuneDump(IConsole::IResult *pResult, void *pUserData);
@@ -149,6 +152,11 @@ public:
 
 	//
 	void SwapTeams();
+
+	void ResetRevivedClients();
+	// Returns true if the client has already used up its one free respawn
+	// per round.
+	bool RegisterReviveClient(int ClientID);
 
 	// engine events
 	virtual void OnInit();

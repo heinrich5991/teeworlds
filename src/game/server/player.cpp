@@ -240,8 +240,15 @@ void CPlayer::Respawn()
 		m_Spawning = true;
 }
 
-void CPlayer::Revive()
+void CPlayer::Revive(bool Init)
 {
+	// If the player has already received its one revive per round, don't
+	// let them rejoin again.
+	if(GameServer()->RegisterReviveClient(GetCID()))
+	{
+		if(Init)
+			return;
+	}
 	SetTeamSimple(GetGameTeam());
 }
 

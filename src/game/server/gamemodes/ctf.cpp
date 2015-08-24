@@ -376,6 +376,7 @@ void CGameControllerCTF::ReviveCheck()
 
 void CGameControllerCTF::Revive()
 {
+	GameServer()->ResetRevivedClients();
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		CPlayer *pPlayer = GameServer()->m_apPlayers[i];

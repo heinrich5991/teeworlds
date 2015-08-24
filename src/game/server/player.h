@@ -22,7 +22,7 @@ public:
 	void Respawn();
 	void SetGameTeam(int Team, bool DoChatMsg=true);
 	void SetTeamSimple(int Team, bool Init=false);
-	void Revive();
+	void Revive(bool Init=false);
 private:
 	int GetTeam() const { return m_Team; };
 public:

@@ -682,7 +682,7 @@ int net_tcp_accept(NETSOCKET sock, NETSOCKET *new_sock, NETADDR *addr);
 		Returns 0 on success.
 
 */
-int net_tcp_connect(NETSOCKET sock, const NETADDR *addr);
+int net_tcp_connect(NETSOCKET *sock, const NETADDR *addr);
 
 /*
 	Function: net_tcp_send
@@ -1171,7 +1171,7 @@ int fs_rename(const char *oldname, const char *newname);
 
 	DOCTODO: serp
 */
-int net_tcp_connect_non_blocking(NETSOCKET sock, NETADDR bindaddr);
+int net_tcp_connect_non_blocking(NETSOCKET *sock, NETADDR bindaddr);
 
 /*
 	Function: net_set_non_blocking

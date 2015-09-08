@@ -173,6 +173,7 @@ function GenerateLinuxSettings(settings, conf, arch)
 		os.exit(1)
 	end
 	settings.link.libs:Add("pthread")
+	settings.link.libs:Add("http_parser")
 
 	GenerateCommonSettings(settings, conf, arch)
 

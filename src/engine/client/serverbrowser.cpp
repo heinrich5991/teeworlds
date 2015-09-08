@@ -14,6 +14,8 @@
 #include <engine/friends.h>
 #include <engine/masterserver.h>
 
+#include <game/version.h>
+
 #include <mastersrv/mastersrv.h>
 
 #include "serverbrowser.h"
@@ -161,6 +163,7 @@ void CServerBrowser::Update(bool ForceResort)
 		static const char aFormat[] =
 			"GET /teeworlds/serverlist/0.6 HTTP/1.1\r\n"
 			"Host: %s\r\n"
+			"User-Agent: Teeworlds/" GAME_VERSION "\r\n"
 			"Connection: close\r\n"
 			"\r\n";
 

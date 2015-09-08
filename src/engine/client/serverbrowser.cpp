@@ -209,7 +209,6 @@ void CServerBrowser::Update(bool ForceResort)
 			{
 				if(!net_would_block())
 				{
-					dbg_msg("dbg", "conn failed %d", i);
 					// Connection failed.
 					net_tcp_close(m_aMasters[i].m_Socket);
 					m_aMasters[i].m_State = MASTERSTATE_NONE;
@@ -219,7 +218,6 @@ void CServerBrowser::Update(bool ForceResort)
 			m_aMasters[i].m_RequestSentSize += Sent;
 			if(m_aMasters[i].m_RequestSentSize == m_aMasters[i].m_RequestSize)
 			{
-				dbg_msg("dbg", "conn successful %d", i);
 				m_aMasters[i].m_State = MASTERSTATE_AWAITING_RESPONSE;
 				http_parser_init(&m_aMasters[i].m_Parser, HTTP_RESPONSE);
 			}
@@ -227,7 +225,6 @@ void CServerBrowser::Update(bool ForceResort)
 		}
 		case MASTERSTATE_AWAITING_RESPONSE:
 		{
-			dbg_msg("dbg", "huh %d", i);
 			char aBuf[1024];
 			int Recv = net_tcp_recv(m_aMasters[i].m_Socket, aBuf, sizeof(aBuf));
 			if(Recv < 0)

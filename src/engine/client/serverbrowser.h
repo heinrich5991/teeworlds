@@ -3,12 +3,11 @@
 #ifndef ENGINE_CLIENT_SERVERBROWSER_H
 #define ENGINE_CLIENT_SERVERBROWSER_H
 
+#include <engine/external/http_parser/http_parser.h>
 #include <engine/serverbrowser.h>
 #include "serverbrowser_entry.h"
 #include "serverbrowser_fav.h"
 #include "serverbrowser_filter.h"
-
-#include <http_parser.h>
 
 class CServerBrowser : public IServerBrowser
 {

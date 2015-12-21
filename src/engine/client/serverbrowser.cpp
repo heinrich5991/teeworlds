@@ -3,6 +3,8 @@
 #include <base/math.h>
 #include <base/system.h>
 
+#include <engine/external/json-parser/json.h>
+
 #include <engine/shared/config.h>
 #include <engine/shared/memheap.h>
 #include <engine/shared/network.h>
@@ -188,8 +190,7 @@ void CServerBrowser::Update(bool ForceResort)
 		CHttpRequest::CResult Result = m_aMasterHttpRequests[i].Result();
 		if(Result.m_pData)
 		{
-			Result.m_pData[Result.m_DataSize-1] = 0;
-			dbg_msg("data", "%s", Result.m_pData);
+			ParseMasterServerResponse(Result.m_pData);
 		}
 		m_aMasterHttpRequests[i].Close();
 	}
@@ -515,4 +516,39 @@ void CServerBrowser::SetInfo(int ServerlistType, CServerEntry *pEntry, const CSe
 	m_aServerlist[ServerlistType].m_NumPlayers += pEntry->m_Info.m_NumPlayers;
 
 	pEntry->m_InfoState = CServerEntry::STATE_READY;
+}
+
+void CServerBrowser::ParseMasterServerResponse(char *pJsonString)
+{
+	json_settings JsonSettings;
+	char aError[256];
+	mem_zero(&JsonSettings, sizeof(JsonSettings));
+
+	json_value *pJson = json_parse_ex(&JsonSettings, pJsonString, aError);
+	if(!pJson)
+	{
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "mastersrv", aError);
+		return;
+	}
+	if(pJson->type != json_array)
+	{
+		json_value_free(pJson);
+		return;
+	}
+	for(int i = 0; i < pJson->u.array.length; i++)
+	{
+		const json_value &AddrStringJson = (*pJson)[i];
+		if(AddrStringJson.type != json_string)
+		{
+			continue;
+		}
+		const char *pAddrString = AddrStringJson;
+		NETADDR Addr;
+		if(net_addr_from_str(&Addr, pAddrString) != 0)
+		{
+			continue;
+		}
+		Set(Addr, SET_MASTER_ADD, -1, 0);
+	}
+	json_value_free(pJson);
 }

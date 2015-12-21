@@ -89,7 +89,7 @@ private:
 	CServerEntry *Add(int ServerlistType, const NETADDR &Addr);
 	CServerEntry *Find(int ServerlistType, const NETADDR &Addr);
 
-	http_parser_settings m_HttpParserSettings;
+	void ParseMasterServerResponse(char *pJson);
 
 	void QueueRequest(CServerEntry *pEntry);
 	void RemoveRequest(CServerEntry *pEntry);

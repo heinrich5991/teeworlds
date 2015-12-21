@@ -62,11 +62,6 @@ CHttpRequest::CResult CHttpRequest::Result()
 	return Result;
 }
 
-void CHttpRequest::Close()
-{
-	ChangeState(STATE_INACTIVE);
-}
-
 void CHttpRequest::Request(NETADDR *pAddr, const char *pHost, const char *pUrl)
 {
 	static const char aFormat[] =
@@ -76,7 +71,7 @@ void CHttpRequest::Request(NETADDR *pAddr, const char *pHost, const char *pUrl)
 		"Connection: close\r\n"
 		"\r\n";
 
-	Close();
+	Reset();
 	str_format(m_aRequest, sizeof(m_aRequest), aFormat, pUrl, pHost);
 
 	// Don't include null termination in request.

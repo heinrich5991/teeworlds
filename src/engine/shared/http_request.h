@@ -20,7 +20,7 @@ public:
 	void Init(int MaxResponseSize);
 	void Request(NETADDR *pAddr, const char *pHost, const char *pUrl);
 	void Update();
-	void Close();
+	void Reset() { ChangeState(STATE_INACTIVE); }
 
 	bool Done() { return m_State == STATE_ERROR || m_State == STATE_SUCCESS; }
 	CResult Result();

@@ -176,6 +176,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 
 		int m_State;
 		class CHostLookup m_VersionServeraddr;
+		class CVersionSrv m_VersionSrv;
 	} m_VersionInfo;
 
 	int64 TickStartTime(int Tick);

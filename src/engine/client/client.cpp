@@ -42,6 +42,7 @@
 
 #include "friends.h"
 #include "serverbrowser.h"
+#include "versionsrv.h"
 #include "client.h"
 
 #if defined(CONF_FAMILY_WINDOWS)
@@ -1617,20 +1618,36 @@ void CClient::VersionUpdate()
 	{
 		if(m_VersionInfo.m_VersionServeraddr.m_Job.Status() == CJob::STATE_DONE)
 		{
-			CNetChunk Packet;
-
-			mem_zero(&Packet, sizeof(Packet));
-
-			m_VersionInfo.m_VersionServeraddr.m_Addr.port = VERSIONSRV_PORT;
-
-			Packet.m_ClientID = -1;
-			Packet.m_Address = m_VersionInfo.m_VersionServeraddr.m_Addr;
-			Packet.m_pData = VERSIONSRV_GETVERSION;
-			Packet.m_DataSize = sizeof(VERSIONSRV_GETVERSION);
-			Packet.m_Flags = NETSENDFLAG_CONNLESS;
-
-			m_ContactClient.Send(&Packet);
+			m_VersionInfo.m_VersionServeraddr.m_Addr.port = 80;
+			m_VersionInfo.m_VersionSrv.Request(
+				&m_VersionInfo.m_VersionServeraddr.m_Addr,
+				g_Config.m_ClVersionServer
+			);
 			m_VersionInfo.m_State = CVersionInfo::STATE_READY;
+		}
+	}
+	else if(m_VersionInfo.m_State == CVersionInfo::STATE_READY)
+	{
+		m_VersionInfo.m_VersionSrv.Update();
+		if(m_VersionInfo.m_VersionSrv.Done())
+		{
+			int VersionState = m_VersionInfo.m_VersionSrv.State();
+
+			const char *pResult = 0;
+			if(VersionState == CVersionSrv::VERSION_OUTOFDATE)
+			{
+				pResult = "version out of date";
+			}
+			else if(VersionState == CVersionSrv::VERSION_UPTODATE)
+			{
+				pResult = "version up to date";
+			}
+			else if(VersionState == CVersionSrv::VERSION_ERROR)
+			{
+				pResult = "versionsrv error";
+			}
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/version", pResult);
+			m_VersionInfo.m_VersionSrv.Reset();
 		}
 	}
 }

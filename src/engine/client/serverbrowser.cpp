@@ -192,7 +192,7 @@ void CServerBrowser::Update(bool ForceResort)
 		{
 			ParseMasterServerResponse(Result.m_pData);
 		}
-		m_aMasterHttpRequests[i].Close();
+		m_aMasterHttpRequests[i].Reset();
 	}
 
 	// do timeouts

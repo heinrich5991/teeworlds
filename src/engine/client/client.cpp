@@ -38,11 +38,10 @@
 #include <game/version.h>
 
 #include <mastersrv/mastersrv.h>
-#include <versionsrv/versionsrv.h>
 
 #include "friends.h"
 #include "serverbrowser.h"
-#include "versionsrv.h"
+#include "version.h"
 #include "client.h"
 
 #if defined(CONF_FAMILY_WINDOWS)
@@ -887,53 +886,6 @@ int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pTo
 
 void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 {
-	// version server
-	if(m_VersionInfo.m_State == CVersionInfo::STATE_READY && net_addr_comp(&pPacket->m_Address, &m_VersionInfo.m_VersionServeraddr.m_Addr) == 0)
-	{
-		// version info
-		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_VERSION) + sizeof(GAME_RELEASE_VERSION)) &&
-			mem_comp(pPacket->m_pData, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION)) == 0)
-
-		{
-			char *pVersionData = (char*)pPacket->m_pData + sizeof(VERSIONSRV_VERSION);
-			int VersionMatch = !mem_comp(pVersionData, GAME_RELEASE_VERSION, sizeof(GAME_RELEASE_VERSION));
-
-			char aVersion[sizeof(GAME_RELEASE_VERSION)];
-			str_copy(aVersion, pVersionData, sizeof(aVersion));
-
-			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "version does %s (%s)",
-				VersionMatch ? "match" : "NOT match",
-				aVersion);
-			m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/version", aBuf);
-
-			// assume version is out of date when version-data doesn't match
-			if(!VersionMatch)
-			{
-				str_copy(m_aVersionStr, aVersion, sizeof(m_aVersionStr));
-			}
-
-			// request the map version list now
-			CNetChunk Packet;
-			mem_zero(&Packet, sizeof(Packet));
-			Packet.m_ClientID = -1;
-			Packet.m_Address = m_VersionInfo.m_VersionServeraddr.m_Addr;
-			Packet.m_pData = VERSIONSRV_GETMAPLIST;
-			Packet.m_DataSize = sizeof(VERSIONSRV_GETMAPLIST);
-			Packet.m_Flags = NETSENDFLAG_CONNLESS;
-			m_ContactClient.Send(&Packet);
-		}
-
-		// map version list
-		if(pPacket->m_DataSize >= (int)sizeof(VERSIONSRV_MAPLIST) &&
-			mem_comp(pPacket->m_pData, VERSIONSRV_MAPLIST, sizeof(VERSIONSRV_MAPLIST)) == 0)
-		{
-			int Size = pPacket->m_DataSize-sizeof(VERSIONSRV_MAPLIST);
-			int Num = Size/sizeof(CMapVersion);
-			m_MapChecker.AddMaplist((CMapVersion *)((char*)pPacket->m_pData+sizeof(VERSIONSRV_MAPLIST)), Num);
-		}
-	}
-
 	// server info
 	if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_INFO) && mem_comp(pPacket->m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
 	{
@@ -1619,7 +1571,7 @@ void CClient::VersionUpdate()
 		if(m_VersionInfo.m_VersionServeraddr.m_Job.Status() == CJob::STATE_DONE)
 		{
 			m_VersionInfo.m_VersionServeraddr.m_Addr.port = 80;
-			m_VersionInfo.m_VersionSrv.Request(
+			m_VersionInfo.m_Version.Request(
 				&m_VersionInfo.m_VersionServeraddr.m_Addr,
 				g_Config.m_ClVersionServer
 			);
@@ -1628,26 +1580,31 @@ void CClient::VersionUpdate()
 	}
 	else if(m_VersionInfo.m_State == CVersionInfo::STATE_READY)
 	{
-		m_VersionInfo.m_VersionSrv.Update();
-		if(m_VersionInfo.m_VersionSrv.Done())
+		m_VersionInfo.m_Version.Update();
+		if(m_VersionInfo.m_Version.Done())
 		{
-			int VersionState = m_VersionInfo.m_VersionSrv.State();
+			int VersionState = m_VersionInfo.m_Version.State();
 
 			const char *pResult = 0;
-			if(VersionState == CVersionSrv::VERSION_OUTOFDATE)
+			if(VersionState == CVersion::VERSION_OUTOFDATE)
 			{
 				pResult = "version out of date";
 			}
-			else if(VersionState == CVersionSrv::VERSION_UPTODATE)
+			else if(VersionState == CVersion::VERSION_UPTODATE)
 			{
 				pResult = "version up to date";
 			}
-			else if(VersionState == CVersionSrv::VERSION_ERROR)
+			else if(VersionState == CVersion::VERSION_ERROR)
 			{
 				pResult = "versionsrv error";
 			}
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/version", pResult);
-			m_VersionInfo.m_VersionSrv.Reset();
+			m_VersionInfo.m_Version.Reset();
+
+			m_MapChecker.Request(
+				&m_VersionInfo.m_VersionServeraddr.m_Addr,
+				g_Config.m_ClVersionServer
+			);
 		}
 	}
 }
@@ -1784,6 +1741,7 @@ void CClient::Run()
 	{
 		//
 		VersionUpdate();
+		m_MapChecker.Update();
 
 		// handle pending connects
 		if(m_aCmdConnect[0])

@@ -1,32 +1,32 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
-#include "versionsrv.h"
+#include "version.h"
 
 #include <engine/external/json-parser/json.h>
 #include <game/version.h>
 
-CVersionSrv::CVersionSrv()
+CVersion::CVersion()
 {
 	m_HttpRequest.Init(4 * 1024);
 }
 
-void CVersionSrv::Request(NETADDR *pAddr, char *pHostname)
+void CVersion::Request(NETADDR *pAddr, char *pHostname)
 {
-	m_HttpRequest.Request(pAddr, pHostname, "/teeworlds/version");
+	m_HttpRequest.Request(pAddr, pHostname, "version");
 }
 
-void CVersionSrv::Update()
+void CVersion::Update()
 {
 	m_HttpRequest.Update();
 }
 
-bool CVersionSrv::Done()
+bool CVersion::Done()
 {
 	return m_HttpRequest.Done();
 }
 
-int CVersionSrv::State()
+int CVersion::State()
 {
 	CHttpRequest::CResult Result = m_HttpRequest.Result();
 	if(!Result.m_pData)
@@ -61,7 +61,7 @@ int CVersionSrv::State()
 	return VERSION_OUTOFDATE;
 }
 
-void CVersionSrv::Reset()
+void CVersion::Reset()
 {
 	m_HttpRequest.Reset();
 }

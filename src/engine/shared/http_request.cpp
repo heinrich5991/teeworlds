@@ -65,7 +65,7 @@ CHttpRequest::CResult CHttpRequest::Result()
 void CHttpRequest::Request(NETADDR *pAddr, const char *pHost, const char *pUrl)
 {
 	static const char aFormat[] =
-		"GET %s HTTP/1.1\r\n"
+		"GET /teeworlds/%s HTTP/1.1\r\n"
 		"Host: %s\r\n"
 		"User-Agent: Teeworlds/" GAME_VERSION "\r\n"
 		"Connection: close\r\n"

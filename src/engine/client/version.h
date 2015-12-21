@@ -1,11 +1,11 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef ENGINE_CLIENT_VERSIONSRV_H
-#define ENGINE_CLIENT_VERSIONSRV_H
+#ifndef ENGINE_CLIENT_VERSION_H
+#define ENGINE_CLIENT_VERSION_H
 
 #include <engine/shared/http_request.h>
 
-class CVersionSrv
+class CVersion
 {
 public:
 	enum
@@ -14,7 +14,7 @@ public:
 		VERSION_UPTODATE,
 		VERSION_ERROR,
 	};
-	CVersionSrv();
+	CVersion();
 	void Request(NETADDR *pAddr, char *pHostname);
 	void Update();
 	bool Done();
@@ -25,4 +25,4 @@ private:
 	class CHttpRequest m_HttpRequest;
 };
 
-#endif // ENGINE_CLIENT_VERSIONSRV_H
+#endif // ENGINE_CLIENT_VERSION_H

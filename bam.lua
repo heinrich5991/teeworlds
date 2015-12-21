@@ -339,14 +339,14 @@ function BuildServer(settings, family, platform)
 	
 	local game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), SharedServerFiles())
 	
-	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], libs["http"], server, game_server)
+	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], libs["json"], libs["http"], server, game_server)
 end
 
 function BuildTools(settings)
 	local tools = {}
 	for i,v in ipairs(Collect("src/tools/*.cpp", "src/tools/*.c")) do
 		local toolname = PathFilename(PathBase(v))
-		tools[i] = Link(settings, toolname, Compile(settings, v), libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["http"])
+		tools[i] = Link(settings, toolname, Compile(settings, v), libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["json"], libs["http"])
 	end
 	PseudoTarget(settings.link.Output(settings, "pseudo_tools") .. settings.link.extension, tools)
 end

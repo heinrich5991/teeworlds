@@ -3,7 +3,10 @@
 #ifndef ENGINE_SHARED_MAPCHECKER_H
 #define ENGINE_SHARED_MAPCHECKER_H
 
+#include "http_request.h"
 #include "memheap.h"
+
+#include <versionsrv/versionsrv.h>
 
 class CMapChecker
 {
@@ -23,13 +26,17 @@ class CMapChecker
 	class CHeap m_Whitelist;
 	CWhitelistEntry *m_pFirst;
 
-	bool m_RemoveDefaultList;
-
 	void Init();
 	void SetDefaults();
 
+	CHttpRequest m_HttpRequest;
+	void ParseHttpResponse(char *pResponse);
+	void AddEntry(const char *pMapName, unsigned MapCrc, unsigned MapSize);
+
 public:
 	CMapChecker();
+	void Request(NETADDR *pAddr, char *pHostname);
+	void Update();
 	void AddMaplist(struct CMapVersion *pMaplist, int Num);
 	bool IsMapValid(const char *pMapName, unsigned MapCrc, unsigned MapSize);
 	bool ReadAndValidateMap(class IStorage *pStorage, const char *pFilename, int StorageType);

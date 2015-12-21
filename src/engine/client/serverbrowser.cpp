@@ -174,7 +174,7 @@ void CServerBrowser::Update(bool ForceResort)
 			m_aMasterHttpRequests[i].Request(
 				&Addr,
 				m_pMasterServer->GetName(i),
-				"/teeworlds/serverlist/0.6"
+				HTTP_VERSION "/serverlist"
 			);
 		}
 

@@ -3,7 +3,7 @@
 #ifndef ENGINE_CLIENT_SERVERBROWSER_H
 #define ENGINE_CLIENT_SERVERBROWSER_H
 
-#include <engine/external/http_parser/http_parser.h>
+#include <engine/shared/http_request.h>
 #include <engine/serverbrowser.h>
 #include "serverbrowser_entry.h"
 #include "serverbrowser_fav.h"
@@ -49,35 +49,8 @@ public:
 	void RemoveFilter(int Index) { m_ServerBrowserFilter.RemoveFilter(Index); };
 
 private:
-	enum
-	{
-		MASTERSTATE_NONE=0,
-		MASTERSTATE_CONNECTING,
-		MASTERSTATE_SENDING,
-		MASTERSTATE_AWAITING_RESPONSE,
-	};
-
-	struct CReceiveCallbackData
-	{
-		char m_aBuf[1024];
-		size_t m_BufSize;
-		bool m_Invalid;
-		CServerBrowser *m_pThis;
-	};
-
-	struct CMaster
-	{
-		NETSOCKET m_Socket;
-		int m_State;
-		char m_aRequest[1024];
-		int m_RequestSize;
-		int m_RequestSentSize;
-		http_parser m_Parser;
-		CReceiveCallbackData m_CallbackData;
-	};
-
+	class CHttpRequest m_aMasterHttpRequests[IMasterServer::MAX_MASTERSERVERS];
 	class CNetClient *m_pNetClient;
-	CMaster m_aMasters[IMasterServer::MAX_MASTERSERVERS];
 	class IConsole *m_pConsole;
 	class IMasterServer *m_pMasterServer;
 		
@@ -122,9 +95,6 @@ private:
 	void RemoveRequest(CServerEntry *pEntry);
 	void RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) const;
 	void SetInfo(int ServerlistType, CServerEntry *pEntry, const CServerInfo &Info);
-
-	static int ServerListCallback(http_parser *pParser, const char *pData, size_t DataSize);
-	void ServerListServerCallback(const char *pServerAddr);
 };
 
 #endif

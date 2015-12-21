@@ -8,7 +8,7 @@ enum
 	BUFFER_SIZE=1024,
 };
 
-// Fuck all error checking, right?
+// Error checking is bad, you know?
 
 void SendRequest(NETSOCKET Socket, const char *pHostname)
 {
@@ -53,7 +53,7 @@ int ReceiveCallback(http_parser *pParser, const char *pData, size_t DataSize)
 			continue;
 		}
 
-		if(pData[i] < 32)
+		if(pData[i] <= 32)
 		{
 			// Null termination.
 			pCbData->m_aBuf[pCbData->m_BufSize] = '\0';

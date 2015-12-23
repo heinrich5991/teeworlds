@@ -1235,6 +1235,11 @@ int net_tcp_connect(NETSOCKET *sock, const NETADDR *a)
 	if(a->type&NETTYPE_IPV4)
 	{
 		sock->ipv4sock = ipv4sock;
+		if(ipv6sock >= 0)
+		{
+			priv_net_close_socket(ipv6sock);
+			sock->type &= ~NETTYPE_IPV6;
+		}
 
 		struct sockaddr_in addr;
 		netaddr_to_sockaddr_in(a, &addr);
@@ -1244,6 +1249,11 @@ int net_tcp_connect(NETSOCKET *sock, const NETADDR *a)
 	if(a->type&NETTYPE_IPV6)
 	{
 		sock->ipv6sock = ipv6sock;
+		if(ipv4sock >= 0)
+		{
+			priv_net_close_socket(ipv4sock);
+			sock->type &= ~NETTYPE_IPV4;
+		}
 
 		struct sockaddr_in6 addr;
 		netaddr_to_sockaddr_in6(a, &addr);

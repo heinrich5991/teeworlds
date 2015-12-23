@@ -1580,7 +1580,7 @@ int net_socket_error(NETSOCKET sock)
 	socklen_t result_len = sizeof(result);
 	if(sock.ipv4sock >= 0)
 	{
-		getsockopt(sock.ipv6sock, SOL_SOCKET, SO_ERROR, &result, &result_len);
+		getsockopt(sock.ipv4sock, SOL_SOCKET, SO_ERROR, &result, &result_len);
 	}
 	if(sock.ipv6sock >= 0)
 	{

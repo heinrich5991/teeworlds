@@ -3,6 +3,7 @@
 #ifndef ENGINE_SERVER_REGISTER_H
 #define ENGINE_SERVER_REGISTER_H
 
+#include <engine/shared/http_request.h>
 #include <engine/shared/network.h>
 
 class CRegister
@@ -13,16 +14,16 @@ class CRegister
 		REGISTERSTATE_UPDATE_ADDRS,
 		REGISTERSTATE_QUERY_COUNT,
 		REGISTERSTATE_HEARTBEAT,
-		REGISTERSTATE_REGISTERED,
 		REGISTERSTATE_ERROR
 	};
 
-	struct CMasterserverInfo
+	struct CMasterserver
 	{
 		NETADDR m_Addr;
 		int m_Count;
 		int m_Valid;
-		int64 m_LastSend;
+		int64 m_Blacklisted;
+		CHttpRequest m_HttpRequest;
 	};
 
 	class CNetServer *m_pNetServer;
@@ -33,15 +34,18 @@ class CRegister
 	int64 m_RegisterStateStart;
 	int m_RegisterFirst;
 	int m_RegisterCount;
+	int m_GotHeartbeatResponse;
 
-	CMasterserverInfo m_aMasterserverInfo[IMasterServer::MAX_MASTERSERVERS];
+	CMasterserver m_aMasterservers[IMasterServer::MAX_MASTERSERVERS];
 	int m_RegisterRegisteredServer;
 
 	void RegisterNewState(int State);
-	void RegisterSendFwcheckresponse(NETADDR *pAddr, TOKEN Token);
-	void RegisterSendHeartbeat(NETADDR Addr);
-	void RegisterSendCountRequest(NETADDR Addr);
-	void RegisterGotCount(struct CNetChunk *pChunk);
+	void RegisterSendHeartbeat(int i);
+	void RegisterGotHeartbeatResponse(int i, char *pData);
+	void RegisterSendCountRequest(int i);
+	void RegisterGotCount(int i, char *pData);
+
+	void BlacklistMaster(int i, int Seconds=300);
 
 public:
 	CRegister();

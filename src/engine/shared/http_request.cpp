@@ -62,6 +62,20 @@ CHttpRequest::CResult CHttpRequest::Result()
 	return Result;
 }
 
+void CHttpRequest::RequestImpl(NETADDR *pAddr)
+{
+	Reset();
+	m_RequestSentSize = 0;
+
+	NETADDR BindAddr = { 0 };
+	BindAddr.type = NETTYPE_ALL;
+	m_Socket = net_tcp_create(BindAddr);
+	net_set_non_blocking(m_Socket);
+	net_tcp_connect(&m_Socket, pAddr);
+
+	ChangeState(STATE_CONNECTING);
+}
+
 void CHttpRequest::Request(NETADDR *pAddr, const char *pHost, const char *pUrl)
 {
 	static const char aFormat[] =
@@ -71,21 +85,29 @@ void CHttpRequest::Request(NETADDR *pAddr, const char *pHost, const char *pUrl)
 		"Connection: close\r\n"
 		"\r\n";
 
-	Reset();
 	str_format(m_aRequest, sizeof(m_aRequest), aFormat, pUrl, pHost);
-
 	// Don't include null termination in request.
 	m_RequestSize = str_length(m_aRequest);
-	m_RequestSentSize = 0;
 
-	NETADDR BindAddr = { 0 };
-	BindAddr.type = NETTYPE_ALL;
-	m_Socket = net_tcp_create(BindAddr);
-	net_set_non_blocking(m_Socket);
+	RequestImpl(pAddr);
+}
 
-	net_tcp_connect(&m_Socket, pAddr);
+void CHttpRequest::PostJson(NETADDR *pAddr, const char *pHost, const char *pUrl, const char *pJson)
+{
+	static const char aFormat[] =
+		"POST /teeworlds/%s HTTP/1.1\r\n"
+		"Host: %s\r\n"
+		"User-Agent: Teeworlds/" GAME_VERSION "\r\n"
+		"Connection: close\r\n"
+		"Content-Type: application/json; charset=UTF-8\r\n"
+		"Content-Length: %d\r\n"
+		"\r\n"
+		"%s";
 
-	ChangeState(STATE_CONNECTING);
+	str_format(m_aRequest, sizeof(m_aRequest), aFormat, pUrl, pHost, str_length(pJson), pJson);
+	m_RequestSize = str_length(m_aRequest);
+
+	RequestImpl(pAddr);
 }
 
 void CHttpRequest::Update()
@@ -163,7 +185,6 @@ void CHttpRequest::Update()
 			// This is safe, we allocated one byte more than we
 			// needed.
 			m_Response.m_pBuffer[m_Response.m_Size] = 0;
-			net_tcp_close(m_Socket);
 			ChangeState(STATE_SUCCESS);
 			break;
 		}

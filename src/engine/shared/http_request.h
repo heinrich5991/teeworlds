@@ -19,6 +19,7 @@ public:
 	~CHttpRequest();
 	void Init(int MaxResponseSize);
 	void Request(NETADDR *pAddr, const char *pHost, const char *pUrl);
+	void PostJson(NETADDR *pAddr, const char *pHost, const char *pUrl, const char *pJson);
 	void Update();
 	void Reset() { ChangeState(STATE_INACTIVE); }
 
@@ -29,12 +30,12 @@ private:
 	void Error();
 	static bool SocketClosed(int State);
 	void ChangeState(int NewState);
+	void RequestImpl(NETADDR *pAddr);
 
 	enum
 	{
 		STATE_ERROR=-1,
 		STATE_INACTIVE=0,
-		STATE_RESOLVING,
 		STATE_CONNECTING,
 		STATE_SENDING_REQUEST,
 		STATE_AWAITING_RESPONSE,

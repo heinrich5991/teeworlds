@@ -1,12 +1,12 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
-#include <engine/shared/network.h>
-#include <engine/shared/config.h>
 #include <engine/console.h>
+#include <engine/external/json-parser/json.h>
 #include <engine/masterserver.h>
-
-#include <mastersrv/mastersrv.h>
+#include <engine/shared/config.h>
+#include <engine/shared/network.h>
+#include <game/version.h>
 
 #include "register.h"
 
@@ -20,8 +20,16 @@ CRegister::CRegister()
 	m_RegisterStateStart = 0;
 	m_RegisterFirst = 1;
 	m_RegisterCount = 0;
+	m_GotHeartbeatResponse = 0;
 
-	mem_zero(m_aMasterserverInfo, sizeof(m_aMasterserverInfo));
+	for(int i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
+	{
+		mem_zero(&m_aMasterservers[i].m_Addr, sizeof(m_aMasterservers[i].m_Addr));
+		m_aMasterservers[i].m_Count = 0;
+		m_aMasterservers[i].m_Valid = 0;
+		m_aMasterservers[i].m_Blacklisted = 0;
+		m_aMasterservers[i].m_HttpRequest.Init(4 * 1024);
+	}
 	m_RegisterRegisteredServer = -1;
 }
 
@@ -31,63 +39,146 @@ void CRegister::RegisterNewState(int State)
 	m_RegisterStateStart = time_get();
 }
 
-void CRegister::RegisterSendFwcheckresponse(NETADDR *pAddr, TOKEN Token)
+void CRegister::BlacklistMaster(int i, int Seconds)
 {
-	CNetChunk Packet;
-	Packet.m_ClientID = -1;
-	Packet.m_Address = *pAddr;
-	Packet.m_Flags = NETSENDFLAG_CONNLESS;
-	Packet.m_DataSize = sizeof(SERVERBROWSE_FWRESPONSE);
-	Packet.m_pData = SERVERBROWSE_FWRESPONSE;
-	m_pNetServer->Send(&Packet, Token);
+	m_aMasterservers[i].m_Blacklisted = time_get() + time_freq() * Seconds;
+	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "WARNING: Master server is not responding properly, switching master");
+	RegisterNewState(REGISTERSTATE_START);
 }
 
-void CRegister::RegisterSendHeartbeat(NETADDR Addr)
+void CRegister::RegisterSendHeartbeat(int i)
 {
-	static unsigned char aData[sizeof(SERVERBROWSE_HEARTBEAT) + 2];
-	unsigned short Port = g_Config.m_SvPort;
-	CNetChunk Packet;
-
-	mem_copy(aData, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT));
-
-	Packet.m_ClientID = -1;
-	Packet.m_Address = Addr;
-	Packet.m_Flags = NETSENDFLAG_CONNLESS;
-	Packet.m_DataSize = sizeof(SERVERBROWSE_HEARTBEAT) + 2;
-	Packet.m_pData = &aData;
-
-	// supply the set port that the master can use if it has problems
-	if(g_Config.m_SvExternalPort)
-		Port = g_Config.m_SvExternalPort;
-	aData[sizeof(SERVERBROWSE_HEARTBEAT)] = Port >> 8;
-	aData[sizeof(SERVERBROWSE_HEARTBEAT)+1] = Port&0xff;
-	m_pNetServer->Send(&Packet);
-}
-
-void CRegister::RegisterSendCountRequest(NETADDR Addr)
-{
-	CNetChunk Packet;
-	Packet.m_ClientID = -1;
-	Packet.m_Address = Addr;
-	Packet.m_Flags = NETSENDFLAG_CONNLESS;
-	Packet.m_DataSize = sizeof(SERVERBROWSE_GETCOUNT);
-	Packet.m_pData = SERVERBROWSE_GETCOUNT;
-	m_pNetServer->Send(&Packet);
-}
-
-void CRegister::RegisterGotCount(CNetChunk *pChunk)
-{
-	unsigned char *pData = (unsigned char *)pChunk->m_pData;
-	int Count = (pData[sizeof(SERVERBROWSE_COUNT)]<<8) | pData[sizeof(SERVERBROWSE_COUNT)+1];
-
-	for(int i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
+	char aBuffer[64];
+	if(!g_Config.m_SvExternalPort)
 	{
-		if(net_addr_comp(&m_aMasterserverInfo[i].m_Addr, &pChunk->m_Address) == 0)
-		{
-			m_aMasterserverInfo[i].m_Count = Count;
-			break;
-		}
+		str_format(aBuffer, sizeof(aBuffer), "{\"port\":%d}\n", g_Config.m_SvPort);
+
 	}
+	else
+	{
+		str_format(aBuffer, sizeof(aBuffer),
+			"{\"port\":%d,\"external-port\":%d}\n",
+			g_Config.m_SvPort, g_Config.m_SvExternalPort);
+	}
+	m_aMasterservers[i].m_HttpRequest.PostJson(
+		&m_aMasterservers[i].m_Addr,
+		m_pMasterServer->GetName(i),
+		HTTP_VERSION "/dynamic/register",
+		aBuffer
+	);
+	m_GotHeartbeatResponse = 0;
+}
+
+void CRegister::RegisterGotHeartbeatResponse(int i, char *pData)
+{
+	json_value *pJson = json_parse(pData);
+	if(!pJson)
+	{
+		dbg_msg("register", "invalid json (1): %s", pData);
+		BlacklistMaster(i);
+		return;
+	}
+
+	const json_value &ResultJson = (*pJson)["result"];
+	const json_value &MessageJson = (*pJson)["message"];
+	if(ResultJson.type != json_string ||
+		(MessageJson.type != json_string && MessageJson.type != json_none))
+	{
+		dbg_msg("register", "invalid json (2): %s", pData);
+		BlacklistMaster(i);
+		json_value_free(pJson);
+		return;
+	}
+
+	if(str_comp(ResultJson, "fwerror") == 0)
+	{
+		char aBuf[256];
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "ERROR: the master server reports that clients cannot connect to this server.");
+		str_format(aBuf, sizeof(aBuf), "ERROR: configure your firewall/nat to let through udp on port %d.", g_Config.m_SvPort);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
+		RegisterNewState(REGISTERSTATE_ERROR);
+		json_value_free(pJson);
+		return;
+	}
+	else if(str_comp(ResultJson, "error") == 0)
+	{
+		if(MessageJson.type == json_string)
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "ERROR: %s", (const char *)MessageJson);
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
+		}
+		else
+		{
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "ERROR registering");
+		}
+		BlacklistMaster(i, 60);
+		json_value_free(pJson);
+		return;
+	}
+	else if(str_comp(ResultJson, "ok") == 0)
+	{
+		if(MessageJson.type == json_string)
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "INFO: %s", (const char *)MessageJson);
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
+		}
+		// Fall through.
+	}
+	else
+	{
+		dbg_msg("register", "invalid json (3): %s", pData);
+		BlacklistMaster(i);
+		json_value_free(pJson);
+		return;
+	}
+	json_value_free(pJson);
+
+	m_GotHeartbeatResponse = 1;
+	if(m_RegisterFirst)
+	{
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "server registered");
+		m_RegisterFirst = 0;
+	}
+
+	// Redo the whole process after 60 minutes to balance out the master servers.
+	if(m_RegisterCount == 240)
+	{
+		RegisterNewState(REGISTERSTATE_START);
+	}
+	else
+	{
+		m_RegisterCount++;
+		RegisterNewState(REGISTERSTATE_HEARTBEAT);
+	}
+}
+
+void CRegister::RegisterSendCountRequest(int i)
+{
+	m_aMasterservers[i].m_HttpRequest.Request(
+		&m_aMasterservers[i].m_Addr,
+		m_pMasterServer->GetName(i),
+		HTTP_VERSION "/dynamic/info"
+	);
+}
+
+void CRegister::RegisterGotCount(int i, char *pData)
+{
+	json_value *pJson = json_parse(pData);
+	if(!pJson)
+	{
+		m_aMasterservers[i].m_Valid = 0;
+		return;
+	}
+	const json_value &CountJson = (*pJson)["count"];
+	m_aMasterservers[i].m_Valid = 0;
+	if(CountJson.type == json_integer)
+	{
+		m_aMasterservers[i].m_Count = CountJson.u.integer;
+		m_aMasterservers[i].m_Valid = 1;
+	}
+	json_value_free(pJson);
 }
 
 void CRegister::Init(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole)
@@ -107,6 +198,11 @@ void CRegister::RegisterUpdate(int Nettype)
 
 	m_pMasterServer->Update();
 
+	for(int i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
+	{
+		m_aMasterservers[i].m_HttpRequest.Update();
+	}
+
 	if(m_RegisterState == REGISTERSTATE_START)
 	{
 		m_RegisterCount = 0;
@@ -124,18 +220,19 @@ void CRegister::RegisterUpdate(int Nettype)
 			int i;
 			for(i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
 			{
-				if(!m_pMasterServer->IsValid(i))
+				if(!m_pMasterServer->IsValid(i)
+					|| Now <= m_aMasterservers[i].m_Blacklisted)
 				{
-					m_aMasterserverInfo[i].m_Valid = 0;
-					m_aMasterserverInfo[i].m_Count = 0;
+					m_aMasterservers[i].m_Valid = 0;
+					m_aMasterservers[i].m_Count = 0;
 					continue;
 				}
 
 				NETADDR Addr = m_pMasterServer->GetAddr(i);
-				m_aMasterserverInfo[i].m_Addr = Addr;
-				m_aMasterserverInfo[i].m_Valid = 1;
-				m_aMasterserverInfo[i].m_Count = -1;
-				m_aMasterserverInfo[i].m_LastSend = 0;
+				m_aMasterservers[i].m_Addr = Addr;
+				m_aMasterservers[i].m_Valid = 1;
+				m_aMasterservers[i].m_Count = -1;
+				RegisterSendCountRequest(i);
 			}
 
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "fetching server counts");
@@ -147,18 +244,28 @@ void CRegister::RegisterUpdate(int Nettype)
 		int Left = 0;
 		for(int i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
 		{
-			if(!m_aMasterserverInfo[i].m_Valid)
+			if(!m_aMasterservers[i].m_Valid)
 				continue;
 
-			if(m_aMasterserverInfo[i].m_Count == -1)
+			if(m_aMasterservers[i].m_Count != -1)
+				continue;
+
+			if(!m_aMasterservers[i].m_HttpRequest.Done())
 			{
 				Left++;
-				if(m_aMasterserverInfo[i].m_LastSend+Freq < Now)
-				{
-					m_aMasterserverInfo[i].m_LastSend = Now;
-					RegisterSendCountRequest(m_aMasterserverInfo[i].m_Addr);
-				}
+				continue;
 			}
+
+			CHttpRequest::CResult Result = m_aMasterservers[i].m_HttpRequest.Result();
+			if(!Result.m_pData)
+			{
+				m_aMasterservers[i].m_Valid = 0;
+				continue;
+			}
+
+			RegisterGotCount(i, Result.m_pData);
+
+			m_aMasterservers[i].m_HttpRequest.Reset();
 		}
 
 		// check if we are done or timed out
@@ -169,10 +276,10 @@ void CRegister::RegisterUpdate(int Nettype)
 			int i;
 			for(i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
 			{
-				if(!m_aMasterserverInfo[i].m_Valid || m_aMasterserverInfo[i].m_Count == -1)
+				if(!m_aMasterservers[i].m_Valid || m_aMasterservers[i].m_Count == -1)
 					continue;
 
-				if(Best == -1 || m_aMasterserverInfo[i].m_Count < m_aMasterserverInfo[Best].m_Count)
+				if(Best == -1 || m_aMasterservers[i].m_Count < m_aMasterservers[Best].m_Count)
 					Best = i;
 			}
 
@@ -188,42 +295,39 @@ void CRegister::RegisterUpdate(int Nettype)
 				char aBuf[256];
 				str_format(aBuf, sizeof(aBuf), "chose '%s' as master, sending heartbeats", m_pMasterServer->GetName(m_RegisterRegisteredServer));
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
-				m_aMasterserverInfo[m_RegisterRegisteredServer].m_LastSend = 0;
 				RegisterNewState(REGISTERSTATE_HEARTBEAT);
+				RegisterSendHeartbeat(m_RegisterRegisteredServer);
 			}
 		}
 	}
 	else if(m_RegisterState == REGISTERSTATE_HEARTBEAT)
 	{
-		// check if we should send heartbeat
-		if(Now > m_aMasterserverInfo[m_RegisterRegisteredServer].m_LastSend+Freq*15)
+		int i = m_RegisterRegisteredServer;
+		if(m_aMasterservers[i].m_HttpRequest.Done())
 		{
-			m_aMasterserverInfo[m_RegisterRegisteredServer].m_LastSend = Now;
-			RegisterSendHeartbeat(m_aMasterserverInfo[m_RegisterRegisteredServer].m_Addr);
-		}
-
-		if(Now > m_RegisterStateStart+Freq*60)
-		{
-			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "WARNING: Master server is not responding, switching master");
-			RegisterNewState(REGISTERSTATE_START);
-		}
-	}
-	else if(m_RegisterState == REGISTERSTATE_REGISTERED)
-	{
-		if(m_RegisterFirst)
-			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "server registered");
-
-		m_RegisterFirst = 0;
-
-		// check if we should send new heartbeat again
-		if(Now > m_RegisterStateStart+Freq)
-		{
-			if(m_RegisterCount == 120) // redo the whole process after 60 minutes to balance out the master servers
-				RegisterNewState(REGISTERSTATE_START);
+			CHttpRequest::CResult Result = m_aMasterservers[i].m_HttpRequest.Result();
+			if(Result.m_pData)
+			{
+				RegisterGotHeartbeatResponse(i, Result.m_pData);
+			}
 			else
 			{
-				m_RegisterCount++;
+				dbg_msg("register", "could not POST register request");
+				BlacklistMaster(i);
+			}
+			m_aMasterservers[i].m_HttpRequest.Reset();
+		}
+		else if(Now > m_RegisterStateStart+Freq*15)
+		{
+			if(!m_GotHeartbeatResponse)
+			{
+				dbg_msg("register", "no heartbeat answer in 15s");
+				BlacklistMaster(i);
+			}
+			else
+			{
 				RegisterNewState(REGISTERSTATE_HEARTBEAT);
+				RegisterSendHeartbeat(i);
 			}
 		}
 	}
@@ -231,59 +335,17 @@ void CRegister::RegisterUpdate(int Nettype)
 	{
 		// check for restart
 		if(Now > m_RegisterStateStart+Freq*60)
+		{
+			for(int i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
+			{
+				m_aMasterservers[i].m_Blacklisted = 0;
+			}
 			RegisterNewState(REGISTERSTATE_START);
+		}
 	}
 }
 
 int CRegister::RegisterProcessPacket(CNetChunk *pPacket, TOKEN Token)
 {
-	// check for masterserver address
-	bool Valid = false;
-	NETADDR Addr1 = pPacket->m_Address;
-	Addr1.port = 0;
-	for(int i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
-	{
-		NETADDR Addr2 = m_aMasterserverInfo[i].m_Addr;
-		Addr2.port = 0;
-		if(net_addr_comp(&Addr1, &Addr2) == 0)
-		{
-			Valid = true;
-			break;
-		}
-	}
-	if(!Valid)
-		return 0;
-
-	if(pPacket->m_DataSize == sizeof(SERVERBROWSE_FWCHECK) &&
-		mem_comp(pPacket->m_pData, SERVERBROWSE_FWCHECK, sizeof(SERVERBROWSE_FWCHECK)) == 0)
-	{
-		RegisterSendFwcheckresponse(&pPacket->m_Address, Token);
-		return 1;
-	}
-	else if(pPacket->m_DataSize == sizeof(SERVERBROWSE_FWOK) &&
-		mem_comp(pPacket->m_pData, SERVERBROWSE_FWOK, sizeof(SERVERBROWSE_FWOK)) == 0)
-	{
-		if(m_RegisterFirst && m_RegisterState != REGISTERSTATE_REGISTERED)
-			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "no firewall/nat problems detected");
-		RegisterNewState(REGISTERSTATE_REGISTERED);
-		return 1;
-	}
-	else if(pPacket->m_DataSize == sizeof(SERVERBROWSE_FWERROR) &&
-		mem_comp(pPacket->m_pData, SERVERBROWSE_FWERROR, sizeof(SERVERBROWSE_FWERROR)) == 0)
-	{
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "ERROR: the master server reports that clients can not connect to this server.");
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "ERROR: configure your firewall/nat to let through udp on port %d.", g_Config.m_SvPort);
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
-		RegisterNewState(REGISTERSTATE_ERROR);
-		return 1;
-	}
-	else if(pPacket->m_DataSize == sizeof(SERVERBROWSE_COUNT)+2 &&
-		mem_comp(pPacket->m_pData, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT)) == 0)
-	{
-		RegisterGotCount(pPacket);
-		return 1;
-	}
-
 	return 0;
 }

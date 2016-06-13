@@ -134,7 +134,7 @@ function build(settings)
 	settings.cc.Output = Intermediate_Output
 
 	if config.compiler.driver == "cl" then
-		settings.cc.flags:Add("/wd4244")
+		settings.cc.flags:Add("/wd4244", "/wd4577")
 	else
 		settings.cc.flags:Add("-Wall", "-fno-exceptions")
 		if platform == "macosx" then

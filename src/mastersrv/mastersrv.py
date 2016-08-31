@@ -1,8 +1,10 @@
 from flask import Flask, abort, jsonify, request
 from redis import StrictRedis
+import socket
 
 app = Flask(__name__)
 redis = StrictRedis()
+udp = socket.socket(type=socket.SOCK_DGRAM)
 
 EXPIRE_SECONDS=90 # Time until a server without heartbeats is removed.
 KEY_SERVER="server/{}".format
@@ -39,10 +41,26 @@ def register():
 		port = json["port"]
 	except KeyError:
 		return abort(400)
-	alt_port = json.get("external-port")
 
-	address = "{}:{}".format(request.remote_addr, port)
-	server_add(address)
+	return jsonify({
+		"result": "fwcheck",
+	})
+
+@app.route("/teeworlds/0.7/dynamic/fwcheck", methods=["POST"])
+def fwcheck():
+	json = request.get_json()
+	if json is None:
+		return abort(400)
+	try:
+		port = json["port"]
+	except KeyError:
+		return abort(400)
+
+	# TODO: Check if port is an integer.
+	udp.sendto(b"\xff\xff\xff\x1f\xff\xff\xff\xff\xff\xfffw?2foobar\08303\0kekse\0", (request.remote_addr, port))
+
+	#address = "{}:{}".format(request.remote_addr, port)
+	#server_add(address)
 	return jsonify({
 		"result": "ok",
 	})

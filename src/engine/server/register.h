@@ -14,6 +14,7 @@ class CRegister
 		REGISTERSTATE_UPDATE_ADDRS,
 		REGISTERSTATE_QUERY_COUNT,
 		REGISTERSTATE_HEARTBEAT,
+		REGISTERSTATE_FWCHECK,
 		REGISTERSTATE_ERROR
 	};
 
@@ -35,6 +36,13 @@ class CRegister
 	int m_RegisterFirst;
 	int m_RegisterCount;
 	int m_GotHeartbeatResponse;
+	int64 m_FwCheckTime;
+	int m_NumFwChecks;
+	bool m_FwCheckDone;
+	bool m_FwCheckAlternatePort;
+	char m_aFwCheckToken[64];
+	char m_aFwCheckResult[64];
+	int m_FwPort;
 
 	CMasterserver m_aMasterservers[IMasterServer::MAX_MASTERSERVERS];
 	int m_RegisterRegisteredServer;
@@ -44,6 +52,7 @@ class CRegister
 	void RegisterGotHeartbeatResponse(int i, char *pData);
 	void RegisterSendCountRequest(int i);
 	void RegisterGotCount(int i, char *pData);
+	void RegisterSendFwCheck(int i);
 
 	void BlacklistMaster(int i, int Seconds=300);
 

@@ -77,7 +77,7 @@ public:
 				if(m_aMasterServers[i].m_Lookup.m_Job.Result() == 0)
 				{
 					m_aMasterServers[i].m_Addr = m_aMasterServers[i].m_Lookup.m_Addr;
-					m_aMasterServers[i].m_Addr.port = 80;
+					m_aMasterServers[i].m_Addr.port = 5000;
 					m_aMasterServers[i].m_Valid = true;
 				}
 				else

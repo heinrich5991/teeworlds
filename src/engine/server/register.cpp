@@ -94,7 +94,8 @@ void CRegister::RegisterSendHeartbeat(int i)
 	m_aMasterservers[i].m_HttpRequest.PostJson(
 		&m_aMasterservers[i].m_Addr,
 		m_pMasterServer->GetName(i),
-		HTTP_VERSION "/dynamic/register",
+		m_pMasterServer->GetPath(i),
+		"/dynamic/register",
 		aBuffer
 	);
 	m_GotHeartbeatResponse = 0;
@@ -195,7 +196,8 @@ void CRegister::RegisterSendCountRequest(int i)
 	m_aMasterservers[i].m_HttpRequest.Request(
 		&m_aMasterservers[i].m_Addr,
 		m_pMasterServer->GetName(i),
-		HTTP_VERSION "/dynamic/info"
+		m_pMasterServer->GetPath(i),
+		"/dynamic/info"
 	);
 }
 

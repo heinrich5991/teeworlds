@@ -35,7 +35,7 @@ class CMapChecker
 
 public:
 	CMapChecker();
-	void Request(NETADDR *pAddr, char *pHostname);
+	void Request(NETADDR *pAddr, char *pHostname, char *pPath);
 	void Update();
 	void AddMaplist(struct CMapVersion *pMaplist, int Num);
 	bool IsMapValid(const char *pMapName, unsigned MapCrc, unsigned MapSize);

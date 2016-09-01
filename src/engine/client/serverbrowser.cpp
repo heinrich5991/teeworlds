@@ -174,7 +174,8 @@ void CServerBrowser::Update(bool ForceResort)
 			m_aMasterHttpRequests[i].Request(
 				&Addr,
 				m_pMasterServer->GetName(i),
-				HTTP_VERSION "/serverlist"
+				m_pMasterServer->GetPath(i),
+				"/serverlist"
 			);
 		}
 

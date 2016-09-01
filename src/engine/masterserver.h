@@ -12,7 +12,8 @@ public:
 
 	enum
 	{
-		MAX_MASTERSERVERS=4
+		NUM_DEFAULT_MASTERSERVERS=4,
+		MAX_MASTERSERVERS=16
 	};
 
 	virtual void Init() = 0;
@@ -25,6 +26,7 @@ public:
 	virtual bool IsRefreshing() const = 0;
 	virtual NETADDR GetAddr(int Index) const= 0;
 	virtual const char *GetName(int Index) const = 0;
+	virtual const char *GetPath(int Index) const = 0;
 	virtual bool IsValid(int Index) const = 0;
 };
 

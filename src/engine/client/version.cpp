@@ -11,9 +11,9 @@ CVersion::CVersion()
 	m_HttpRequest.Init(4 * 1024);
 }
 
-void CVersion::Request(NETADDR *pAddr, char *pHostname)
+void CVersion::Request(NETADDR *pAddr, char *pHostname, char *pPath)
 {
-	m_HttpRequest.Request(pAddr, pHostname, "version");
+	m_HttpRequest.Request(pAddr, pHostname, pPath, "/version");
 }
 
 void CVersion::Update()

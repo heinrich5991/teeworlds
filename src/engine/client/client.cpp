@@ -1563,17 +1563,29 @@ void CClient::VersionUpdate()
 {
 	if(m_VersionInfo.m_State == CVersionInfo::STATE_INIT)
 	{
-		Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer, m_ContactClient.NetType());
+		if(!ParseUrl(g_Config.m_ClVersionServer,
+			m_VersionInfo.m_aHostname, sizeof(m_VersionInfo.m_aHostname),
+			&m_VersionInfo.m_Port,
+			m_VersionInfo.m_aPath, sizeof(m_VersionInfo.m_aPath)))
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "invalid versionsrv url: %s", g_Config.m_ClVersionServer);
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client/version", aBuf);
+			m_VersionInfo.m_State = CVersionInfo::STATE_DONE;
+			return;
+		}
+		Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, m_VersionInfo.m_aHostname, m_ContactClient.NetType());
 		m_VersionInfo.m_State = CVersionInfo::STATE_START;
 	}
 	else if(m_VersionInfo.m_State == CVersionInfo::STATE_START)
 	{
 		if(m_VersionInfo.m_VersionServeraddr.m_Job.Status() == CJob::STATE_DONE)
 		{
-			m_VersionInfo.m_VersionServeraddr.m_Addr.port = 80;
+			m_VersionInfo.m_VersionServeraddr.m_Addr.port = m_VersionInfo.m_Port;
 			m_VersionInfo.m_Version.Request(
 				&m_VersionInfo.m_VersionServeraddr.m_Addr,
-				g_Config.m_ClVersionServer
+				m_VersionInfo.m_aHostname,
+				m_VersionInfo.m_aPath
 			);
 			m_VersionInfo.m_State = CVersionInfo::STATE_READY;
 		}
@@ -1603,7 +1615,8 @@ void CClient::VersionUpdate()
 
 			m_MapChecker.Request(
 				&m_VersionInfo.m_VersionServeraddr.m_Addr,
-				g_Config.m_ClVersionServer
+				m_VersionInfo.m_aHostname,
+				m_VersionInfo.m_aPath
 			);
 		}
 	}

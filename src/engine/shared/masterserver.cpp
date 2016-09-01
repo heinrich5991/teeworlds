@@ -6,6 +6,7 @@
 
 #include <engine/engine.h>
 #include <engine/masterserver.h>
+#include <engine/shared/http_request.h>
 #include <engine/storage.h>
 
 #include "linereader.h"
@@ -17,6 +18,8 @@ public:
 	struct CMasterInfo
 	{
 		char m_aHostname[128];
+		char m_aPath[128];
+		int m_Port;
 		NETADDR m_Addr;
 		bool m_Valid;
 
@@ -31,12 +34,14 @@ public:
 	};
 
 	CMasterInfo m_aMasterServers[MAX_MASTERSERVERS];
+	int m_NumMasterServers;
 	int m_State;
 	IEngine *m_pEngine;
 	IStorage *m_pStorage;
 
 	CMasterServer()
 	{
+		m_NumMasterServers = 0;
 		SetDefault();
 		m_State = STATE_INIT;
 		m_pEngine = 0;
@@ -51,7 +56,7 @@ public:
 		dbg_msg("engine/mastersrv", "refreshing master server addresses");
 
 		// add lookup jobs
-		for(int i = 0; i < MAX_MASTERSERVERS; i++)
+		for(int i = 0; i < m_NumMasterServers; i++)
 		{
 			m_pEngine->HostLookup(&m_aMasterServers[i].m_Lookup, m_aMasterServers[i].m_aHostname, Nettype);
 			m_aMasterServers[i].m_Valid = false;
@@ -68,7 +73,7 @@ public:
 			return;
 		m_State = STATE_READY;
 
-		for(int i = 0; i < MAX_MASTERSERVERS; i++)
+		for(int i = 0; i < m_NumMasterServers; i++)
 		{
 			if(m_aMasterServers[i].m_Lookup.m_Job.Status() != CJob::STATE_DONE)
 				m_State = STATE_UPDATE;
@@ -77,7 +82,7 @@ public:
 				if(m_aMasterServers[i].m_Lookup.m_Job.Result() == 0)
 				{
 					m_aMasterServers[i].m_Addr = m_aMasterServers[i].m_Lookup.m_Addr;
-					m_aMasterServers[i].m_Addr.port = 5000;
+					m_aMasterServers[i].m_Addr.port = m_aMasterServers[i].m_Port;
 					m_aMasterServers[i].m_Valid = true;
 				}
 				else
@@ -102,6 +107,11 @@ public:
 		return m_aMasterServers[Index].m_Addr;
 	}
 
+	virtual const char *GetPath(int Index) const
+	{
+		return m_aMasterServers[Index].m_aPath;
+	}
+
 	virtual const char *GetName(int Index) const
 	{
 		return m_aMasterServers[Index].m_aHostname;
@@ -109,7 +119,7 @@ public:
 
 	virtual bool IsValid(int Index) const
 	{
-		return m_aMasterServers[Index].m_Valid;
+		return Index < m_NumMasterServers && m_aMasterServers[Index].m_Valid;
 	}
 
 	virtual void Init()
@@ -121,15 +131,60 @@ public:
 	virtual void SetDefault()
 	{
 		mem_zero(m_aMasterServers, sizeof(m_aMasterServers));
-		for(int i = 0; i < MAX_MASTERSERVERS; i++)
+		for(int i = 0; i < NUM_DEFAULT_MASTERSERVERS; i++)
+		{
 			str_format(m_aMasterServers[i].m_aHostname, sizeof(m_aMasterServers[i].m_aHostname), "master%d.teeworlds.com", i+1);
+		}
+		m_NumMasterServers = NUM_DEFAULT_MASTERSERVERS;
 	}
 
 	virtual int Load()
 	{
+		LoadMasters();
+		LoadCache();
+	}
+
+	virtual int LoadMasters()
+	{
 		if(!m_pStorage)
 			return -1;
 
+		IOHANDLE File = m_pStorage->OpenFile("http_masters.cfg", IOFLAG_READ, IStorage::TYPE_ALL);
+		if(!File)
+			return -1;
+
+		m_NumMasterServers = 0;
+
+		CLineReader LineReader;
+		LineReader.Init(File);
+		while(1)
+		{
+			CMasterInfo *pMs = &m_aMasterServers[m_NumMasterServers];
+			mem_zero(pMs, sizeof(*pMs));
+
+			char *pLine = LineReader.Get();
+			if(!pLine)
+			{
+				break;
+			}
+			if(m_NumMasterServers == MAX_MASTERSERVERS)
+			{
+				dbg_msg("engine/mastersrv", "too many master servers: %s", pLine);
+				continue;
+			}
+			if(!ParseUrl(pLine, pMs->m_aHostname, sizeof(pMs->m_aHostname), &pMs->m_Port, pMs->m_aPath, sizeof(pMs->m_aPath)))
+			{
+				dbg_msg("engine/mastersrv", "invalid master url: %s", pLine);
+				continue;
+			}
+			dbg_msg("dbg", "%s %d %s", pMs->m_aHostname, pMs->m_Port, pMs->m_aPath);
+			m_NumMasterServers++;
+		}
+		io_close(File);
+	}
+
+	virtual int LoadCache()
+	{
 		// try to open file
 		IOHANDLE File = m_pStorage->OpenFile("masters.cfg", IOFLAG_READ, IStorage::TYPE_SAVE);
 		if(!File)
@@ -148,29 +203,14 @@ public:
 			char aAddrStr[NETADDR_MAXSTRSIZE];
 			if(sscanf(pLine, "%127s %47s", Info.m_aHostname, aAddrStr) == 2 && net_addr_from_str(&Info.m_Addr, aAddrStr) == 0)
 			{
-				Info.m_Addr.port = 80;
-				bool Added = false;
-				for(int i = 0; i < MAX_MASTERSERVERS; ++i)
+				for(int i = 0; i < m_NumMasterServers; ++i)
+				{
 					if(str_comp(m_aMasterServers[i].m_aHostname, Info.m_aHostname) == 0)
 					{
-						m_aMasterServers[i] = Info;
-						Added = true;
+						m_aMasterServers[i].m_Addr = Info.m_Addr;
 						break;
 					}
-
-				if(!Added)
-				{
-					for(int i = 0; i < MAX_MASTERSERVERS; ++i)
-						if(m_aMasterServers[i].m_Addr.type == NETTYPE_INVALID)
-						{
-							m_aMasterServers[i] = Info;
-							Added = true;
-							break;
-						}
 				}
-
-				if(!Added)
-					break;
 			}
 		}
 
@@ -188,11 +228,11 @@ public:
 		if(!File)
 			return -1;
 
-		for(int i = 0; i < MAX_MASTERSERVERS; i++)
+		for(int i = 0; i < m_NumMasterServers; i++)
 		{
 			char aAddrStr[NETADDR_MAXSTRSIZE];
 			if(m_aMasterServers[i].m_Addr.type != NETTYPE_INVALID)
-				net_addr_str(&m_aMasterServers[i].m_Addr, aAddrStr, sizeof(aAddrStr), true);
+				net_addr_str(&m_aMasterServers[i].m_Addr, aAddrStr, sizeof(aAddrStr), false);
 			else
 				aAddrStr[0] = 0;
 			char aBuf[256];

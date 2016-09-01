@@ -106,9 +106,9 @@ bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, 
 	return !StandardMap;
 }
 
-void CMapChecker::Request(NETADDR *pAddr, char *pHostname)
+void CMapChecker::Request(NETADDR *pAddr, char *pHostname, char *pPath)
 {
-	m_HttpRequest.Request(pAddr, pHostname, HTTP_VERSION "/maps");
+	m_HttpRequest.Request(pAddr, pHostname, pPath, "/maps");
 }
 
 void CMapChecker::Update()

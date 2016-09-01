@@ -15,7 +15,7 @@ public:
 		VERSION_ERROR,
 	};
 	CVersion();
-	void Request(NETADDR *pAddr, char *pHostname);
+	void Request(NETADDR *pAddr, char *pHostname, char *pPath);
 	void Update();
 	bool Done();
 	int State();

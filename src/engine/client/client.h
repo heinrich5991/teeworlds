@@ -172,9 +172,13 @@ class CClient : public IClient, public CDemoPlayer::IListner
 			STATE_INIT=0,
 			STATE_START,
 			STATE_READY,
+			STATE_DONE,
 		};
 
 		int m_State;
+		char m_aHostname[128];
+		int m_Port;
+		char m_aPath[128];
 		class CHostLookup m_VersionServeraddr;
 		class CVersion m_Version;
 		class CMapVersion m_MapVersion;

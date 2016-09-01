@@ -6,6 +6,8 @@
 #include <base/system.h>
 #include <engine/external/http_parser/http_parser.h>
 
+bool ParseUrl(const char *pUrl, char *pHost, int HostLen, int *pPort, char *pPath, int PathLen);
+
 class CHttpRequest
 {
 public:
@@ -18,8 +20,8 @@ public:
 	CHttpRequest();
 	~CHttpRequest();
 	void Init(int MaxResponseSize);
-	void Request(NETADDR *pAddr, const char *pHost, const char *pUrl);
-	void PostJson(NETADDR *pAddr, const char *pHost, const char *pUrl, const char *pJson);
+	void Request(NETADDR *pAddr, const char *pHost, const char *pPrefix, const char *pUrl);
+	void PostJson(NETADDR *pAddr, const char *pHost, const char *pPrefix, const char *pUrl, const char *pJson);
 	void Update();
 	void Reset() { ChangeState(STATE_INACTIVE); }
 

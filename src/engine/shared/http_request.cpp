@@ -6,6 +6,79 @@
 #include <engine/shared/config.h>
 #include <game/version.h>
 
+// Returns false on failure.
+bool ParseUrl(const char *pUrl, char *pHost, int HostLen, int *pPort, char *pPath, int PathLen)
+{
+	http_parser_url Url;
+	mem_zero(&Url, sizeof(Url));
+
+	if(http_parser_parse_url(pUrl, str_length(pUrl), 0, &Url))
+	{
+		return false;
+	}
+
+	// Check for required fields
+	if((Url.field_set | (1<<UF_SCHEMA|1<<UF_HOST|1<<UF_PATH)) != Url.field_set)
+	{
+		return false;
+	}
+
+	// Check for forbidden fields
+	if((Url.field_set & (1<<UF_QUERY|1<<UF_FRAGMENT|1<<UF_USERINFO)) != 0)
+	{
+		return false;
+	}
+
+	if(Url.field_data[UF_SCHEMA].len != 4)
+	{
+		return false;
+	}
+	char aSchema[5];
+	mem_copy(aSchema, pUrl + Url.field_data[UF_SCHEMA].off, Url.field_data[UF_SCHEMA].len);
+	aSchema[Url.field_data[UF_SCHEMA].len] = 0;
+	if(str_comp_nocase(aSchema, "http") != 0)
+	{
+		return false;
+	}
+
+	// Nul-terminate the returned strings.
+	if(Url.field_data[UF_HOST].len >= HostLen)
+	{
+		return false;
+	}
+	if(Url.field_data[UF_PATH].len >= PathLen)
+	{
+		return false;
+	}
+	mem_copy(pHost, pUrl + Url.field_data[UF_HOST].off, Url.field_data[UF_HOST].len);
+	mem_copy(pPath, pUrl + Url.field_data[UF_PATH].off, Url.field_data[UF_PATH].len);
+	pHost[Url.field_data[UF_HOST].len] = 0;
+	pPath[Url.field_data[UF_PATH].len] = 0;
+
+	// Path must end with a slash.
+	if(Url.field_data[UF_PATH].len < 1 || pPath[Url.field_data[UF_PATH].len - 1] != '/')
+	{
+		return false;
+	}
+
+	if((Url.field_set & (1<<UF_PORT)) != 0 && Url.port != 80)
+	{
+		char aPortStr[8];
+		str_format(aPortStr, sizeof(aPortStr), ":%d", Url.port);
+		if(Url.field_data[UF_HOST].len + str_length(aPortStr) >= HostLen)
+		{
+			return false;
+		}
+		str_append(pHost, aPortStr, HostLen);
+		*pPort = Url.port;
+	}
+	else
+	{
+		*pPort = 80;
+	}
+	return true;
+}
+
 CHttpRequest::CHttpRequest()
 {
 	m_State = STATE_INACTIVE;
@@ -76,26 +149,26 @@ void CHttpRequest::RequestImpl(NETADDR *pAddr)
 	ChangeState(STATE_CONNECTING);
 }
 
-void CHttpRequest::Request(NETADDR *pAddr, const char *pHost, const char *pUrl)
+void CHttpRequest::Request(NETADDR *pAddr, const char *pHost, const char *pPrefix, const char *pUrl)
 {
 	static const char aFormat[] =
-		"GET /teeworlds/%s HTTP/1.1\r\n"
+		"GET %s" HTTP_VERSION  "%s HTTP/1.1\r\n"
 		"Host: %s\r\n"
 		"User-Agent: Teeworlds/" GAME_VERSION "\r\n"
 		"Connection: close\r\n"
 		"\r\n";
 
-	str_format(m_aRequest, sizeof(m_aRequest), aFormat, pUrl, pHost);
+	str_format(m_aRequest, sizeof(m_aRequest), aFormat, pPrefix, pUrl, pHost);
 	// Don't include null termination in request.
 	m_RequestSize = str_length(m_aRequest);
 
 	RequestImpl(pAddr);
 }
 
-void CHttpRequest::PostJson(NETADDR *pAddr, const char *pHost, const char *pUrl, const char *pJson)
+void CHttpRequest::PostJson(NETADDR *pAddr, const char *pHost, const char *pPrefix, const char *pUrl, const char *pJson)
 {
 	static const char aFormat[] =
-		"POST /teeworlds/%s HTTP/1.1\r\n"
+		"POST %s" HTTP_VERSION "%s HTTP/1.1\r\n"
 		"Host: %s\r\n"
 		"User-Agent: Teeworlds/" GAME_VERSION "\r\n"
 		"Connection: close\r\n"
@@ -104,7 +177,7 @@ void CHttpRequest::PostJson(NETADDR *pAddr, const char *pHost, const char *pUrl,
 		"\r\n"
 		"%s";
 
-	str_format(m_aRequest, sizeof(m_aRequest), aFormat, pUrl, pHost, str_length(pJson), pJson);
+	str_format(m_aRequest, sizeof(m_aRequest), aFormat, pPrefix, pUrl, pHost, str_length(pJson), pJson);
 	m_RequestSize = str_length(m_aRequest);
 
 	RequestImpl(pAddr);

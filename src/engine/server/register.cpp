@@ -24,12 +24,12 @@ CRegister::CRegister()
 	m_RegisterCount = 0;
 	m_GotHeartbeatResponse = 0;
 
-	m_FwCheckDone = true;
-	m_FwCheckTime = 0;
 	m_FwCheckAlternatePort = true;
+	m_FwCheckResultValid = false;
 	m_NumFwChecks = 0;
 	m_FwPort = 0;
 	mem_zero(m_aFwCheckToken, sizeof(m_aFwCheckToken));
+	mem_zero(m_aFwCheckResult, sizeof(m_aFwCheckResult));
 
 	for(int i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
 	{
@@ -55,46 +55,41 @@ void CRegister::BlacklistMaster(int i, int Seconds)
 	RegisterNewState(REGISTERSTATE_START);
 }
 
-void CRegister::RegisterSendFwCheck(int i)
-{
-	int Port = g_Config.m_SvPort;
-	if(g_Config.m_SvExternalPort)
-	{
-		if(m_FwCheckAlternatePort)
-		{
-			Port = g_Config.m_SvExternalPort;
-		}
-		m_FwCheckAlternatePort = !m_FwCheckAlternatePort;
-	}
-	char aBuffer[64];
-	str_format(aBuffer, sizeof(aBuffer),
-		"{\"port\":%d,\"token\":\"%s\"}",
-		Port, m_aFwCheckToken);
-	m_aMasterservers[i].m_HttpRequest.PostJson(
-		&m_aMasterservers[i].m_Addr,
-		m_pMasterServer->GetName(i),
-		HTTP_VERSION "/dynamic/fwcheck",
-		aBuffer
-	);
-	m_FwCheckTime = time_get();
-	m_FwCheckDone = false;
-}
-
 void CRegister::RegisterSendHeartbeat(int i)
 {
+	// TODO!
+	str_copy(m_aFwCheckToken, "foobar", sizeof(m_aFwCheckToken));
+
 	char aBuffer[128];
-	if(m_FwPort)
+	if(m_FwCheckResultValid)
 	{
 		str_format(aBuffer, sizeof(aBuffer),
-			"{\"port\":%d,\"fwtoken\":\"%s\"}\n",
-			m_FwPort, m_aFwCheckResult);
+			"{\"port\":%d,\"token\":\"%s\",\"fwtoken\":\"%s\"}\n",
+			m_FwPort, m_aFwCheckToken, m_aFwCheckResult);
+		m_FwCheckResultValid = false;
 	}
 	else
 	{
-		int Port = g_Config.m_SvPort;
-		if(g_Config.m_SvExternalPort)
+		int Port = m_FwPort;
+		if(!Port)
+		{
 			Port = g_Config.m_SvExternalPort;
-		str_format(aBuffer, sizeof(aBuffer), "{\"port\":%d}", Port);
+			if(!Port)
+			{
+				Port = g_Config.m_SvPort;
+			}
+			else
+			{
+				if(!m_FwCheckAlternatePort)
+				{
+					Port = g_Config.m_SvPort;
+				}
+				m_FwCheckAlternatePort = !m_FwCheckAlternatePort;
+			}
+		}
+		str_format(aBuffer, sizeof(aBuffer),
+			"{\"port\":%d,\"token\":\"%s\"}",
+			Port, m_aFwCheckToken);
 	}
 	m_aMasterservers[i].m_HttpRequest.PostJson(
 		&m_aMasterservers[i].m_Addr,
@@ -128,11 +123,15 @@ void CRegister::RegisterGotHeartbeatResponse(int i, char *pData)
 
 	if(str_comp(ResultJson, "fwcheck") == 0)
 	{
-		m_FwCheckAlternatePort = true;
-		m_NumFwChecks = 0;
-		// TODO!
-		str_copy(m_aFwCheckToken, "foobar", sizeof(m_aFwCheckToken));
-		RegisterNewState(REGISTERSTATE_FWCHECK);
+		if(m_RegisterState != REGISTERSTATE_FWCHECK)
+		{
+			RegisterNewState(REGISTERSTATE_FWCHECK);
+		}
+		else
+		{
+			m_NumFwChecks++;
+		}
+		m_GotHeartbeatResponse = 1;
 		json_value_free(pJson);
 		return;
 	}
@@ -171,6 +170,7 @@ void CRegister::RegisterGotHeartbeatResponse(int i, char *pData)
 	}
 	json_value_free(pJson);
 
+	m_NumFwChecks = 0;
 	m_GotHeartbeatResponse = 1;
 	if(m_RegisterFirst)
 	{
@@ -187,7 +187,6 @@ void CRegister::RegisterGotHeartbeatResponse(int i, char *pData)
 	{
 		m_RegisterCount++;
 		RegisterNewState(REGISTERSTATE_HEARTBEAT);
-		m_FwPort = 0;
 	}
 }
 
@@ -244,6 +243,8 @@ void CRegister::RegisterUpdate(int Nettype)
 	{
 		m_RegisterCount = 0;
 		m_RegisterFirst = 1;
+		m_FwPort = 0;
+		m_FwCheckAlternatePort = true;
 		RegisterNewState(REGISTERSTATE_UPDATE_ADDRS);
 		m_pMasterServer->RefreshAddresses(Nettype);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "refreshing ip addresses");
@@ -333,51 +334,13 @@ void CRegister::RegisterUpdate(int Nettype)
 				str_format(aBuf, sizeof(aBuf), "chose '%s' as master, sending heartbeats", m_pMasterServer->GetName(m_RegisterRegisteredServer));
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
 				RegisterNewState(REGISTERSTATE_HEARTBEAT);
-				m_FwPort = 0;
+				m_FwCheckResultValid = false;
+				m_NumFwChecks = 0;
 				RegisterSendHeartbeat(m_RegisterRegisteredServer);
 			}
 		}
 	}
-	else if(m_RegisterState == REGISTERSTATE_FWCHECK)
-	{
-		int i = m_RegisterRegisteredServer;
-		if(m_aMasterservers[i].m_HttpRequest.Done())
-		{
-			CHttpRequest::CResult Result = m_aMasterservers[i].m_HttpRequest.Result();
-			if(Result.m_pData)
-			{
-				m_NumFwChecks++;
-				m_FwCheckDone = true;
-			}
-			else
-			{
-				dbg_msg("register", "could not POST fwcheck request");
-				BlacklistMaster(i);
-			}
-			m_aMasterservers[i].m_HttpRequest.Reset();
-		}
-		if(Now > m_FwCheckTime + Freq && m_FwCheckDone)
-		{
-			RegisterSendFwCheck(i);
-		}
-		if(Now > m_RegisterStateStart + Freq * 60 || m_NumFwChecks >= 10)
-		{
-			if(m_NumFwChecks < 5)
-			{
-				dbg_msg("register", "master server slow to respond to fwcheck requests");
-				BlacklistMaster(i);
-			}
-			else
-			{
-				char aBuf[256];
-				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "ERROR: the master server reports that clients cannot connect to this server.");
-				str_format(aBuf, sizeof(aBuf), "ERROR: configure your firewall/nat to let through udp on port %d.", g_Config.m_SvPort);
-				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
-				RegisterNewState(REGISTERSTATE_ERROR);
-			}
-		}
-	}
-	else if(m_RegisterState == REGISTERSTATE_HEARTBEAT)
+	else if(m_RegisterState == REGISTERSTATE_HEARTBEAT || m_RegisterState == REGISTERSTATE_FWCHECK)
 	{
 		int i = m_RegisterRegisteredServer;
 		if(m_aMasterservers[i].m_HttpRequest.Done())
@@ -391,21 +354,46 @@ void CRegister::RegisterUpdate(int Nettype)
 			{
 				dbg_msg("register", "could not POST register request");
 				BlacklistMaster(i);
+				return;
 			}
 			m_aMasterservers[i].m_HttpRequest.Reset();
-			if(m_RegisterState == REGISTERSTATE_FWCHECK)
+			if(m_RegisterState == REGISTERSTATE_FWCHECK && m_FwCheckResultValid)
 			{
-				RegisterSendFwCheck(i);
+				RegisterNewState(REGISTERSTATE_HEARTBEAT);
+				RegisterSendHeartbeat(i);
+				return;
 			}
 		}
-		else if(Now > m_RegisterStateStart+Freq*15)
+
+		if(Now > m_RegisterStateStart+Freq*3)
 		{
 			if(!m_GotHeartbeatResponse)
 			{
-				dbg_msg("register", "no heartbeat answer in 15s");
+				dbg_msg("register", "no heartbeat answer in 3s");
 				BlacklistMaster(i);
+				return;
 			}
 			else
+			{
+				if(m_RegisterState == REGISTERSTATE_FWCHECK)
+				{
+					if(m_NumFwChecks > 4)
+					{
+						char aBuf[256];
+						m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "ERROR: the master server reports that clients cannot connect to this server.");
+						str_format(aBuf, sizeof(aBuf), "ERROR: configure your firewall/nat to let through udp on port %d.", g_Config.m_SvPort);
+						m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
+						RegisterNewState(REGISTERSTATE_ERROR);
+						return;
+					}
+					RegisterNewState(REGISTERSTATE_FWCHECK);
+					RegisterSendHeartbeat(i);
+				}
+			}
+		}
+		if(m_RegisterState == REGISTERSTATE_HEARTBEAT && Now > m_RegisterStateStart+Freq*15)
+		{
+			if(m_GotHeartbeatResponse)
 			{
 				RegisterNewState(REGISTERSTATE_HEARTBEAT);
 				RegisterSendHeartbeat(i);
@@ -428,7 +416,7 @@ void CRegister::RegisterUpdate(int Nettype)
 
 int CRegister::RegisterProcessPacket(CNetChunk *pPacket, TOKEN Token)
 {
-	if(m_RegisterState == REGISTERSTATE_FWCHECK)
+	if(m_RegisterState == REGISTERSTATE_FWCHECK || m_RegisterState == REGISTERSTATE_HEARTBEAT)
 	{
 		if(pPacket->m_DataSize >= sizeof(SERVERBROWSE_FWCHECK)
 			&& mem_comp(pPacket->m_pData, SERVERBROWSE_FWCHECK, sizeof(SERVERBROWSE_FWCHECK)) == 0)
@@ -452,7 +440,12 @@ int CRegister::RegisterProcessPacket(CNetChunk *pPacket, TOKEN Token)
 			}
 			m_FwPort = str_toint(pPort);
 			str_copy(m_aFwCheckResult, pFwToken, sizeof(m_aFwCheckResult));
-			RegisterNewState(REGISTERSTATE_HEARTBEAT);
+			m_FwCheckResultValid = true;
+			if(m_RegisterState == REGISTERSTATE_FWCHECK)
+			{
+				RegisterSendHeartbeat(m_RegisterRegisteredServer);
+				RegisterNewState(REGISTERSTATE_HEARTBEAT);
+			}
 			return 1;
 		}
 	}

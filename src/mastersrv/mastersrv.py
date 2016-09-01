@@ -32,6 +32,9 @@ def server_count():
 	p.execute()
 	return count
 
+def is_proper_bytestring(s):
+	return isinstance(s, str) and all(0x20 <= ord(x) <= 0x7e for x in s)
+
 @app.route("/teeworlds/0.7/dynamic/register", methods=["POST"])
 def register():
 	json = request.get_json()
@@ -39,28 +42,25 @@ def register():
 		return abort(400)
 	try:
 		port = json["port"]
+		token = json["token"]
 	except KeyError:
 		return abort(400)
-
-	return jsonify({
-		"result": "fwcheck",
-	})
-
-@app.route("/teeworlds/0.7/dynamic/fwcheck", methods=["POST"])
-def fwcheck():
-	json = request.get_json()
-	if json is None:
+	if not isinstance(port, int) or not is_proper_bytestring(token):
 		return abort(400)
+	token = token.encode('ascii')
+
 	try:
-		port = json["port"]
+		fwtoken = json["fwtoken"]
 	except KeyError:
-		return abort(400)
+		HEADER=b"\xff\xff\xff\x1f\xff\xff\xff\xff\xff\xfffw?2"
+		message = b"%s%s\0%s\0%d\0" % (HEADER, token, b"kekse", port)
+		udp.sendto(message, (request.remote_addr, port))
+		return jsonify({
+			"result": "fwcheck",
+		})
 
-	# TODO: Check if port is an integer.
-	udp.sendto(b"\xff\xff\xff\x1f\xff\xff\xff\xff\xff\xfffw?2foobar\08303\0kekse\0", (request.remote_addr, port))
-
-	#address = "{}:{}".format(request.remote_addr, port)
-	#server_add(address)
+	address = "{}:{}".format(request.remote_addr, port)
+	server_add(address)
 	return jsonify({
 		"result": "ok",
 	})

@@ -431,13 +431,18 @@ int CRegister::RegisterProcessPacket(CNetChunk *pPacket, TOKEN Token)
 			const char *pFwToken = Up.GetString();
 			if(Up.Error())
 			{
-				// TODO: Remove these?
-				dbg_msg("register", "got invalid fwcheck");
+				if(g_Config.m_Debug)
+				{
+					dbg_msg("register", "got invalid fwcheck");
+				}
 				return 1;
 			}
 			if(str_comp(pToken, m_aFwCheckToken) != 0)
 			{
-				dbg_msg("register", "got invalid fwcheck token");
+				if(g_Config.m_Debug)
+				{
+					dbg_msg("register", "got invalid fwcheck token");
+				}
 				return 1;
 			}
 			m_FwPort = str_toint(pPort);

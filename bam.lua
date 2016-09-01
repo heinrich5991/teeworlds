@@ -136,10 +136,8 @@ function GenerateMacOSXSettings(settings, conf, arch)
 	-- Build server launcher before adding game stuff
 	local serverlaunch = Link(settings, "serverlaunch", Compile(settings, "src/osxlaunch/server.m"))
 
-	-- Master server, version server and tools
+	-- Tools
 	BuildEngineCommon(settings)
-	BuildMasterserver(settings)
-	BuildVersionserver(settings)
 	BuildTools(settings)
 
 	-- Add requirements for Server & Client
@@ -178,11 +176,9 @@ function GenerateLinuxSettings(settings, conf, arch)
 
 	GenerateCommonSettings(settings, conf, arch)
 
-	-- Master server, version server and tools
+	-- Tools
 	BuildEngineCommon(settings)
 	BuildTools(settings)
-	BuildMasterserver(settings)
-	BuildVersionserver(settings)
 
 	-- Add requirements for Server & Client
 	BuildGameCommon(settings)
@@ -237,10 +233,8 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 
 	GenerateCommonSettings(settings, conf, target_arch)
 
-	-- Master server, version server and tools
+	-- Tools
 	BuildEngineCommon(settings)
-	BuildMasterserver(settings)
-	BuildVersionserver(settings)
 	BuildTools(settings)
 
 	-- Add requirements for Server & Client
@@ -349,14 +343,6 @@ function BuildTools(settings)
 		tools[i] = Link(settings, toolname, Compile(settings, v), libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["json"], libs["http"])
 	end
 	PseudoTarget(settings.link.Output(settings, "pseudo_tools") .. settings.link.extension, tools)
-end
-
-function BuildMasterserver(settings)
-	return Link(settings, "mastersrv", Compile(settings, Collect("src/mastersrv/*.cpp")), libs["zlib"], libs["md5"])
-end
-
-function BuildVersionserver(settings)
-	return Link(settings, "versionsrv", Compile(settings, Collect("src/versionsrv/*.cpp")), libs["zlib"], libs["md5"])
 end
 
 function BuildContent(settings)
@@ -473,7 +459,6 @@ if ScriptArgs['builddir'] then
 end
 
 targets = {client="teeworlds", server="teeworlds_srv",
-           versionserver="versionsrv", masterserver="mastersrv",
            tools="pseudo_tools", content="content"}
 
 subtargets = {}

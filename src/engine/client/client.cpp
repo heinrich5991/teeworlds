@@ -1618,6 +1618,7 @@ void CClient::VersionUpdate()
 				m_VersionInfo.m_aHostname,
 				m_VersionInfo.m_aPath
 			);
+			m_VersionInfo.m_State = CVersionInfo::STATE_DONE;
 		}
 	}
 }

@@ -938,6 +938,10 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 			}
 			Addr.port = (pAddrs[i].m_aPort[0]<<8) | pAddrs[i].m_aPort[1];
 
+			char aBuf[NETADDR_MAXSTRSIZE];
+			net_addr_str(&Addr, aBuf, sizeof(aBuf));
+			dbg_msg("dbg", "added %s", aBuf);
+
 			m_ServerBrowser.Set(Addr, IServerBrowser::SET_MASTER_ADD, -1, 0x0);
 		}
 	}
@@ -945,6 +949,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 	// server info
 	if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_INFO) && mem_comp(pPacket->m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
 	{
+		dbg_msg("dbg", "we got ze info");
 		// we got ze info
 		CUnpacker Up;
 		CServerInfo Info = {0};
@@ -1237,6 +1242,21 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
 				if(m_SnapshotParts == (unsigned)((1<<NumParts)-1))
 				{
+					#define DBGDUMP(x, size) \
+						do \
+						{ \
+							int size_ = size; \
+							if(size > 0) \
+							{ \
+								char aBuf[10240]; \
+								str_hex(aBuf, sizeof(aBuf), (x), size_); \
+								dbg_msg("dbg", "%d " #x " %s", size_, aBuf); \
+							} \
+							else \
+								dbg_msg("dbg", "%d " #x, size_); \
+						} \
+						while(0)
+
 					static CSnapshot Emptysnap;
 					CSnapshot *pDeltaShot = &Emptysnap;
 					int PurgeTick;
@@ -1345,15 +1365,15 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 
 					// add new
 					m_SnapshotStorage.Add(GameTick, time_get(), SnapSize, pTmpBuffer3, 1);
-
+					int AltSnapSize;
 					if(Hacks())
-						Hacks()->OnSnap(0, pTmpBuffer3, &SnapSize);
+						Hacks()->OnSnap(0, m_SnapshotStorage.m_pLast->m_pAltSnap, &AltSnapSize);
 
 					// add snapshot to demo
 					if(m_DemoRecorder.IsRecording())
 					{
 						// write snapshot
-						m_DemoRecorder.RecordSnapshot(GameTick, pTmpBuffer3, SnapSize);
+						m_DemoRecorder.RecordSnapshot(GameTick, m_SnapshotStorage.m_pLast->m_pAltSnap, AltSnapSize);
 					}
 
 					// apply snapshot, cycle pointers
@@ -1369,6 +1389,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 						m_PredictedTime.SetAdjustSpeed(1, 1000.0f);
 						m_GameTime.Init((GameTick-1)*time_freq()/50);
 						m_aSnapshots[SNAP_PREV] = m_SnapshotStorage.m_pFirst;
+
 						m_aSnapshots[SNAP_CURRENT] = m_SnapshotStorage.m_pLast;
 						m_LocalStartTime = time_get();
 						SetState(IClient::STATE_ONLINE);
@@ -2265,6 +2286,7 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateEditor());
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateGameClient());
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);
+
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pHacks);
 
 		if(RegisterFail)

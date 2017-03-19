@@ -8,6 +8,8 @@
 
 //#include <game/generated/protocol.h>
 
+#include <mastersrv/mastersrv.h>
+
 #include <proxy/proxy/0.5/nethash.h>
 #include <proxy/proxy/0.6/nethash.h>
 
@@ -23,6 +25,16 @@ private:
 	IClient *m_pClient;
 	CNetClient *m_pNet;
 	int m_InDisconnect;
+
+	struct CBrowserAddress
+	{
+		NETADDR m_Address;
+		int m_Version;
+		CBrowserAddress *m_pNext;
+	};
+
+	CBrowserAddress *m_apBrowserAddresses[256];
+	CHeap m_BrowserAddressHeap;
 public:
 	IClient *Client() { return m_pClient; }
 
@@ -46,6 +58,8 @@ public:
 	int Detect5(CNetChunk *pPacket);
 	int DetectHacks(CNetChunk *pPacket);
 
+	virtual int OnPacket(CNetChunk *pPacket, int Origin);
+
 	virtual int OnDisconnect(int PeerID);
 
 	virtual void OnRegisterUpdate(int Nettype) { dbg_assert(false, "not reachable"); }
@@ -58,6 +72,7 @@ CHacksClient::CHacksClient()
 {
 	m_pNet = 0;
 	m_InDisconnect = 0;
+	mem_zero(m_aNumBrowserAddresses, sizeof(m_aNumBrowserAddresses));
 }
 
 CHacksClient::~CHacksClient()
@@ -104,7 +119,6 @@ const NETADDR *CHacksClient::GetPeerAddress(int PeerID)
 int CHacksClient::OnDisconnect(int PeerID)
 {
 	dbg_assert(0 <= PeerID && PeerID < 1, "invalid pid");
-	dbg_msg("dbg", "ondisconnect=%d proxy=%p state=%d", m_InDisconnect, m_aPeers[PeerID].m_pProxy, Client()->State());
 
 	if(m_InDisconnect)
 		return 0;
@@ -170,7 +184,74 @@ int CHacksClient::OnDisconnect(int PeerID)
 	return CHacks::OnDisconnect(PeerID);
 }
 
+int CHacksClient::OnPacket(CNetChunk *pPacket, int Origin)
+{
+	if(Origin == ORIGIN_OWN && pPacket->m_Flags&NETSENDFLAG_CONNLESS)
+	{
+		if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_GETLIST)
+			&& mem_comp(pPacket->m_pData, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0)
+		{
+			mem_zero(m_apBrowserAddresses, sizeof(m_apBrowserAddresses));
+			m_BrowserAddressHeap.Reset();
+
+			for(int i = 0; i < NUM_VERSIONS; i++)
+			{
+				InitCBData(Origin, pPacket->m_ClientID);
+				m_apConnlessProxies[i]->TranslatePacket(pPacket, GetRole(Origin));
+				FinalizeCBData(Origin);
+			}
+			return 1;
+		}
+		else if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_GETINFO)
+			&& mem_comp(pPacket->m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
+		{
+			for(int i = 0; i < NUM_VERSIONS; i++)
+			{
+				if(i == GetVersion())
+					continue;
+				for(int k = 0; k < m_aNumBrowserAddresses[i]; k++)
+				{
+					if(net_addr_comp(&m_aaBrowserAddresses[i][k], &pPacket->m_Address) == 0)
+					{
+						InitCBData(Origin, pPacket->m_ClientID);
+						m_apConnlessProxies[i]->TranslatePacket(pPacket, GetRole(Origin));
+						FinalizeCBData(Origin);
+						return 1;
+					}
+				}
+			}
+		}
+	}
+	else if(Origin == ORIGIN_PEER && pPacket->m_Flags&NETSENDFLAG_CONNLESS)
+	{
+		int Result = CHacks::OnPacket(pPacket, Origin);
+		if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_LIST)
+			&& mem_comp(pPacket->m_pData, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST)) == 0)
+		{
+			m_BrowserAddressHeap.Allocate(sizeof());
+
+			for(int i = 0; i < NUM_VERSIONS; i++)
+			{
+				InitCBData(Origin, pPacket->m_ClientID);
+				m_apConnlessProxies[i]->TranslatePacket(pPacket, GetRole(Origin));
+				FinalizeCBData(Origin);
+			}
+			return 1;
+		}
+	}
+	return CHacks::OnPacket(pPacket, Origin);
+}
+
 int CHacksClient::Detect(CNetChunk *pPacket)
+{
+	int Result;
+	Result = Detect5(pPacket);
+	if(Result)
+		return Result;
+	return 0;
+}
+
+int CHacksClient::Detect5(CNetChunk *pPacket)
 {
 	return 0;
 }
@@ -179,3 +260,4 @@ int CHacksClient::DetectHacks(CNetChunk *pPacket)
 {
 	return 0;
 }
+

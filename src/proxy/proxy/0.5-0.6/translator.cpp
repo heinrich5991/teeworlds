@@ -5,6 +5,8 @@
 #include <engine/shared/packer.h>
 #include <engine/shared/snapshot.h>
 
+#include <game/gamecore.h>
+
 #include <proxy/proxy/0.5/nethash.h>
 #include <proxy/proxy/0.5/mastersrv.h>
 #include <proxy/proxy/0.5/protocol.h>
@@ -17,6 +19,8 @@
 
 #include "translator.h"
 
+static char s_aZeros[16] = { 0 };
+
 class CTranslator_05_06 : public ITranslator
 {
 	int m_MapDownloadCrc;
@@ -25,6 +29,8 @@ public:
 	CTranslator_05_06(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData);
 	virtual void TranslatePacket(CNetChunk *pPacket);
 	virtual int TranslateSnap(CSnapshot *pSnap);
+	static int TranslateEmoticon(int Emoticon);
+	static int TranslatePlayerState(int PlayerState);
 };
 
 class CTranslator_06_05 : public ITranslator
@@ -34,6 +40,8 @@ public:
 	CTranslator_06_05(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData);
 	virtual void TranslatePacket(CNetChunk *pPacket);
 	virtual int TranslateSnap(CSnapshot *pSnap);
+	static int TranslateEmoticon(int Emoticon);
+	static int TranslatePlayerFlags(int PlayerFlags);
 };
 
 ITranslator *CreateTranslator_05_06(IHacks *pHacks, PACKET_FUNC pfnTranslatePacketCB, void *pUserData)
@@ -68,23 +76,146 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 
 	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
 	{
-		if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_GETINFO) + 1
-			&& mem_comp(Unpacker.GetRaw(sizeof(Protocol5::SERVERBROWSE_GETINFO)), Protocol5::SERVERBROWSE_GETINFO,
-				sizeof(Protocol5::SERVERBROWSE_GETINFO)) == 0)
+		dbg_msg("dbg", "connless5");
+		const unsigned char *pRequest = Unpacker.GetRaw(sizeof(Protocol5::SERVERBROWSE_GETINFO));
+		if(!pRequest)
+			return;
+
+		if(mem_comp(pRequest, Protocol5::SERVERBROWSE_GETINFO,
+			sizeof(Protocol5::SERVERBROWSE_GETINFO)) == 0)
 		{
 			Packer.AddRaw(Protocol6::SERVERBROWSE_GETINFO, sizeof(Protocol6::SERVERBROWSE_GETINFO));
-			Packer.AddRaw(Unpacker.GetRaw(1), 1); // token
+			// token
 		}
-		else if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)
-			&& mem_comp(Unpacker.GetRaw(sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)), Protocol5::SERVERBROWSE_OLD_GETINFO,
-				sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)) == 0)
+		else if(mem_comp(pRequest, Protocol5::SERVERBROWSE_OLD_GETINFO,
+			sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)) == 0)
 		{
 			static const unsigned char Byte255 = 255; // just hope we never hit 255 refreshs
 			Packer.AddRaw(Protocol6::SERVERBROWSE_GETINFO, sizeof(Protocol6::SERVERBROWSE_GETINFO));
 			Packer.AddRaw(&Byte255, 1);
 		}
-		else
+		else if(mem_comp(pRequest, Protocol5::SERVERBROWSE_INFO,
+				sizeof(Protocol5::SERVERBROWSE_INFO)) == 0)
+		{
+			Packer.AddRaw(Protocol6::SERVERBROWSE_INFO, sizeof(Protocol6::SERVERBROWSE_INFO));
+
+			dbg_msg("dbg", "info");
+			const char *pString = Unpacker.GetString();
+			const char *pClientCount = 0;
+			int i = 0;
+			while(!Unpacker.Error())
+			{
+				//     i 5 6  desc
+				//     0 x x  token
+				//     1 x m  version
+				//     2 x x  name
+				//     3 x x  map
+				//     4 x x  gametype
+				//     5 x x  flags
+				//     6 x    progression
+				//         x  player count
+				//         x  max players
+				//     7 x x  client count
+				//     8 x x  max clients
+				// 2k+ 9 x x  k-th client's name
+				//         x  k-th client's clan
+				//         x  k-th client's country
+				// 2k+10 x x  k-th client's score
+				//         x  k-th client's team
+
+				if(i == 1) // version
+					Packer.AddString("0.6.2", 0);
+				else if(i == 6)
+					; // drop progression
+				else if(i == 7)
+					pClientCount = pString;
+				else if(i == 8)
+				{
+					Packer.AddString(pClientCount, 0); // player count
+					Packer.AddString(pString, 0);      // max players
+					Packer.AddString(pClientCount, 0); // client count
+					Packer.AddString(pString, 0);      // max clients
+				}
+				else if(i >= 9 && i % 2 == 1)
+				{
+					Packer.AddString(pString, 0); // k-th client's name
+					Packer.AddString("", 0);      // k-th client's clan
+					Packer.AddString("-1", 0);    // k-th client's country
+				}
+				else if(i >= 9 && i % 2 == 0)
+				{
+					Packer.AddString(pString, 0); // k-th client's score
+					Packer.AddString("1", 0);     // k-th client's team (1 == ingame, 0 == spectator)
+				}
+				else
+				{
+					Packer.AddString(pString, 0);
+				}
+
+				if(Unpacker.Remaining() <= 0)
+					break;
+				pString = Unpacker.GetString();
+				i++;
+			}
+		}
+		else if(mem_comp(pRequest, Protocol5::SERVERBROWSE_GETLIST,
+				sizeof(Protocol5::SERVERBROWSE_GETLIST)) == 0)
+		{
+			Packer.AddRaw(Protocol6::SERVERBROWSE_GETLIST, sizeof(Protocol6::SERVERBROWSE_GETLIST));
+		}
+		else if(mem_comp(pRequest, Protocol5::SERVERBROWSE_LIST,
+				sizeof(Protocol5::SERVERBROWSE_LIST)) == 0)
+		{
+			dbg_msg("dbg", "hooraay!");
+			CNetChunk Packet = *pPacket;
+
+			int Size = Unpacker.Remaining();
+			Protocol5::MASTERSRV_ADDR *pAddrs = (Protocol5::MASTERSRV_ADDR *)Unpacker.GetRaw(Size);
+			Protocol6::CMastersrvAddr AddrT;
+			int Num = Size / sizeof(*pAddrs);
+
+			// IPv4 mapping
+			for(int i = 0; i < 10; i++)
+				AddrT.m_aIp[i] = 0;
+			for(int i = 10; i < 12; i++)
+				AddrT.m_aIp[i] = 0xFF;
+
+			Packer.AddRaw(Protocol6::SERVERBROWSE_LIST, sizeof(Protocol6::SERVERBROWSE_LIST));
+			for(int i = 0; i < Num; i++)
+			{
+				// max servers per packet:
+				// 0.5: 128
+				// 0.6:  75
+				// use two packets, for simplicity
+				if(i == 75)
+				{
+					Packet.m_DataSize = Packer.Size();
+					Packet.m_pData = Packer.Data();
+					TranslatePacketCB(&Packet);
+
+					Packer.Reset();
+					Packer.AddRaw(Protocol6::SERVERBROWSE_LIST, sizeof(Protocol6::SERVERBROWSE_LIST));
+				}
+				AddrT.m_aIp[12] = pAddrs[i].m_aIp[0];
+				AddrT.m_aIp[13] = pAddrs[i].m_aIp[1];
+				AddrT.m_aIp[14] = pAddrs[i].m_aIp[2];
+				AddrT.m_aIp[15] = pAddrs[i].m_aIp[3];
+
+				// tricky: port is little endian in 0.5 and big endian in 0.6
+				AddrT.m_aPort[0] = pAddrs[i].m_aPort[1];
+				AddrT.m_aPort[1] = pAddrs[i].m_aPort[0];
+
+				Packer.AddRaw(&AddrT, sizeof(AddrT));
+			}
+			Packet.m_DataSize = Packer.Size();
+			Packet.m_pData = Packer.Data();
+			TranslatePacketCB(&Packet);
 			return;
+		}
+		else
+			Packer.AddRaw(pRequest, sizeof(Protocol5::SERVERBROWSE_GETINFO));
+
+		Packer.AddRaw(&Unpacker);
 
 		CNetChunk Packet = *pPacket;
 		Packet.m_DataSize = Packer.Size();
@@ -96,6 +227,9 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 	int Msg = Unpacker.GetInt();
 	int Sys = Msg&1;
 	Msg >>= 1;
+
+	if(!Sys)
+		dbg_msg("dbg56", "sys=%d id=%d", Sys, Msg);
 
 	if(Unpacker.Error())
 		return;
@@ -139,17 +273,7 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 			Protocol5::CNetObj_PlayerInput *pData = (Protocol5::CNetObj_PlayerInput *)aInputBuf;
 			Protocol6::CNetObj_PlayerInput DataT = *(Protocol6::CNetObj_PlayerInput *)pData;
 
-			DataT.m_PlayerFlags = 0;
-			DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_SCOREBOARD; // to fix ping updates
-			if(pData->m_PlayerState == Protocol5::PLAYERSTATE_IN_MENU)
-			{
-				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_IN_MENU;
-				DataT.m_PlayerFlags &= ~Protocol6::PLAYERFLAG_SCOREBOARD; // no possibility to have scoreboard open
-			}
-			else if(pData->m_PlayerState == Protocol5::PLAYERSTATE_CHATTING)
-				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_CHATTING;
-			else
-				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_PLAYING;
+			DataT.m_PlayerFlags = TranslatePlayerState(pData->m_PlayerState);
 
 			mem_copy(aInputBuf, &DataT, sizeof(DataT));
 			for(int i = 0; i < Size / 4; i++)
@@ -204,11 +328,15 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 		if(Msg == Protocol5::NETMSGTYPE_CL_STARTINFO
 			|| Msg == Protocol5::NETMSGTYPE_CL_CHANGEINFO
 			|| Msg == Protocol5::NETMSGTYPE_CL_EMOTICON
-			|| Msg == Protocol5::NETMSGTYPE_CL_CALLVOTE)
+			|| Msg == Protocol5::NETMSGTYPE_CL_CALLVOTE
+			|| Msg == Protocol5::NETMSGTYPE_SV_EMOTICON)
 		{
 			pRawData = Handler.SecureUnpackMsg(Msg, &Unpacker);
 			if(!pRawData)
+			{
+				dbg_msg("dbg", "unpackfail");
 				return;
+			}
 		}
 
 		// client -> server
@@ -230,16 +358,8 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 		{
 			Protocol5::CNetMsg_Cl_Emoticon *pData = (Protocol5::CNetMsg_Cl_Emoticon *)pRawData;
 			Protocol6::CNetMsg_Cl_Emoticon DataT = *(Protocol6::CNetMsg_Cl_Emoticon *)pData;
-			// abuse that the emoticon values are nearly the same
-			// use Protocol6 variants because they have names
-			if(pData->m_Emoticon == Protocol6::EMOTICON_SORRY) // emoticon: music without bubble
-				DataT.m_Emoticon = Protocol6::EMOTICON_MUSIC;
-			else if(pData->m_Emoticon == Protocol6::EMOTICON_EYES) // emoticon: dead tee
-				DataT.m_Emoticon = Protocol6::EMOTICON_SPLATTEE;
-			else if(pData->m_Emoticon == Protocol6::EMOTICON_WTF) // no emoticon
-				DataT.m_Emoticon = -1;
-			else if(pData->m_Emoticon == Protocol6::EMOTICON_QUESTION) // no emoticon
-				DataT.m_Emoticon = -1;
+			DataT.m_Emoticon = TranslateEmoticon(pData->m_Emoticon);
+			dbg_msg("dbg", "pre=%d post=%d", pData->m_Emoticon, DataT.m_Emoticon);
 			if(DataT.m_Emoticon == -1)
 				return;
 			DataT.Pack((CMsgPacker *)&Packer);
@@ -254,6 +374,16 @@ void CTranslator_05_06::TranslatePacket(CNetChunk *pPacket)
 			DataT.Pack((CMsgPacker *)&Packer);
 		}
 		// server -> client
+		else if(Msg == Protocol5::NETMSGTYPE_SV_EMOTICON)
+		{
+			Protocol5::CNetMsg_Sv_Emoticon *pData = (Protocol5::CNetMsg_Sv_Emoticon *)pRawData;
+			Protocol6::CNetMsg_Sv_Emoticon DataT = *(Protocol6::CNetMsg_Sv_Emoticon *)pData;
+			DataT.m_Emoticon = TranslateEmoticon(pData->m_Emoticon);
+			dbg_msg("dbg", "pre=%d post=%d", pData->m_Emoticon, DataT.m_Emoticon);
+			if(DataT.m_Emoticon == -1)
+				return;
+			DataT.Pack((CMsgPacker *)&Packer);
+		}
 	}
 
 	Packer.AddRaw(&Unpacker);
@@ -273,7 +403,20 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
 	{
 		const unsigned char *pRequest = Unpacker.GetRaw(sizeof(Protocol6::SERVERBROWSE_INFO));
-		if(pRequest && mem_comp(pRequest, Protocol6::SERVERBROWSE_INFO,
+		char aBuf[5];
+		str_copy(aBuf, (char *)&pRequest[4], sizeof(aBuf));
+
+		dbg_msg("dbg", "connless6 %s", aBuf);
+		if(!pRequest)
+			return;
+		if(mem_comp(pRequest, Protocol6::SERVERBROWSE_GETINFO,
+			sizeof(Protocol6::SERVERBROWSE_GETINFO)) == 0)
+		{
+			dbg_msg("dbg", "getinfo");
+			Packer.AddRaw(Protocol5::SERVERBROWSE_GETINFO, sizeof(Protocol5::SERVERBROWSE_GETINFO));
+			// token
+		}
+		else if(mem_comp(pRequest, Protocol6::SERVERBROWSE_INFO,
 				sizeof(Protocol6::SERVERBROWSE_INFO)) == 0)
 		{
 			const char *pString = Unpacker.GetString();
@@ -341,8 +484,16 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 				i++;
 			}
 		}
+		else if(mem_comp(pRequest, Protocol6::SERVERBROWSE_GETLIST,
+				sizeof(Protocol6::SERVERBROWSE_GETLIST)) == 0)
+		{
+			dbg_msg("dbg", "woohooo!");
+			Packer.AddRaw(Protocol5::SERVERBROWSE_GETLIST, sizeof(Protocol5::SERVERBROWSE_GETLIST));
+		}
 		else
-			return;
+			Packer.AddRaw(pRequest, sizeof(Protocol6::SERVERBROWSE_INFO));
+
+		Packer.AddRaw(&Unpacker);
 
 		CNetChunk Packet = *pPacket;
 		Packet.m_DataSize = Packer.Size();
@@ -354,6 +505,9 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 	int Msg = Unpacker.GetInt();
 	int Sys = Msg&1;
 	Msg >>= 1;
+
+	if(!Sys)
+		dbg_msg("dbg65", "sys=%d id=%d", Sys, Msg);
 
 	if(Unpacker.Error())
 		return;
@@ -417,14 +571,7 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 			Protocol6::CNetObj_PlayerInput *pData = (Protocol6::CNetObj_PlayerInput *)aInputBuf;
 			Protocol5::CNetObj_PlayerInput DataT = *(Protocol5::CNetObj_PlayerInput *)pData;
 
-			DataT.m_PlayerState = Protocol5::PLAYERSTATE_UNKNOWN;
-			if(pData->m_PlayerFlags&Protocol6::PLAYERFLAG_IN_MENU)
-				DataT.m_PlayerState = Protocol5::PLAYERSTATE_IN_MENU;
-			else if(pData->m_PlayerFlags&Protocol6::PLAYERFLAG_CHATTING)
-				DataT.m_PlayerState = Protocol5::PLAYERSTATE_CHATTING;
-			else if(pData->m_PlayerFlags&Protocol6::PLAYERFLAG_PLAYING)
-				DataT.m_PlayerState = Protocol5::PLAYERSTATE_PLAYING;
-
+			DataT.m_PlayerState = TranslatePlayerFlags(pData->m_PlayerFlags);
 
 			mem_copy(aInputBuf, &DataT, sizeof(DataT));
 			for(int i = 0; i < Size / 4; i++)
@@ -454,12 +601,16 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 			|| Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONREMOVE
 			|| Msg == Protocol6::NETMSGTYPE_CL_STARTINFO
 			|| Msg == Protocol6::NETMSGTYPE_CL_CHANGEINFO
-			|| Msg == Protocol6::NETMSGTYPE_CL_CALLVOTE)
+			|| Msg == Protocol6::NETMSGTYPE_CL_CALLVOTE
+			|| Msg == Protocol6::NETMSGTYPE_CL_EMOTICON)
 		{
 			Protocol6::CNetObjHandler Handler;
 			pRawData = Handler.SecureUnpackMsg(Msg, &Unpacker);
 			if(!pRawData)
+			{
+				dbg_msg("dbg", "unpack faield");
 				return;
+			}
 		}
 
 		// server -> client
@@ -467,16 +618,10 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 		{
 			Protocol6::CNetMsg_Sv_Emoticon *pData = (Protocol6::CNetMsg_Sv_Emoticon *)pRawData;
 			Protocol5::CNetMsg_Sv_Emoticon DataT = *(Protocol5::CNetMsg_Sv_Emoticon *)pData;
-			// abuse that the emoticon values are nearly the same
-			// use Protocol6 variants because they have names
-			if(pData->m_Emoticon == Protocol6::EMOTICON_SORRY)
-				DataT.m_Emoticon = Protocol6::EMOTICON_OOP;
-			else if(pData->m_Emoticon == Protocol6::EMOTICON_WTF)
-				DataT.m_Emoticon = Protocol6::EMOTICON_ZZZ; // proxy: TODO: debatable
-			else if(pData->m_Emoticon == Protocol6::EMOTICON_EYES)
-				DataT.m_Emoticon = Protocol6::EMOTICON_MUSIC;
-			else if(pData->m_Emoticon == Protocol6::EMOTICON_QUESTION)
-				DataT.m_Emoticon = Protocol6::EMOTICON_DOTDOT;
+			DataT.m_Emoticon = TranslateEmoticon(pData->m_Emoticon);
+			dbg_msg("dbg", "pre=%d post=%d", pData->m_Emoticon, DataT.m_Emoticon);
+			if(DataT.m_Emoticon == -1)
+				return;
 			DataT.Pack((CMsgPacker *)&Packer);
 		}
 		else if(Msg == Protocol6::NETMSGTYPE_SV_VOTEOPTIONLISTADD)
@@ -531,6 +676,16 @@ void CTranslator_06_05::TranslatePacket(CNetChunk *pPacket)
 			//Data->m_Reason;
 			DataT.Pack((CMsgPacker *)&Packer);
 		}
+		else if(Msg == Protocol6::NETMSGTYPE_CL_EMOTICON)
+		{
+			Protocol6::CNetMsg_Cl_Emoticon *pData = (Protocol6::CNetMsg_Cl_Emoticon *)pRawData;
+			Protocol5::CNetMsg_Cl_Emoticon DataT = *(Protocol5::CNetMsg_Cl_Emoticon *)pData;
+			DataT.m_Emoticon = TranslateEmoticon(pData->m_Emoticon);
+			dbg_msg("dbg", "pre=%d post=%d", pData->m_Emoticon, DataT.m_Emoticon);
+			if(DataT.m_Emoticon == -1)
+				return;
+			DataT.Pack((CMsgPacker *)&Packer);
+		}
 	}
 
 	Packer.AddRaw(&Unpacker);
@@ -554,16 +709,11 @@ int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 		CSnapshotItem *pItem = pSnap->GetItem(i);
 		if(pItem->Type() == Protocol5::NETOBJTYPE_FLAG)
 		{
-			Protocol6::CNetObj_Flag *pData = (Protocol6::CNetObj_Flag *)pItem->Data();
-			Protocol5::CNetObj_Flag DataT;
-
-			DataT.m_X = pData->m_X;
-			DataT.m_Y = pData->m_Y;
-			DataT.m_Team = pData->m_Team;
+			Protocol5::CNetObj_Flag *pData = (Protocol5::CNetObj_Flag *)pItem->Data();
 			if(pData->m_Team == 0)
 			{
 				if(!FoundRedFlag)
-					RedFlagCarriedBy = DataT.m_CarriedBy;
+					RedFlagCarriedBy = pData->m_CarriedBy;
 				else
 					RedFlagCarriedBy = -1;
 				FoundRedFlag = true;
@@ -571,7 +721,7 @@ int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 			else if(pData->m_Team == 1)
 			{
 				if(!FoundBlueFlag)
-					BlueFlagCarriedBy = DataT.m_CarriedBy;
+					BlueFlagCarriedBy = pData->m_CarriedBy;
 				else
 					RedFlagCarriedBy = -1;
 				FoundBlueFlag = true;
@@ -600,17 +750,8 @@ int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 			// abuse that it has the same layout
 			Protocol6::CNetObj_Character DataT = *(Protocol6::CNetObj_Character *)pData;
 
-			DataT.m_PlayerFlags = 0;
-			DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_SCOREBOARD; // to fix ping updates
-			if(pData->m_PlayerState == Protocol5::PLAYERSTATE_IN_MENU)
-			{
-				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_IN_MENU;
-				DataT.m_PlayerFlags &= ~Protocol6::PLAYERFLAG_SCOREBOARD; // no possibility to have scoreboard open
-			}
-			else if(pData->m_PlayerState == Protocol5::PLAYERSTATE_CHATTING)
-				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_CHATTING;
-			else
-				DataT.m_PlayerFlags |= Protocol6::PLAYERFLAG_PLAYING;
+			DataT.m_PlayerFlags = TranslatePlayerState(pData->m_PlayerState);
+
 			void *pWrite = Builder.NewItem(NewType, ID, sizeof(DataT));
 			mem_copy(pWrite, &DataT, sizeof(DataT));
 		}
@@ -639,6 +780,7 @@ int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 				DataT.m_GameStateFlags |= Protocol6::GAMESTATEFLAG_SUDDENDEATH;
 			if(pData->m_Paused)
 				DataT.m_GameStateFlags |= Protocol6::GAMESTATEFLAG_PAUSED;
+			DataT.m_RoundStartTick = pData->m_RoundStartTick;
 			DataT.m_ScoreLimit = pData->m_ScoreLimit;
 			DataT.m_TimeLimit = pData->m_TimeLimit;
 			DataT.m_WarmupTimer = pData->m_Warmup;
@@ -660,7 +802,16 @@ int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 			void *pWrite = Builder.NewItem(Protocol6::NETOBJTYPE_GAMEINFO, ID, sizeof(DataT));
 			mem_copy(pWrite, &DataT, sizeof(DataT));
 		}
-		else if(Type == Protocol6::NETOBJTYPE_CLIENTINFO)
+		else if(Type == Protocol5::NETOBJTYPE_PLAYERINFO)
+		{
+			Protocol5::CNetObj_PlayerInfo *pData = (Protocol5::CNetObj_PlayerInfo *)pItem->Data();
+			Protocol6::CNetObj_PlayerInfo DataT;
+			mem_copy(&DataT, pData, sizeof(*pData));
+
+			void *pWrite = Builder.NewItem(NewType, ID, sizeof(DataT));
+			mem_copy(pWrite, &DataT, sizeof(DataT));
+		}
+		else if(Type == Protocol5::NETOBJTYPE_CLIENTINFO)
 		{
 			Protocol5::CNetObj_ClientInfo *pData = (Protocol5::CNetObj_ClientInfo *)pItem->Data();
 			Protocol6::CNetObj_ClientInfo DataT;
@@ -678,9 +829,7 @@ int CTranslator_05_06::TranslateSnap(CSnapshot *pSnap)
 			DataT.m_Skin4 = pData->m_Skin4;
 			DataT.m_Skin5 = pData->m_Skin5;
 			DataT.m_Country = -1;
-			DataT.m_Clan0 = 0;
-			DataT.m_Clan1 = 0;
-			DataT.m_Clan2 = 0;
+			StrToInts(&DataT.m_Clan0, 3, s_aZeros);
 			DataT.m_UseCustomColor = pData->m_UseCustomColor;
 			DataT.m_ColorBody = pData->m_ColorBody;
 			DataT.m_ColorFeet = pData->m_ColorFeet;
@@ -766,13 +915,8 @@ int CTranslator_06_05::TranslateSnap(CSnapshot *pSnap)
 			// abuse that it has the same layout
 			Protocol5::CNetObj_Character DataT = *(Protocol5::CNetObj_Character *)pData;
 
-			DataT.m_PlayerState = Protocol5::PLAYERSTATE_UNKNOWN;
-			if(pData->m_PlayerFlags&Protocol6::PLAYERFLAG_PLAYING)
-				DataT.m_PlayerState = Protocol5::PLAYERSTATE_PLAYING;
-			if(pData->m_PlayerFlags&Protocol6::PLAYERFLAG_IN_MENU)
-				DataT.m_PlayerState = Protocol5::PLAYERSTATE_IN_MENU;
-			if(pData->m_PlayerFlags&Protocol6::PLAYERFLAG_CHATTING)
-				DataT.m_PlayerState = Protocol5::PLAYERSTATE_CHATTING;
+			DataT.m_PlayerState = TranslatePlayerFlags(pData->m_PlayerFlags);
+
 			void *pWrite = Builder.NewItem(NewType, ID, sizeof(DataT));
 			mem_copy(pWrite, &DataT, sizeof(DataT));
 		}
@@ -852,3 +996,59 @@ int CTranslator_06_05::TranslateSnap(CSnapshot *pSnap)
 	return Builder.Finish(pSnap);
 }
 
+int CTranslator_05_06::TranslateEmoticon(int Emoticon)
+{
+	// abuse that the emoticon values are nearly the same
+	// use Protocol6 variants because they have names
+	if(Emoticon == Protocol6::EMOTICON_SORRY) // emoticon: music without bubble
+		return Protocol6::EMOTICON_MUSIC;
+	else if(Emoticon == Protocol6::EMOTICON_EYES) // emoticon: dead tee
+		return Protocol6::EMOTICON_SPLATTEE;
+	else if(Emoticon == Protocol6::EMOTICON_WTF) // no emoticon
+		return -1;
+	else if(Emoticon == Protocol6::EMOTICON_QUESTION) // no emoticon
+		return -1;
+	return Emoticon;
+}
+
+int CTranslator_06_05::TranslateEmoticon(int Emoticon)
+{
+	// abuse that the emoticon values are nearly the same
+	// use Protocol6 variants because they have names
+	if(Emoticon == Protocol6::EMOTICON_SORRY)
+		return Protocol6::EMOTICON_OOP; // emoticon: oop
+	else if(Emoticon == Protocol6::EMOTICON_WTF)
+		return Protocol6::EMOTICON_ZZZ; // emoticon: zzz // proxy: TODO: debatable
+	else if(Emoticon == Protocol6::EMOTICON_EYES)
+		return Protocol6::EMOTICON_MUSIC; // emoticon: music
+	else if(Emoticon == Protocol6::EMOTICON_QUESTION)
+		return Protocol6::EMOTICON_DOTDOT; // emoticon: dotdot
+	return Emoticon;
+}
+
+int CTranslator_05_06::TranslatePlayerState(int PlayerState)
+{
+	int PlayerFlags = 0;
+	PlayerFlags |= Protocol6::PLAYERFLAG_SCOREBOARD; // to fix ping updates
+	if(PlayerState == Protocol5::PLAYERSTATE_IN_MENU)
+	{
+		PlayerFlags |= Protocol6::PLAYERFLAG_IN_MENU;
+		PlayerFlags &= ~Protocol6::PLAYERFLAG_SCOREBOARD; // no possibility to have scoreboard open
+	}
+	else if(PlayerState == Protocol5::PLAYERSTATE_CHATTING)
+		PlayerFlags |= Protocol6::PLAYERFLAG_CHATTING;
+	else
+		PlayerFlags |= Protocol6::PLAYERFLAG_PLAYING;
+	return PlayerFlags;
+}
+
+int CTranslator_06_05::TranslatePlayerFlags(int PlayerFlags)
+{
+	if(PlayerFlags&Protocol6::PLAYERFLAG_CHATTING)
+		return Protocol5::PLAYERSTATE_CHATTING;
+	if(PlayerFlags&Protocol6::PLAYERFLAG_IN_MENU)
+		return Protocol5::PLAYERSTATE_IN_MENU;
+	if(PlayerFlags&Protocol6::PLAYERFLAG_PLAYING)
+		return Protocol5::PLAYERSTATE_PLAYING;
+	return Protocol5::PLAYERSTATE_UNKNOWN;
+}

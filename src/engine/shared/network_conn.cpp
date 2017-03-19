@@ -161,8 +161,10 @@ void CNetConnection::Resend()
 
 int CNetConnection::Connect(NETADDR *pAddr)
 {
+	dbg_msg("dbg/conn", "connect");
 	if(State() != NET_CONNSTATE_OFFLINE)
 		return -1;
+	dbg_msg("dbg/conn", "connect!");
 
 	// init connection
 	Reset();

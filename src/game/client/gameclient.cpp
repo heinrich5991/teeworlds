@@ -50,6 +50,8 @@
 #include "components/spectator.h"
 #include "components/voting.h"
 
+#include <proxy/proxy/0.5/protocol_generated.h>
+
 CGameClient g_GameClient;
 
 // instanciate all systems
@@ -228,8 +230,9 @@ void CGameClient::OnInit()
 
 	// TODO: this should be different
 	// setup item sizes
-	for(int i = 0; i < NUM_NETOBJTYPES; i++)
-		Client()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
+	Protocol5::CNetObjHandler NetObjHandler;
+	for(int i = 0; i < Protocol5::NUM_NETOBJTYPES; i++)
+		Client()->SnapSetStaticsize(i, NetObjHandler.GetObjSize(i));
 
 	// load default font
 	static CFont *pDefaultFont = 0;

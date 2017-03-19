@@ -74,38 +74,20 @@ int CHacks::OnPacket(CNetChunk *pPacket, int Origin)
 
 	if(pPacket->m_Flags&NETSENDFLAG_CONNLESS)
 	{
-		// connlesshack begin
-		if(Origin == ORIGIN_PEER)
+		// connless packet to one of our peers?
+		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			int Version = GetConnlessVersion(pPacket);
-			if(m_apConnlessProxies[Version])
+			if(m_aPeers[i].m_pProxy
+				&& net_addr_comp(&m_aPeers[i].m_Addr, &pPacket->m_Address) == 0)
 			{
-				InitCBData(Origin, PeerID);
-				m_apConnlessProxies[Version]->TranslatePacket(pPacket, GetRole(Origin));
+				InitCBData(Origin, i);
+				m_aPeers[i].m_pProxy->TranslatePacket(pPacket, GetRole(Origin));
 				FinalizeCBData(Origin);
 				return 1;
 			}
-			else
-				return 0;
-		}
-		// connlesshack end
-
-		if(Origin == ORIGIN_OWN)
-		{
-			for(int i = 0; i < MAX_CLIENTS; i++)
-			{
-				if(m_aPeers[PeerID].m_pProxy
-					&& net_addr_comp(&m_aPeers[PeerID].m_Addr, &pPacket->m_Address) == 0)
-				{
-					InitCBData(Origin, PeerID);
-					m_aPeers[PeerID].m_pProxy->TranslatePacket(pPacket, GetRole(Origin));
-					FinalizeCBData(Origin);
-					return 1;
-				}
-			}
 		}
 
-		// connlesshack begin
+		// connless packet is response to another connless packet?
 		if(Origin == ORIGIN_OWN && m_pConnlessAddrProxy
 			&& net_addr_comp(&pPacket->m_Address, &m_ConnlessAddr) == 0)
 		{
@@ -114,7 +96,16 @@ int CHacks::OnPacket(CNetChunk *pPacket, int Origin)
 			FinalizeCBData(Origin);
 			return 1;
 		}
-		// connlesshack end
+
+		// try to guess the version of the connless packet
+		int Version = GetConnlessVersion(pPacket);
+		if(m_apConnlessProxies[Version])
+		{
+			InitCBData(Origin, PeerID);
+			m_apConnlessProxies[Version]->TranslatePacket(pPacket, GetRole(Origin));
+			FinalizeCBData(Origin);
+			return 1;
+		}
 
 		return 0;
 	}
@@ -140,18 +131,33 @@ int CHacks::OnPacket(CNetChunk *pPacket, int Origin)
 
 int CHacks::GetConnlessVersion(CNetChunk *pPacket)
 {
+	#define COMP(x) (mem_comp(pPacket->m_pData, (x), sizeof(x)) == 0)
+	#define COMP5(x) COMP(Protocol5::x)
 	// 0.5 begin
-	if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_GETINFO) + 1
-		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_GETINFO,
-			    sizeof(Protocol5::SERVERBROWSE_GETINFO)) == 0)
-		return VERSION_05;
-	if(pPacket->m_DataSize == sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)
-		&& mem_comp(pPacket->m_pData, Protocol5::SERVERBROWSE_OLD_GETINFO,
-		            sizeof(Protocol5::SERVERBROWSE_OLD_GETINFO)) == 0)
-		return VERSION_05;
+	if(pPacket->m_DataSize >= (int)sizeof(Protocol5::SERVERBROWSE_GETINFO))
+	{
+		if(COMP5(SERVERBROWSE_HEARTBEAT)
+			|| COMP5(SERVERBROWSE_HEARTBEAT)
+			|| COMP5(SERVERBROWSE_GETLIST)
+			|| COMP5(SERVERBROWSE_LIST)
+			|| COMP5(SERVERBROWSE_GETCOUNT)
+			|| COMP5(SERVERBROWSE_COUNT)
+			|| COMP5(SERVERBROWSE_GETINFO)
+			|| COMP5(SERVERBROWSE_INFO)
+			|| COMP5(SERVERBROWSE_OLD_GETINFO)
+			|| COMP5(SERVERBROWSE_OLD_INFO))
+			// same as 0.6:
+			// || COMP5(SERVERBROWSE_FWCHECK)
+			// || COMP5(SERVERBROWSE_FWRESPONSE)
+			// || COMP5(SERVERBROWSE_FWOK)
+			// || COMP5(SERVERBROWSE_FWERROR)
+			return VERSION_05;
+	}
 	// 0.5 end
 
-	return VERSION_06;
+	return GetVersion();
+	#undef COMP5
+	#undef COMP
 }
 
 
@@ -194,7 +200,9 @@ void CHacks::SetProxy(int PeerID, int Version)
 	m_aPeers[PeerID].m_pProxy = CreateProxy(Version);
 	m_aPeers[PeerID].m_Addr = *GetPeerAddress(PeerID);
 
-	dbg_msg("proxy", "version detected pid=%d ver=%s", PeerID, GetVersionString(Version));
+	char aAddress[NETADDR_MAXSTRSIZE];
+	net_addr_str(&m_aPeers[PeerID].m_Addr, aAddress, sizeof(aAddress));
+	dbg_msg("proxy", "version detected pid=%d addr=%s ver=%s", PeerID, aAddress, GetVersionString(Version));
 }
 
 IProxy *CHacks::CreateProxy(int PeerVersion)
@@ -229,7 +237,9 @@ void CHacks::OnSnap(int PeerID, CSnapshot *pSnap, int *pSnapSize)
 	dbg_assert(0 <= PeerID && PeerID < MAX_CLIENTS, "pid out of range"); // proxy: TODO: check that before release
 	if(m_aPeers[PeerID].m_pProxy)
 	{
-		*pSnapSize = m_aPeers[PeerID].m_pProxy->TranslateServerSnap(pSnap);
+		int SnapSize = m_aPeers[PeerID].m_pProxy->TranslateServerSnap(pSnap);
+		if(pSnapSize)
+			*pSnapSize = SnapSize;
 	}
 }
 

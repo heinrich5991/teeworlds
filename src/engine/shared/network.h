@@ -296,7 +296,7 @@ private:
 
 	int RecvImpl(CNetChunk *pChunk);
 	int SendImpl(CNetChunk *pChunk);
-
+	friend IHacks;
 	IHacks *m_pHacks;
 
 public:
@@ -398,7 +398,7 @@ class CNetClient
 
 	int RecvImpl(CNetChunk *pChunk);
 	int SendImpl(CNetChunk *pChunk);
-
+	friend IHacks;
 	IHacks *m_pHacks;
 
 public:

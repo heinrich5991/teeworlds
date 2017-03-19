@@ -137,6 +137,7 @@ function build(settings)
 		settings.cc.flags:Add("/wd4244")
 	else
 		settings.cc.flags:Add("-Wall", "-fno-exceptions")
+		settings.cc.flags:Add("-fno-diagnostics-show-caret")
 		if platform == "macosx" then
 			settings.cc.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.5.sdk")
 			settings.link.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.5.sdk")

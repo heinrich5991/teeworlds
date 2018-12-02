@@ -450,13 +450,14 @@ void CHud::RenderVoting()
 	CUIRect Base = {5, 88, 100, 4};
 	m_pClient->m_pVoting->RenderBars(Base, false);
 
-	const char *pYesKey = m_pClient->m_pBinds->GetKey("vote yes");
-	const char *pNoKey = m_pClient->m_pBinds->GetKey("vote no");
-	str_format(aBuf, sizeof(aBuf), "%s - %s", pYesKey, Localize("Vote yes"));
+	char aBufYes[64], aBufNo[64];
+	m_pClient->m_pBinds->GetKey("vote yes", aBufYes, sizeof(aBufYes));
+	m_pClient->m_pBinds->GetKey("vote no", aBufNo, sizeof(aBufNo));
+	str_format(aBuf, sizeof(aBuf), "%s - %s", aBufYes, Localize("Vote yes"));
 	Base.y += Base.h+1;
 	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_LEFT);
 
-	str_format(aBuf, sizeof(aBuf), "%s - %s", Localize("Vote no"), pNoKey);
+	str_format(aBuf, sizeof(aBuf), "%s - %s", Localize("Vote no"), aBufNo);
 	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_RIGHT);
 }
 
@@ -661,6 +662,18 @@ void CHud::RenderSpectatorHud()
 	TextRender()->TextEx(&Cursor, aBuf, -1);
 }
 
+void CHud::RenderSpectatorNotification()
+{
+	if(m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS &&
+		m_pClient->m_TeamChangeTime + 5.0f >= Client()->LocalTime())
+	{
+		const char *pText = Localize("Click on a player or a flag to follow it");
+		float FontSize = 16.0f;
+		float w = TextRender()->TextWidth(0, FontSize, pText, -1);
+		TextRender()->Text(0, 150 * Graphics()->ScreenAspect() + -w / 2, 30, FontSize, pText, -1);
+	}
+}
+
 void CHud::OnRender()
 {
 	if(!m_pClient->m_Snap.m_pGameData)
@@ -683,6 +696,7 @@ void CHud::OnRender()
 			if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != -1)
 				RenderHealthAndAmmo(&m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_Cur);
 			RenderSpectatorHud();
+			RenderSpectatorNotification();
 		}
 
 		RenderGameTimer();

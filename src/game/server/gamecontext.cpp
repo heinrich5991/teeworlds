@@ -93,22 +93,19 @@ class CCharacter *CGameContext::GetPlayerChar(int ClientID)
 	return m_apPlayers[ClientID]->GetCharacter();
 }
 
-void CGameContext::CreateDamageInd(vec2 Pos, float Angle, int Amount)
+void CGameContext::CreateDamage(vec2 Pos, int Id, vec2 Source, int HealthAmount, int ArmorAmount, bool Self)
 {
-	float a = 3*pi/2 + Angle;
-	//float a = get_angle(dir);
-	float s = a-pi/3;
-	float e = a+pi/3;
-	for(int i = 0; i < Amount; i++)
+	float f = angle(Source);
+	CNetEvent_Damage *pEvent = (CNetEvent_Damage *)m_Events.Create(NETEVENTTYPE_DAMAGE, sizeof(CNetEvent_Damage));
+	if(pEvent)
 	{
-		float f = mix(s, e, float(i+1)/float(Amount+2));
-		CNetEvent_DamageInd *pEvent = (CNetEvent_DamageInd *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(CNetEvent_DamageInd));
-		if(pEvent)
-		{
-			pEvent->m_X = (int)Pos.x;
-			pEvent->m_Y = (int)Pos.y;
-			pEvent->m_Angle = (int)(f*256.0f);
-		}
+		pEvent->m_X = (int)Pos.x;
+		pEvent->m_Y = (int)Pos.y;
+		pEvent->m_ClientID = Id;
+		pEvent->m_Angle = (int)(f*256.0f);
+		pEvent->m_HealthAmount = HealthAmount;
+		pEvent->m_ArmorAmount = ArmorAmount;
+		pEvent->m_Self = Self;
 	}
 }
 
@@ -149,7 +146,7 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, int MaxDamag
 			Force = normalize(Diff) * MaxForce;
 		float Factor = 1 - clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
 		if((int)(Factor * MaxDamage))
-			apEnts[i]->TakeDamage(Force * Factor, (int)(Factor * MaxDamage), Owner, Weapon);
+			apEnts[i]->TakeDamage(Force * Factor, Diff*-1, (int)(Factor * MaxDamage), Owner, Weapon);
 	}
 }
 
@@ -176,7 +173,7 @@ void CGameContext::CreateDeath(vec2 Pos, int ClientID)
 	}
 }
 
-void CGameContext::CreateSound(vec2 Pos, int Sound, int Mask)
+void CGameContext::CreateSound(vec2 Pos, int Sound, int64 Mask)
 {
 	if (Sound < 0)
 		return;
@@ -278,7 +275,7 @@ void CGameContext::SendSettings(int ClientID)
 	Msg.m_SpecVote = g_Config.m_SvVoteSpectate;
 	Msg.m_TeamLock = m_LockTeams != 0;
 	Msg.m_TeamBalance = g_Config.m_SvTeambalanceTime != 0;
-	Msg.m_PlayerSlots = Server()->MaxClients()-g_Config.m_SvSpectatorSlots;
+	Msg.m_PlayerSlots = g_Config.m_SvPlayerSlots;
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
@@ -604,6 +601,10 @@ void CGameContext::OnClientEnter(int ClientID)
 	NewClientInfoMsg.m_pClan = Server()->ClientClan(ClientID);
 	NewClientInfoMsg.m_Country = Server()->ClientCountry(ClientID);
 	NewClientInfoMsg.m_Silent = false;
+
+	if(g_Config.m_SvSilentSpectatorMode && m_apPlayers[ClientID]->GetTeam() == TEAM_SPECTATORS)
+		NewClientInfoMsg.m_Silent = true;
+
 	for(int p = 0; p < 6; p++)
 	{
 		NewClientInfoMsg.m_apSkinPartNames[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aaSkinPartNames[p];
@@ -678,6 +679,9 @@ void CGameContext::OnClientTeamChange(int ClientID)
 
 void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 {
+	AbortVoteOnDisconnect(ClientID);
+	m_pController->OnPlayerDisconnect(m_apPlayers[ClientID]);
+
 	// update clients on drop
 	if(Server()->ClientIngame(ClientID))
 	{
@@ -693,11 +697,11 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 		Msg.m_ClientID = ClientID;
 		Msg.m_pReason = pReason;
 		Msg.m_Silent = false;
+		if(g_Config.m_SvSilentSpectatorMode && m_apPlayers[ClientID]->GetTeam() == TEAM_SPECTATORS)
+			Msg.m_Silent = true;
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, -1);
 	}
 
-	AbortVoteOnDisconnect(ClientID);
-	m_pController->OnPlayerDisconnect(m_apPlayers[ClientID]);
 	delete m_apPlayers[ClientID];
 	m_apPlayers[ClientID] = 0;
 
@@ -1113,7 +1117,7 @@ void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData)
 	int ClientID = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	int Team = clamp(pResult->GetInteger(1), -1, 1);
 	int Delay = pResult->NumArguments()>2 ? pResult->GetInteger(2) : 0;
-	if(!pSelf->m_apPlayers[ClientID])
+	if(!pSelf->m_apPlayers[ClientID] || !pSelf->m_pController->CanJoinTeam(Team, ClientID))
 		return;
 
 	char aBuf[256];
@@ -1132,7 +1136,7 @@ void CGameContext::ConSetTeamAll(IConsole::IResult *pResult, void *pUserData)
 	pSelf->SendGameMsg(GAMEMSG_TEAM_ALL, Team, -1);
 
 	for(int i = 0; i < MAX_CLIENTS; ++i)
-		if(pSelf->m_apPlayers[i])
+		if(pSelf->m_apPlayers[i] && pSelf->m_pController->CanJoinTeam(Team, i))
 			pSelf->m_pController->DoTeamChange(pSelf->m_apPlayers[i], Team, false);
 }
 
@@ -1366,6 +1370,8 @@ void CGameContext::ConchainSettingUpdate(IConsole::IResult *pResult, void *pUser
 	if(pResult->NumArguments())
 	{
 		CGameContext *pSelf = (CGameContext *)pUserData;
+		if(pSelf->Server()->MaxClients() < g_Config.m_SvPlayerSlots)
+			g_Config.m_SvPlayerSlots = pSelf->Server()->MaxClients();
 		pSelf->SendSettings(-1);
 	}
 }
@@ -1406,18 +1412,6 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("remove_vote", "s", CFGFLAG_SERVER, ConRemoveVote, this, "remove a voting option");
 	Console()->Register("clear_votes", "", CFGFLAG_SERVER, ConClearVotes, this, "Clears the voting options");
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Force a vote to yes/no");
-
-	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
-
-	Console()->Chain("sv_vote_kick", ConchainSettingUpdate, this);
-	Console()->Chain("sv_vote_kick_min", ConchainSettingUpdate, this);
-	Console()->Chain("sv_vote_spectate", ConchainSettingUpdate, this);
-	Console()->Chain("sv_teambalance_time", ConchainSettingUpdate, this);
-	Console()->Chain("sv_spectator_slots", ConchainSettingUpdate, this);
-
-	Console()->Chain("sv_scorelimit", ConchainGameinfoUpdate, this);
-	Console()->Chain("sv_timelimit", ConchainGameinfoUpdate, this);
-	Console()->Chain("sv_matches_per_map", ConchainGameinfoUpdate, this);
 }
 
 void CGameContext::OnInit()
@@ -1465,11 +1459,27 @@ void CGameContext::OnInit()
 		}
 	}
 
+	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
+
+	Console()->Chain("sv_vote_kick", ConchainSettingUpdate, this);
+	Console()->Chain("sv_vote_kick_min", ConchainSettingUpdate, this);
+	Console()->Chain("sv_vote_spectate", ConchainSettingUpdate, this);
+	Console()->Chain("sv_teambalance_time", ConchainSettingUpdate, this);
+	Console()->Chain("sv_player_slots", ConchainSettingUpdate, this);
+
+	Console()->Chain("sv_scorelimit", ConchainGameinfoUpdate, this);
+	Console()->Chain("sv_timelimit", ConchainGameinfoUpdate, this);
+	Console()->Chain("sv_matches_per_map", ConchainGameinfoUpdate, this);
+
+	// clamp sv_player_slots to 0..MaxClients
+	if(Server()->MaxClients() < g_Config.m_SvPlayerSlots)
+		g_Config.m_SvPlayerSlots = Server()->MaxClients();
+
 #ifdef CONF_DEBUG
 	if(g_Config.m_DbgDummies)
 	{
 		for(int i = 0; i < g_Config.m_DbgDummies ; i++)
-			OnClientConnected(MAX_CLIENTS-i-1, true);
+			OnClientConnected(Server()->MaxClients() -i-1, true);
 	}
 #endif
 }

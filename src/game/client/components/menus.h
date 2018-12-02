@@ -24,6 +24,7 @@ class CMenusKeyBinder : public CComponent
 public:
 	bool m_TakeKey;
 	bool m_GotKey;
+	int m_Modifier;
 	IInput::CEvent m_Key;
 	CMenusKeyBinder();
 	virtual bool OnInput(IInput::CEvent Event);
@@ -91,7 +92,7 @@ private:
 	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
 	void DoButton_KeySelect(CButtonContainer *pBC, const char *pText, int Checked, const CUIRect *pRect);
-	int DoKeyReader(CButtonContainer *pPC, const CUIRect *pRect, int Key);
+	int DoKeyReader(CButtonContainer *pPC, const CUIRect *pRect, int Key, int Modifier, int* NewModifier);
 
 	//static int ui_do_key_reader(void *id, const CUIRect *rect, int key);
 	void UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeight, float Spacing);
@@ -223,6 +224,27 @@ private:
 
 	static int ThemeScan(const char *pName, int IsDir, int DirType, void *pUser);
 	static int ThemeIconScan(const char *pName, int IsDir, int DirType, void *pUser);
+
+	// gametype icons
+	class CGameIcon
+	{
+	public:
+		enum
+		{
+			GAMEICON_FULL=0,
+			GAMEICON_ON,
+			GAMEICON_OFF,
+		};
+		CGameIcon() {};
+		CGameIcon(const char *pName) : m_Name(pName) {}
+
+		string m_Name;
+		IGraphics::CTextureHandle m_IconTexture;
+	};
+	array<CGameIcon> m_lGameIcons;
+	IGraphics::CTextureHandle m_GameIconDefault;
+	void DoGameIcon(const char *pName, const CUIRect *pRect, int Type);
+	static int GameIconScan(const char *pName, int IsDir, int DirType, void *pUser);
 
 	int64 m_LastInput;
 
@@ -515,7 +537,7 @@ private:
 	void RenderServerbrowserInfoTab(CUIRect View);
 	void RenderServerbrowserFriendList(CUIRect View);
 	void RenderDetailInfo(CUIRect View, const CServerInfo *pInfo);
-	void RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int Column);
+	void RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	//void RenderServerbrowserFriends(CUIRect View);
 	void RenderServerbrowserBottomBox(CUIRect View);

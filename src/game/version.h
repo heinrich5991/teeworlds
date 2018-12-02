@@ -6,5 +6,5 @@
 #define GAME_VERSION "0.7.1"
 #define GAME_NETVERSION "0.7 " GAME_NETVERSION_HASH
 #define CLIENT_VERSION 0x0701
-static const char GAME_RELEASE_VERSION[8] = {'0', '.', '7', '.', '1', 0};
+static const char GAME_RELEASE_VERSION[8] = "0.7.1";
 #endif

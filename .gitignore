@@ -5,6 +5,9 @@
 /objs
 /other/*/include
 /other/*/lib
+/other/freetype/mac/
+/other/sdl/mac/
+/other/wavpack/
 __pycache__/
 *.dll
 *.pyc

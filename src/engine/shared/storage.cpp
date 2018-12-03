@@ -4,6 +4,7 @@
 #include <engine/storage.h>
 #include "linereader.h"
 #include <zlib.h>
+#include <string.h>
 
 // compiled-in data-dir path
 #define DATA_DIR "data"
@@ -222,6 +223,14 @@ public:
 		}
 
 	#if defined(CONF_FAMILY_UNIX)
+		char aResDir[128];
+		str_copy(aResDir, m_aAppDir, sizeof(aResDir));
+		int cut = (unsigned)strlen(aResDir) - 5;
+		if (aResDir[cut])
+		{
+			aResDir[cut] = 0;
+		}
+		str_format(aResDir, sizeof(aResDir), "%sResources/data", aResDir);
 		// 4) check for all default locations
 		{
 			const char *aDirs[] = {
@@ -232,7 +241,7 @@ public:
 				"/usr/pkg/share/teeworlds/data",
 				"/usr/pkg/share/games/teeworlds/data",
 				"/opt/teeworlds/data",
-				"/Volumes/Teeworlds/Teeworlds.app/Contents/Resources/data"
+				aResDir
 			};
 			const int DirsCount = sizeof(aDirs) / sizeof(aDirs[0]);
 

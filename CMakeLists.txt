@@ -1634,8 +1634,10 @@ if(CLIENT AND (DMGTOOLS_FOUND OR HDIUTIL))
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_CLIENT}> ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/MacOS/
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/other/sdl/mac/lib64/SDL2.framework ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/Frameworks/SDL2.framework
     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/other/freetype/mac/lib64/libfreetype.6.dylib ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/Frameworks/
+    COMMAND ${CMAKE_COMMAND} -E copy /usr/local/Cellar/wavpack/5.1.0/lib/libwavpack.dylib ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/Frameworks/
     COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/darwin_change_dylib.py change --tools ${CMAKE_INSTALL_NAME_TOOL} ${CMAKE_OTOOL} ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/MacOS/${TARGET_CLIENT} SDL2 @executable_path/../Frameworks/SDL2.framework/SDL2
     COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/darwin_change_dylib.py change --tools ${CMAKE_INSTALL_NAME_TOOL} ${CMAKE_OTOOL} ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/MacOS/${TARGET_CLIENT} libfreetype @executable_path/../Frameworks/libfreetype.6.dylib
+    COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/darwin_change_dylib.py change --tools ${CMAKE_INSTALL_NAME_TOOL} ${CMAKE_OTOOL} ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/MacOS/${TARGET_CLIENT} libwavpack @executable_path/../Frameworks/libwavpack.dylib
 
     # SERVER
     COMMAND ${CMAKE_COMMAND} -E copy_directory data/maps ${DMG_TMPDIR}/${TARGET_SERVER}.app/Contents/Resources/data/maps

@@ -136,6 +136,7 @@ public:
 	void SetCurrentServerPing(const NETADDR &Addr, int Ping);
 
 	void SetBaseInfo(class CNetClient *pClient, const char *pNetVersion);
+	void OnInit();
 
 	void RequestImpl64(const NETADDR &Addr, CServerEntry *pEntry) const;
 	void QueueRequest(CServerEntry *pEntry);
@@ -153,6 +154,7 @@ private:
 	bool m_RefreshingHttp = false;
 	IServerBrowserHttp *m_pHttp = nullptr;
 	IServerBrowserPingCache *m_pPingCache = nullptr;
+	const char *m_pHttpPrevBestUrl = nullptr;
 
 	CHeap m_ServerlistHeap;
 	CServerEntry **m_ppServerlist;

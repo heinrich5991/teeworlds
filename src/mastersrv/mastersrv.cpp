@@ -12,6 +12,7 @@
 #include <engine/shared/network.h>
 
 #include "mastersrv.h"
+#include "json.h"
 
 
 enum {
@@ -41,7 +42,9 @@ struct CServerEntry
 	int64 m_Expire;
 };
 
-static CServerEntry m_aServers[MAX_SERVERS];
+static CServerEntry m_aAllServers[MAX_SERVERS*2];
+static CServerEntry *m_aServers = &m_aAllServers[MAX_SERVERS];
+static int m_NumExtraServers = 0;
 static int m_NumServers = 0;
 
 struct CPacketData
@@ -80,7 +83,6 @@ struct CCountPacketData
 static CCountPacketData m_CountData;
 static CCountPacketData m_CountDataLegacy;
 
-
 CNetBan m_NetBan;
 
 static CNetClient m_NetChecker; // NAT/FW checker
@@ -88,10 +90,100 @@ static CNetClient m_NetOp; // main
 
 IConsole *m_pConsole;
 
+bool ServerbrowserParseUrl(ServerType *pType, NETADDR *pOut, const char *pUrl)
+{
+	char aHost[128];
+
+	if(str_comp_num(pUrl, "tw-0.6+udp://", 13) == 0)
+	{
+		*pType = SERVERTYPE_NORMAL;
+	}
+	else if(str_comp_num(pUrl, "tw-0.5+udp://", 13) == 0)
+	{
+		*pType = SERVERTYPE_LEGACY;
+	}
+	else
+	{
+		return true;
+	}
+	const char *pRest = pUrl + 13;
+	int Length = str_length(pRest);
+	int Start = 0;
+	int End = Length;
+	for(int i = 0; i < Length; i++)
+	{
+		if(pRest[i] == '@')
+		{
+			if(Start != 0)
+			{
+				// Two at signs.
+				return true;
+			}
+			Start = i + 1;
+		}
+		else if(pRest[i] == '/' || pRest[i] == '?' || pRest[i] == '#')
+		{
+			End = i;
+			break;
+		}
+	}
+	str_copy(aHost, pRest + Start, sizeof(aHost));
+	if(End - Start < (int)sizeof(aHost))
+	{
+		aHost[End - Start] = 0;
+	}
+	return net_addr_from_str(pOut, aHost) != 0;
+}
+
+void ReadServers()
+{
+	IOHANDLE AddressesFile = io_open("addresses.json", IOFLAG_READ);
+	if(!AddressesFile)
+	{
+		return;
+	}
+
+	// 0         1         2         3         4         5         6
+	// 0123456789012345678901234567890123456789012345678901234567890
+	// "tw-0.6+udp://[1111:2222:3333:4444:5555:6666:7777:8888]:1234"
+	char aBuffer[MAX_SERVERS * 64];
+	int Length = io_read(AddressesFile, aBuffer, sizeof(aBuffer));
+	json_value *pJson = json_parse(aBuffer, Length);
+	dbg_assert((bool)pJson, "invalid JSON in addresses.json");
+	dbg_assert(pJson->type == json_array, "not a JSON list in addresses.json");
+
+	int Total = 0;
+	for (unsigned int i = 0; i < pJson->u.array.length; i++)
+	{
+		const json_value &Address = (*pJson)[i];
+		dbg_assert(Address.type == json_string, "invalid address");
+		if(str_comp_num(Address, "tw-0.5+udp://", 13) != 0 && str_comp_num(Address, "tw-0.6+udp://", 13) != 0)
+		{
+			continue;
+		}
+		Total++;
+	}
+	int Count = 0;
+	for (unsigned int i = 0; i < pJson->u.array.length; i++)
+	{
+		const json_value &Address = (*pJson)[i];
+		dbg_assert(Address.type == json_string, "invalid address");
+		if(str_comp_num(Address, "tw-0.5+udp://", 13) != 0 && str_comp_num(Address, "tw-0.6+udp://", 13) != 0)
+		{
+			continue;
+		}
+		CServerEntry *pOut = &m_aServers[-Total + Count];
+		int Failure = ServerbrowserParseUrl(&pOut->m_Type, &pOut->m_Address, Address);
+		dbg_assert(!Failure, "can't parse address");
+		Count++;
+	}
+	m_NumExtraServers = Count;
+}
+
 void BuildPackets()
 {
-	CServerEntry *pCurrent = &m_aServers[0];
-	int ServersLeft = m_NumServers;
+	CServerEntry *pCurrent = &m_aServers[-m_NumExtraServers];
+	int ServersLeft = m_NumExtraServers + m_NumServers;
 	m_NumPackets = 0;
 	m_NumPacketsLegacy = 0;
 	int PacketIndex = 0;
@@ -428,8 +520,8 @@ int main(int argc, const char **argv) // ignore_convention
 				p.m_Flags = NETSENDFLAG_CONNLESS;
 				p.m_DataSize = sizeof(m_CountData);
 				p.m_pData = &m_CountData;
-				m_CountData.m_High = (m_NumServers>>8)&0xff;
-				m_CountData.m_Low = m_NumServers&0xff;
+				m_CountData.m_High = ((m_NumExtraServers+m_NumServers)>>8)&0xff;
+				m_CountData.m_Low = (m_NumExtraServers+m_NumServers)&0xff;
 				m_NetOp.Send(&p);
 			}
 			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETCOUNT_LEGACY) &&
@@ -443,8 +535,8 @@ int main(int argc, const char **argv) // ignore_convention
 				p.m_Flags = NETSENDFLAG_CONNLESS;
 				p.m_DataSize = sizeof(m_CountData);
 				p.m_pData = &m_CountDataLegacy;
-				m_CountDataLegacy.m_High = (m_NumServers>>8)&0xff;
-				m_CountDataLegacy.m_Low = m_NumServers&0xff;
+				m_CountDataLegacy.m_High = ((m_NumExtraServers+m_NumServers)>>8)&0xff;
+				m_CountDataLegacy.m_Low = (m_NumExtraServers+m_NumServers)&0xff;
 				m_NetOp.Send(&p);
 			}
 			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETLIST) &&
@@ -531,6 +623,7 @@ int main(int argc, const char **argv) // ignore_convention
 
 			PurgeServers();
 			UpdateServers();
+			ReadServers();
 			BuildPackets();
 		}
 

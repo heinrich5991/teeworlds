@@ -806,7 +806,7 @@ endif()
 # VARIOUS TARGETS
 ########################################################################
 
-set_glob(MASTERSRV_SRC GLOB src/mastersrv mastersrv.cpp mastersrv.h)
+set_glob(MASTERSRV_SRC GLOB src/mastersrv json.c json.h mastersrv.cpp mastersrv.h)
 set_glob(VERSIONSRV_SRC GLOB src/versionsrv mapversions.h versionsrv.cpp versionsrv.h)
 
 set(TARGET_MASTERSRV mastersrv)

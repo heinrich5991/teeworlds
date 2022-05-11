@@ -136,8 +136,10 @@ void ReadServers()
 	dbg_assert((bool)pJson, "invalid JSON in addresses.json");
 	dbg_assert(pJson->type == json_array, "not a JSON list in addresses.json");
 
+	ServerType aAddressesType[MAX_SERVERS];
+	NETADDR aAddresses[MAX_SERVERS];
 	int Total = 0;
-	for (unsigned int i = 0; i < pJson->u.array.length; i++)
+	for(unsigned int i = 0; i < pJson->u.array.length; i++)
 	{
 		const json_value &Address = (*pJson)[i];
 		dbg_assert(Address.type == json_string, "invalid address");
@@ -145,24 +147,26 @@ void ReadServers()
 		{
 			continue;
 		}
+		ServerType Type;
+		NETADDR Addr;
+		int Failure = ServerbrowserParseUrl(&Type, &Addr, Address);
+		dbg_assert(!Failure, "can't parse address");
+		if(m_NetBan.IsBanned(&Addr, 0, 0, 0) || Total >= MAX_SERVERS)
+		{
+			continue;
+		}
+		aAddressesType[Total] = Type;
+		aAddresses[Total] = Addr;
 		Total++;
 	}
-	int Count = 0;
-	for (unsigned int i = 0; i < pJson->u.array.length; i++)
-	{
-		const json_value &Address = (*pJson)[i];
-		dbg_assert(Address.type == json_string, "invalid address");
-		if(str_comp_num(Address, "tw-0.7+udp://", 13) != 0)
-		{
-			continue;
-		}
-		CServerEntry *pOut = &m_aServers[-Total + Count];
-		int Failure = ServerbrowserParseUrl(&pOut->m_Type, &pOut->m_Address, Address);
-		dbg_assert(!Failure, "can't parse address");
-		Count++;
-	}
-	m_NumExtraServers = Count;
 	json_value_free(pJson);
+	for(int i = 0; i < Total; i++)
+	{
+		CServerEntry *pOut = &m_aServers[-Total + i];
+		pOut->m_Type = aAddressesType[i];
+		pOut->m_Address = aAddresses[i];
+	}
+	m_NumExtraServers = Total;
 }
 
 void BuildPackets()

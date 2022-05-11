@@ -131,6 +131,7 @@ void ReadServers()
 	// "tw-0.6+udp://[1111:2222:3333:4444:5555:6666:7777:8888]:1234"
 	char aBuffer[MAX_SERVERS * 64];
 	int Length = io_read(AddressesFile, aBuffer, sizeof(aBuffer));
+	io_close(AddressesFile);
 	json_value *pJson = json_parse(aBuffer, Length);
 	dbg_assert((bool)pJson, "invalid JSON in addresses.json");
 	dbg_assert(pJson->type == json_array, "not a JSON list in addresses.json");
@@ -161,6 +162,7 @@ void ReadServers()
 		Count++;
 	}
 	m_NumExtraServers = Count;
+	json_value_free(pJson);
 }
 
 void BuildPackets()

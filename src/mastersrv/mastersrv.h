@@ -32,4 +32,11 @@ static const unsigned char SERVERBROWSE_FWRESPONSE[] = {255, 255, 255, 255, 'f',
 static const unsigned char SERVERBROWSE_FWOK[] = {255, 255, 255, 255, 'f', 'w', 'o', 'k'};
 static const unsigned char SERVERBROWSE_FWERROR[] = {255, 255, 255, 255, 'f', 'w', 'e', 'r'};
 
+// dont-send-http-servers@mastersrv.ddnet.org
+// e02cb630-b680-38f6-81a6-da096e9696d1
+static const unsigned char SERVERBROWSE_NOBACKCOMPAT[] = {
+       0xe0, 0x2c, 0xb6, 0x30, 0xb6, 0x80, 0x38, 0xf6,
+       0x81, 0xa6, 0xda, 0x09, 0x6e, 0x96, 0x96, 0xd1,
+};
+
 #endif

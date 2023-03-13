@@ -56,8 +56,8 @@ struct CPacketData
 	} m_Data;
 };
 
-CPacketData m_aPackets[MAX_PACKETS];
-static int m_NumPackets = 0;
+CPacketData m_aaAllPackets[2][MAX_PACKETS];
+static int m_aNumAllPackets[2] = {0};
 
 // legacy code
 struct CPacketDataLegacy
@@ -69,8 +69,8 @@ struct CPacketDataLegacy
 	} m_Data;
 };
 
-CPacketDataLegacy m_aPacketsLegacy[MAX_PACKETS];
-static int m_NumPacketsLegacy = 0;
+CPacketDataLegacy m_aaAllPacketsLegacy[2][MAX_PACKETS];
+static int m_aNumAllPacketsLegacy[2] = {0};
 
 
 struct CCountPacketData
@@ -186,10 +186,15 @@ void ReadServers()
 	m_NumExtraServers = Total;
 }
 
-void BuildPackets()
+void BuildPackets(bool NoBackcompat)
 {
-	CServerEntry *pCurrent = &m_aServers[-m_NumExtraServers];
-	int ServersLeft = m_NumExtraServers + m_NumServers;
+	CServerEntry *pCurrent = NoBackcompat ? &m_aServers[0] : &m_aServers[-m_NumExtraServers];
+	int ServersLeft = NoBackcompat ? m_NumServers : m_NumExtraServers + m_NumServers;
+	int &m_NumPackets = m_aNumAllPackets[NoBackcompat];
+	int &m_NumPacketsLegacy = m_aNumAllPacketsLegacy[NoBackcompat];
+	CPacketData *m_aPackets = m_aaAllPackets[NoBackcompat];
+	CPacketDataLegacy *m_aPacketsLegacy = m_aaAllPacketsLegacy[NoBackcompat];
+
 	m_NumPackets = 0;
 	m_NumPacketsLegacy = 0;
 	int PacketIndex = 0;
@@ -416,6 +421,11 @@ void ReloadBans()
 	m_pConsole->ExecuteFile("master.cfg");
 }
 
+bool DontSendBackwardCompatibility(const void *pData, int DataSize)
+{
+	return memmem(pData, DataSize, SERVERBROWSE_NOBACKCOMPAT, sizeof(SERVERBROWSE_NOBACKCOMPAT)) != 0;
+}
+
 int main(int argc, const char **argv) // ignore_convention
 {
 	int64 LastBuild = 0, LastBanReload = 0;
@@ -488,7 +498,9 @@ int main(int argc, const char **argv) // ignore_convention
 			if(m_NetBan.IsBanned(&Packet.m_Address, 0, 0))
 				continue;
 
-			if(Packet.m_DataSize == sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
+			bool NoBackcompat = DontSendBackwardCompatibility(Packet.m_pData, Packet.m_DataSize);
+
+			if(Packet.m_DataSize >= sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT)) == 0)
 			{
 				NETADDR Alt;
@@ -501,7 +513,7 @@ int main(int argc, const char **argv) // ignore_convention
 				// add it
 				AddCheckserver(&Packet.m_Address, &Alt, SERVERTYPE_NORMAL);
 			}
-			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_HEARTBEAT_LEGACY)+2 &&
+			else if(Packet.m_DataSize >= sizeof(SERVERBROWSE_HEARTBEAT_LEGACY)+2 &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT_LEGACY, sizeof(SERVERBROWSE_HEARTBEAT_LEGACY)) == 0)
 			{
 				NETADDR Alt;
@@ -515,10 +527,11 @@ int main(int argc, const char **argv) // ignore_convention
 				AddCheckserver(&Packet.m_Address, &Alt, SERVERTYPE_LEGACY);
 			}
 
-			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETCOUNT) &&
+			else if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETCOUNT) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT, sizeof(SERVERBROWSE_GETCOUNT)) == 0)
 			{
 				dbg_msg("mastersrv", "count requested, responding with %d", m_NumServers);
+				int Count = NoBackcompat ? m_NumServers : m_NumExtraServers + m_NumServers;
 
 				CNetChunk p;
 				p.m_ClientID = -1;
@@ -526,14 +539,15 @@ int main(int argc, const char **argv) // ignore_convention
 				p.m_Flags = NETSENDFLAG_CONNLESS;
 				p.m_DataSize = sizeof(m_CountData);
 				p.m_pData = &m_CountData;
-				m_CountData.m_High = ((m_NumExtraServers+m_NumServers)>>8)&0xff;
-				m_CountData.m_Low = (m_NumExtraServers+m_NumServers)&0xff;
+				m_CountData.m_High = (Count>>8)&0xff;
+				m_CountData.m_Low = Count&0xff;
 				m_NetOp.Send(&p);
 			}
-			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETCOUNT_LEGACY) &&
+			else if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETCOUNT_LEGACY) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT_LEGACY, sizeof(SERVERBROWSE_GETCOUNT_LEGACY)) == 0)
 			{
 				dbg_msg("mastersrv", "count requested, responding with %d", m_NumServers);
+				int Count = NoBackcompat ? m_NumServers : m_NumExtraServers + m_NumServers;
 
 				CNetChunk p;
 				p.m_ClientID = -1;
@@ -541,11 +555,11 @@ int main(int argc, const char **argv) // ignore_convention
 				p.m_Flags = NETSENDFLAG_CONNLESS;
 				p.m_DataSize = sizeof(m_CountData);
 				p.m_pData = &m_CountDataLegacy;
-				m_CountDataLegacy.m_High = ((m_NumExtraServers+m_NumServers)>>8)&0xff;
-				m_CountDataLegacy.m_Low = (m_NumExtraServers+m_NumServers)&0xff;
+				m_CountDataLegacy.m_High = (Count>>8)&0xff;
+				m_CountDataLegacy.m_Low = Count&0xff;
 				m_NetOp.Send(&p);
 			}
-			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETLIST) &&
+			else if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETLIST) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0)
 			{
 				// someone requested the list
@@ -556,14 +570,14 @@ int main(int argc, const char **argv) // ignore_convention
 				p.m_Address = Packet.m_Address;
 				p.m_Flags = NETSENDFLAG_CONNLESS;
 
-				for(int i = 0; i < m_NumPackets; i++)
+				for(int i = 0; i < m_aNumAllPackets[NoBackcompat]; i++)
 				{
-					p.m_DataSize = m_aPackets[i].m_Size;
-					p.m_pData = &m_aPackets[i].m_Data;
+					p.m_DataSize = m_aaAllPackets[NoBackcompat][i].m_Size;
+					p.m_pData = &m_aaAllPackets[NoBackcompat][i].m_Data;
 					m_NetOp.Send(&p);
 				}
 			}
-			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETLIST_LEGACY) &&
+			else if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETLIST_LEGACY) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST_LEGACY, sizeof(SERVERBROWSE_GETLIST_LEGACY)) == 0)
 			{
 				// someone requested the list
@@ -574,10 +588,10 @@ int main(int argc, const char **argv) // ignore_convention
 				p.m_Address = Packet.m_Address;
 				p.m_Flags = NETSENDFLAG_CONNLESS;
 
-				for(int i = 0; i < m_NumPacketsLegacy; i++)
+				for(int i = 0; i < m_aNumAllPacketsLegacy[NoBackcompat]; i++)
 				{
-					p.m_DataSize = m_aPacketsLegacy[i].m_Size;
-					p.m_pData = &m_aPacketsLegacy[i].m_Data;
+					p.m_DataSize = m_aaAllPacketsLegacy[NoBackcompat][i].m_Size;
+					p.m_pData = &m_aaAllPacketsLegacy[NoBackcompat][i].m_Data;
 					m_NetOp.Send(&p);
 				}
 			}
@@ -590,7 +604,7 @@ int main(int argc, const char **argv) // ignore_convention
 			if(m_NetBan.IsBanned(&Packet.m_Address, 0, 0))
 				continue;
 
-			if(Packet.m_DataSize == sizeof(SERVERBROWSE_FWRESPONSE) &&
+			if(Packet.m_DataSize >= sizeof(SERVERBROWSE_FWRESPONSE) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_FWRESPONSE, sizeof(SERVERBROWSE_FWRESPONSE)) == 0)
 			{
 				Type = SERVERTYPE_INVALID;
@@ -630,7 +644,8 @@ int main(int argc, const char **argv) // ignore_convention
 			PurgeServers();
 			UpdateServers();
 			ReadServers();
-			BuildPackets();
+			BuildPackets(false);
+			BuildPackets(true);
 		}
 
 		// be nice to the CPU

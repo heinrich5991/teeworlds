@@ -49,4 +49,11 @@ static const unsigned char SERVERBROWSE_LIST_LEGACY[] = {255, 255, 255, 255, 'l'
 
 static const unsigned char SERVERBROWSE_GETCOUNT_LEGACY[] = {255, 255, 255, 255, 'c', 'o', 'u', 'n'};
 static const unsigned char SERVERBROWSE_COUNT_LEGACY[] = {255, 255, 255, 255, 's', 'i', 'z', 'e'};
+
+// dont-send-http-servers@mastersrv.ddnet.org
+// e02cb630-b680-38f6-81a6-da096e9696d1
+static const unsigned char SERVERBROWSE_NOBACKCOMPAT[] = {
+	0xe0, 0x2c, 0xb6, 0x30, 0xb6, 0x80, 0x38, 0xf6,
+	0x81, 0xa6, 0xda, 0x09, 0x6e, 0x96, 0x96, 0xd1,
+};
 #endif

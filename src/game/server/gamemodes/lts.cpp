@@ -9,7 +9,7 @@
 
 CGameControllerLTS::CGameControllerLTS(CGameContext *pGameServer) : IGameController(pGameServer)
 {
-	m_pGameType = "LTS";
+	m_pGameType = "LTS*";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_SURVIVAL;
 }
 

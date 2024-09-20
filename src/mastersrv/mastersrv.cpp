@@ -500,7 +500,7 @@ int main(int argc, const char **argv) // ignore_convention
 
 			bool NoBackcompat = DontSendBackwardCompatibility(Packet.m_pData, Packet.m_DataSize);
 
-			if(Packet.m_DataSize >= sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
+			if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT)) == 0)
 			{
 				NETADDR Alt;
@@ -513,7 +513,7 @@ int main(int argc, const char **argv) // ignore_convention
 				// add it
 				AddCheckserver(&Packet.m_Address, &Alt, SERVERTYPE_NORMAL);
 			}
-			else if(Packet.m_DataSize >= sizeof(SERVERBROWSE_HEARTBEAT_LEGACY)+2 &&
+			else if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_HEARTBEAT_LEGACY)+2 &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT_LEGACY, sizeof(SERVERBROWSE_HEARTBEAT_LEGACY)) == 0)
 			{
 				NETADDR Alt;
@@ -527,7 +527,7 @@ int main(int argc, const char **argv) // ignore_convention
 				AddCheckserver(&Packet.m_Address, &Alt, SERVERTYPE_LEGACY);
 			}
 
-			else if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETCOUNT) &&
+			else if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_GETCOUNT) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT, sizeof(SERVERBROWSE_GETCOUNT)) == 0)
 			{
 				dbg_msg("mastersrv", "count requested, responding with %d", m_NumServers);
@@ -543,7 +543,7 @@ int main(int argc, const char **argv) // ignore_convention
 				m_CountData.m_Low = Count&0xff;
 				m_NetOp.Send(&p);
 			}
-			else if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETCOUNT_LEGACY) &&
+			else if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_GETCOUNT_LEGACY) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT_LEGACY, sizeof(SERVERBROWSE_GETCOUNT_LEGACY)) == 0)
 			{
 				dbg_msg("mastersrv", "count requested, responding with %d", m_NumServers);
@@ -559,7 +559,7 @@ int main(int argc, const char **argv) // ignore_convention
 				m_CountDataLegacy.m_Low = Count&0xff;
 				m_NetOp.Send(&p);
 			}
-			else if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETLIST) &&
+			else if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_GETLIST) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0)
 			{
 				// someone requested the list
@@ -577,7 +577,7 @@ int main(int argc, const char **argv) // ignore_convention
 					m_NetOp.Send(&p);
 				}
 			}
-			else if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETLIST_LEGACY) &&
+			else if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_GETLIST_LEGACY) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST_LEGACY, sizeof(SERVERBROWSE_GETLIST_LEGACY)) == 0)
 			{
 				// someone requested the list
@@ -604,7 +604,7 @@ int main(int argc, const char **argv) // ignore_convention
 			if(m_NetBan.IsBanned(&Packet.m_Address, 0, 0))
 				continue;
 
-			if(Packet.m_DataSize >= sizeof(SERVERBROWSE_FWRESPONSE) &&
+			if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_FWRESPONSE) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_FWRESPONSE, sizeof(SERVERBROWSE_FWRESPONSE)) == 0)
 			{
 				Type = SERVERTYPE_INVALID;

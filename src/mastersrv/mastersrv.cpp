@@ -465,7 +465,7 @@ int main(int argc, const char **argv)
 
 			bool NoBackcompat = DontSendBackwardCompatibility(Packet.m_pData, Packet.m_DataSize);
 
-			if(Packet.m_DataSize >= sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
+			if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT)) == 0)
 			{
 				NETADDR Alt;
@@ -478,7 +478,7 @@ int main(int argc, const char **argv)
 				// add it
 				AddCheckserver(&Packet.m_Address, &Alt, SERVERTYPE_NORMAL, Token);
 			}
-			else if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETCOUNT) &&
+			else if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_GETCOUNT) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT, sizeof(SERVERBROWSE_GETCOUNT)) == 0)
 			{
 				dbg_msg("mastersrv", "count requested, responding with %d", m_NumServers);
@@ -494,7 +494,7 @@ int main(int argc, const char **argv)
 				m_CountData.m_Low = Count&0xff;
 				m_NetOp.Send(&p, Token);
 			}
-			else if(Packet.m_DataSize >= sizeof(SERVERBROWSE_GETLIST) &&
+			else if(Packet.m_DataSize >= (int)sizeof(SERVERBROWSE_GETLIST) &&
 				mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0)
 			{
 				// someone requested the list

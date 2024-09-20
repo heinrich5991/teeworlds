@@ -146,7 +146,7 @@ void ReadServers()
 	// 0         1         2         3         4         5         6
 	// 0123456789012345678901234567890123456789012345678901234567890
 	// "tw-0.6+udp://[1111:2222:3333:4444:5555:6666:7777:8888]:1234"
-	char aBuffer[MAX_SERVERS * 64];
+	char aBuffer[1024 * 1024];
 	int Length = io_read(AddressesFile, aBuffer, sizeof(aBuffer));
 	io_close(AddressesFile);
 	json_value *pJson = json_parse(aBuffer, Length);
